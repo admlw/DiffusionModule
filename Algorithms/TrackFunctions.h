@@ -7,6 +7,13 @@
 // root includes
 #include "TVector3.h"
 
+// cpp includes
+#include <numeric>
+#include <vector>
+#include <functional>
+#include <cmath>
+#include <stdexcept>
+
 // Local includes
 #include "VectorFunctions.h"
 

@@ -1,5 +1,5 @@
-#ifndef VECTORUTILS_H
-#define VECTORUTILS_H
+#ifndef VECTORFUNCTIONS_H
+#define VECTORFUNCTIONS_H
 
 // larsoft includes
 #include "lardataobj/RecoBase/Track.h"

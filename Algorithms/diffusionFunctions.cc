@@ -141,7 +141,9 @@ bool diffusionFunctions::passesPreSelection(recob::Track const& track, diffusion
       return true;
   }
 }
+*/
 
+/*
 bool diffusionFunctions::passesHitSelection(recob::Hit const* hit, double HIT_GOODNESSOFFIT_CUT){
 
   if (hit->Multiplicity() == 1 && hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT && hit->View() ==2 && hit->Channel() > 6150) {
