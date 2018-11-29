@@ -1,6 +1,6 @@
 #include "diffusionFunctions.h"
 
-
+/*
 namespace diffmod{
     std::vector<double> diffusionFunctions::getMomentumVector(const recob::Track& a){
 
@@ -12,7 +12,7 @@ namespace diffmod{
 
     }
 }
-/*
+
 float diffusionFunctions::getAngle(const std::vector<double> a, const std::vector<double> b, diffusionFunctions diffutil, std::string proj){
 
   std::vector<double> aMom;

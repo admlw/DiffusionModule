@@ -14,9 +14,9 @@ namespace diffmod {
 
             TVector3 getMomentumVector(const recob::Track& a);
 
-            double getAngle(TVector3 a, TVector3 b);
+            double getAngle(TVector3 a, TVector3 b, VectorFunctions vecFuncs, std::string proj);
 
-            TVector3 getUnitVector(TVector3 a, TVector3 b);
+            TVector3 getUnitVector(TVector3 a);
 
             double getDotProduct(TVector3 a, TVector3 b);
     };
