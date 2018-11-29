@@ -1,6 +1,10 @@
 #ifndef WAVEFORMFUNCTIONS_H
 #define WAVEFORMFUNCTIONS_H
 
+// art includes
+#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Core/ModuleMacros.h"
+
 // larsoft includes
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Hit.h"
@@ -21,7 +25,7 @@ namespace diffmod {
 
     class WaveformFunctions {
         public: 
-          bool passesHitSelection(recob::Hit const* hit, double HIT_GOODNESSOFFIT_CUT); 
+          bool passesHitSelection(art::Ptr< recob::Hit > hit, double HIT_GOODNESSOFFIT_CUT); 
 
           double convertXToTicks(double xPosition, int WAVEFORM_DRIFT_START_TICK, int WAVEFORM_DRIFT_SIZE, double X_WIDTH);
 

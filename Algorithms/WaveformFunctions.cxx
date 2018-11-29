@@ -1,7 +1,7 @@
 #include "WaveformFunctions.h"
 
 namespace diffmod {
-    bool WaveformFunctions::passesHitSelection(recob::Hit const* hit, double HIT_GOODNESSOFFIT_CUT){
+    bool WaveformFunctions::passesHitSelection(art::Ptr< recob::Hit > hit, double HIT_GOODNESSOFFIT_CUT){
 
       if (hit->Multiplicity() == 1 && hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT && hit->View() ==2 && hit->Channel() > 6150) {
         //std::cout << "Hit passed" << std::endl;
