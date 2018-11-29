@@ -24,14 +24,12 @@ physics:
     {
         diffusionmodule:{
             module_type: "LArDiffusion"
+            DriftVelocity: 0.111436
         }
     }
 
-    stream1: [ out1 ]
-    prod: [ pidcalibration, dedxcalibration, pid ]
-    analysis: [ numuselection ]
-    trigger_paths: [ prod ]
-    end_paths: [ analysis, stream1 ]
+    analysis: [ diffusionmodule ]
+    end_paths: [ analysis ]
 } #physics
 
 services.DetectorClocksService.InheritClockConfig: false
