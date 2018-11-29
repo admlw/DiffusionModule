@@ -23,7 +23,7 @@ physics:
     analyzers:
     {
         diffusionmodule:{
-            module_type: "DiffusionModule"
+            module_type: "LArDiffusion"
         }
     }
 
