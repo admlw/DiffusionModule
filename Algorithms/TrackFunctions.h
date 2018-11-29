@@ -7,6 +7,9 @@
 // root includes
 #include "TVector3.h"
 
+// Local includes
+#include "VectorFunctions.h"
+
 namespace diffmod {
 
     class TrackFunctions {
