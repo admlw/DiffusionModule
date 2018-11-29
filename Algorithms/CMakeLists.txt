@@ -39,9 +39,8 @@ set( hitfinder_tool_lib_list
     )
 
 art_make( BASENAME_ONLY
-          LIBRARY_NAME     uboonecode_uboone_UBXSec_Algorithms
+          LIBRARY_NAME     uboonecode_uboone_DiffusionModule_Algorithms
           LIB_LIBRARIES
-                   ubobj_UBXSec
                    ubana_BasicTool_GeoAlgo
                    uboone_UBFlashFinder
 		   ubana_SelectionTool_OpT0FinderBase
@@ -96,8 +95,6 @@ art_make( BASENAME_ONLY
                    ${hitfinder_tool_lib_list}
 
           MODULE_LIBRARIES
-                   ubobj_UBXSec
-                   uboonecode_uboone_UBXSec_Algorithms
                    larsim_MCCheater_BackTrackerService_service
 		   larpandora_LArPandoraInterface
                    #                   larpandora_LArPandoraContent
