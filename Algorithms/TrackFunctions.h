@@ -30,9 +30,6 @@ namespace diffmod {
                  double trackAngleYZHighBound
             );
 
-            double findTrackStraightness(recob::Track const& track,
-                   TrackFunctions trackFuncs
-            );
     };
 
 }
