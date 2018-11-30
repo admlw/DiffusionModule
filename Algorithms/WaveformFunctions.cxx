@@ -78,8 +78,8 @@ namespace diffmod {
 
       }
 
-      double baseline = cumulativeSum/tickCounter;
-
+      double baseline  = 0;
+      if (tickCounter !=0) baseline = cumulativeSum/tickCounter;
 
       // correct baseline and return histogram
       for (int i = 0; i <= h_rawDCorrected->GetNbinsX(); i++){ 

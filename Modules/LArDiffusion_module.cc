@@ -26,8 +26,6 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/AnalysisBase/T0.h"
-#include "lardataalg/DetectorInfo/DetectorProperties.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 // art
 #include "canvas/Persistency/Common/FindManyP.h"
@@ -74,6 +72,7 @@ private:
   int tick_window_size;
   int tick_window_left;
   int tick_window_right;
+  int waveform_drift_size;
 
   // fhicl
   std::string track_label;
@@ -85,14 +84,21 @@ private:
   bool use_t0tagged_tracks;
   float drift_velocity;
   double hit_GOF_cut;
-  int waveform_drift_size;
+  int waveform_size;
+  int waveform_intime_start;
+  int waveform_intime_end;
   int number_drift_bins;
+  float peak_finder_threshold;
+  int number_dropped_ticks;
 
   // manipulation histograms
+  // binnings are placeholders and will be modified later
+
+  // histogram opened around the hit peak value 
   TH1D* h_wire_in_window = new TH1D("h_wire_in_window", "", 100, 0, 100);
 
-  // detector properties
-  ::detinfo::DetectorProperties const* _detprop;
+  // after baseline correcting
+  TH1D* h_wire_baseline_corrected = new TH1D("h_wire_baseline_corrected", "", 100, 0, 100);
 
   // other classes
   diffmod::WaveformFunctions _waveform_func;
@@ -118,11 +124,14 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     use_t0tagged_tracks = p.get< bool >("UseT0TaggedTracks", true); 
     drift_velocity      = p.get< float >("DriftVelocity");
     hit_GOF_cut         = p.get< double >("HitGOFCut", 1.1);
-    waveform_drift_size = p.get< int >("WindowSize", 6400); 
-    number_drift_bins   = p.get< int > ("NumberDriftBins", 25); 
+    waveform_size = p.get< int >("WaveformSize", 6400); 
+    waveform_intime_start = p.get< int >("WaveformIntimeStart", 800);
+    waveform_intime_end = p.get< int >("WaveformIntimeEnd", 5600);
+    number_drift_bins   = p.get< int >("NumberDriftBins", 25); 
+    peak_finder_threshold = p.get< float >("PeakFinderThreshold", 3.0);
+    number_dropped_ticks = p.get< int >("NumberDroppedTicks", 2400);
 
-    _detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-
+    waveform_drift_size = waveform_intime_end - waveform_intime_start;
     number_ticks_per_bin = waveform_drift_size/number_drift_bins;
 }
 
@@ -169,10 +178,16 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
             // + the number of ticks we drop
             // + the tick at which we begin to be in time
             // TODO: modify this to use fhicl where possible
-            float correction_time = thisT0->Time()+2400+800;
+            float t0 = thisT0->Time();
+            float t0_tick = t0 * 2;
+            float correction_x = t0 * drift_velocity;
 
-            std::cout << "[DIFFMOD] Correction Time: " 
-                << correction_time << std::endl;
+            std::cout << "t0: " << t0 << std::endl;
+            std::cout << "drift velocity: " << drift_velocity << std::endl;
+            std::cout << "correction_x: " << correction_x << std::endl;
+            std::cout << "uncorr: track start x: " << thisTrack->Start().X() << " end x: " << thisTrack->End().X() << std::endl;
+            std::cout << "corr+: track start x: " << thisTrack->Start().X()+correction_x << " end x: " << thisTrack->End().X()+correction_x << std::endl;
+            std::cout << "corr-: track start x: " << thisTrack->Start().X()-correction_x << " end x: " << thisTrack->End().X()-correction_x << std::endl;
 
             // loop hits
             for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
@@ -183,10 +198,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                 if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut)) 
                     continue;
              
-
                 // get wire information for hit
                 art::Ptr< recob::Wire > wire_from_hit = wire_from_hits.at(thisHit.key()).at(0);            
-                
                 hit_peak_time = thisHit->PeakTime(); 
                 tick_window_size = number_ticks_per_bin;
                 tick_window_left  = hit_peak_time - tick_window_size/2;
@@ -197,23 +210,85 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                     tick_window_left = 0;
                     tick_window_size = tick_window_right; 
                 }
-                if (tick_window_left > waveform_drift_size){
-                    tick_window_right = waveform_drift_size;
+                if (tick_window_left > waveform_size){
+                    tick_window_right = waveform_size;
                     tick_window_size = tick_window_right - tick_window_left;
                 }
 
+                h_wire_in_window->SetBins(tick_window_size, tick_window_left, tick_window_right);
+
                 // using the peak time, go to the recob::Wire, and grab the 
                 // information within some number of ticks of the peak
+                //
+                // also check to ensure that we only have one peak above
+                // threshold
+                int peak_counter = 0;
                 for (int i_tick = tick_window_left; i_tick < tick_window_right; i_tick++){
 
-                    std::cout << wire_from_hit->Signal().at(i_tick) << std::endl;
+                    float value = wire_from_hit->Signal().at(i_tick);
+
+                    h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
+
+                    if (value > peak_finder_threshold){
+
+                        // make sure we only look for the peak
+                        if (wire_from_hit->Signal().at(i_tick-1) < value
+                         && wire_from_hit->Signal().at(i_tick+1) < value){
+                            std::cout << "found peak!" << std::endl;
+                        
+                            peak_counter++;
+                        }
+
+                    }
 
                 }
 
-                // for later
-                //detprop->ConvertTicksToX(thisHit->PeakTime(), geo::PlaneID(0,0,2));
+                if (peak_counter != 1){
+                    std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
+                    continue;
+                }
 
-                
+                // get peak bin tick after t0 correction
+                int maximum_tick = h_wire_in_window->GetMaximumBin()
+                    + tick_window_left - t0_tick;
+
+                // now the magic: 
+                // loop over the drift bins and check to see if the 
+                // t0-corrected pulse center is in each bin
+                // if it is then sum the pulses
+
+                std::cout << "maximum tick: " << maximum_tick << std::endl;
+
+                for (int bin_it = 0; bin_it < number_drift_bins; bin_it++){
+
+                    // set binning for histograms
+                    h_wire_baseline_corrected->SetBins(h_wire_in_window->GetNbinsX(),
+                            waveform_intime_start + (bin_it) * number_ticks_per_bin,
+                            waveform_intime_start + (bin_it + 1) * number_ticks_per_bin);
+
+                    if (maximum_tick >= (bin_it * number_ticks_per_bin)
+                        && maximum_tick < ((bin_it + 1) * number_ticks_per_bin)) {
+
+                        h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
+
+                    }
+
+
+                    for (int i = 0; i < h_wire_in_window->GetNbinsX(); i++){
+
+                        std::cout << "t0corr: " << i << " " << h_wire_in_window->GetBinContent(i) << std::endl;
+
+                    }
+
+                    h_wire_baseline_corrected = _waveform_func.applyGlobalBaselineCorrection(h_wire_in_window, h_wire_baseline_corrected); 
+                    
+                    for (int i = 0; i < h_wire_baseline_corrected->GetNbinsX(); i++){
+
+                        std::cout << "baseline corrected: " << i << " " << h_wire_baseline_corrected->GetBinContent(i) << std::endl;
+
+                    }
+
+                }
 
             }
 
