@@ -33,6 +33,7 @@
 
 // ROOT
 #include "TH1D.h"
+#include "TTree.h"
 
 // local
 #include "ubana/DiffusionModule/Algorithms/WaveformFunctions.h"
@@ -64,6 +65,8 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
         art::ServiceHandle< art::TFileService > tfs;
 
+        TTree* difftree;
+
         // variables
         int run;
         int sub_run;
@@ -71,6 +74,16 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         int is_real_data;
 
         float hit_peak_time;
+        float t0;
+        float t0_tick;
+        float track_x_correction;
+        double pulse_height;
+        double mean;
+        double sigma;       
+        double fit_chisq;   
+        double waveform_x_correction;
+        int bin_no;
+
         int number_ticks_per_bin;
         int tick_window_size;
         int tick_window_left;
@@ -98,11 +111,12 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         // binnings are placeholders and will be modified later
 
         // histogram opened around the hit peak value 
-        TH1D* h_wire_in_window;
+        TH1D* h_wire_in_window = tfs->make<TH1D>("h_wire_in_window", "", 100, 0, 100);
 
         // after baseline correcting
-        TH1D* h_wire_baseline_corrected;
+        TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
+        // output histograms
         std::vector<TH1D*> h_summed_wire_info_per_bin; 
 
         // other classes
@@ -124,19 +138,19 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
 
     track_hit_assn = p.get< std::string >("TrackHitAssn", "pandoraCosmic");
     track_t0_assn  = p.get< std::string >("TrackT0Assn", "pandoraCosmicT0RecoLoose");
-    hit_wire_assn = p.get< std::string >("HitWireAssn", "gaushit");
+    hit_wire_assn  = p.get< std::string >("HitWireAssn", "gaushit");
 
-    use_t0tagged_tracks = p.get< bool >("UseT0TaggedTracks", true); 
-    drift_velocity      = p.get< float >("DriftVelocity");
-    hit_GOF_cut         = p.get< double >("HitGOFCut", 1.1);
-    waveform_size = p.get< int >("WaveformSize", 6400); 
+    use_t0tagged_tracks   = p.get< bool >("UseT0TaggedTracks", true);
+    drift_velocity        = p.get< float >("DriftVelocity");
+    hit_GOF_cut           = p.get< double >("HitGOFCut", 1.1);
+    waveform_size         = p.get< int >("WaveformSize", 6400);
     waveform_intime_start = p.get< int >("WaveformIntimeStart", 800);
-    waveform_intime_end = p.get< int >("WaveformIntimeEnd", 5400);
-    number_drift_bins   = p.get< int >("NumberDriftBins", 25); 
+    waveform_intime_end   = p.get< int >("WaveformIntimeEnd", 5400);
+    number_drift_bins     = p.get< int >("NumberDriftBins", 25);
+    number_dropped_ticks  = p.get< int >("NumberDroppedTicks", 2400);
     peak_finder_threshold = p.get< float >("PeakFinderThreshold", 3.0);
-    number_dropped_ticks = p.get< int >("NumberDroppedTicks", 2400);
 
-    waveform_drift_size = waveform_intime_end - waveform_intime_start;
+    waveform_drift_size  = waveform_intime_end - waveform_intime_start;
     number_ticks_per_bin = waveform_drift_size/number_drift_bins;
 }
 
@@ -183,16 +197,16 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
             // + the number of ticks we drop
             // + the tick at which we begin to be in time
             // TODO: modify this to use fhicl where possible
-            float t0 = thisT0->Time();
-            float t0_tick = t0 * 2;
-            float correction_x = t0 * drift_velocity;
+            t0 = thisT0->Time();
+            t0_tick = t0 * 2;
+            track_x_correction = t0 * drift_velocity;
 
             std::cout << "t0: " << t0 << std::endl;
             std::cout << "drift velocity: " << drift_velocity << std::endl;
-            std::cout << "correction_x: " << correction_x << std::endl;
+            std::cout << "track_x_correction: " << track_x_correction << std::endl;
             std::cout << "uncorr: track start x: " << thisTrack->Start().X() << " end x: " << thisTrack->End().X() << std::endl;
-            std::cout << "corr+: track start x: " << thisTrack->Start().X()+correction_x << " end x: " << thisTrack->End().X()+correction_x << std::endl;
-            std::cout << "corr-: track start x: " << thisTrack->Start().X()-correction_x << " end x: " << thisTrack->End().X()-correction_x << std::endl;
+            std::cout << "corr+: track start x: " << thisTrack->Start().X()+track_x_correction << " end x: " << thisTrack->End().X()+track_x_correction << std::endl;
+            std::cout << "corr-: track start x: " << thisTrack->Start().X()-track_x_correction << " end x: " << thisTrack->End().X()-track_x_correction << std::endl;
 
             // loop hits
             for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
@@ -274,10 +288,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                     if (maximum_tick >= (waveform_intime_start + bin_it * number_ticks_per_bin)
                             && maximum_tick < (waveform_intime_start + (bin_it + 1) * number_ticks_per_bin)) {
 
-                        std::cout << "filling in bin " << bin_it << std::endl;
+                        bin_no = bin_it;
 
                         h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
-
 
                         // apply baseline correction
                         h_wire_baseline_corrected = 
@@ -286,18 +299,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                                     h_wire_baseline_corrected); 
 
                         // calculate sigma
-                        double pulse_height = h_wire_baseline_corrected->GetMaximum();
-                        double mean = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
-                        double sigma = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
-                        double fit_chisq = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
+                        pulse_height = h_wire_baseline_corrected->GetMaximum();
+                        mean         = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
+                        sigma        = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
+                        fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
 
                         // now find the correction needed to minimise the rms of the sum of the 
                         // histograms
-                        double x_correction;
                         if (h_summed_wire_info_per_bin.at(bin_it)->Integral() == 0) 
-                            x_correction = 0;
+                            waveform_x_correction = 0;
                         else
-                            x_correction = 
+                            waveform_x_correction = 
                                 _waveform_func.findXCorrection(
                                         _waveform_func, 
                                         h_summed_wire_info_per_bin.at(bin_it), 
@@ -306,21 +318,22 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
                         
 
-                        TH1D* h_x_correction = 
-                            new TH1D("h_x_correction", 
+                        TH1D* h_waveform_x_correction = 
+                            new TH1D("h_waveform_x_correction", 
                                     "", 
                                     number_ticks_per_bin, 
                                     h_wire_baseline_corrected->GetXaxis()->GetXmin(), 
                                     h_wire_baseline_corrected->GetXaxis()->GetXmax()); 
 
                         for (int ntick = 1; ntick <= h_wire_baseline_corrected->GetNbinsX(); ntick++)
-                            h_x_correction->SetBinContent(
+                            h_waveform_x_correction->SetBinContent(
                                     ntick, 
-                                    h_wire_baseline_corrected->GetBinContent(ntick+x_correction));
+                                    h_wire_baseline_corrected->GetBinContent(ntick+waveform_x_correction));
 
+                        difftree->Fill();
 
                         // finally add to output histograms
-                        h_summed_wire_info_per_bin.at(bin_it)->Add(h_x_correction);
+                        h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_x_correction);
 
                     }
                 }
@@ -335,11 +348,19 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
 void diffmod::LArDiffusion::beginJob()
 {
-    // histogram opened around the hit peak value 
-    h_wire_in_window = tfs->make<TH1D>("h_wire_in_window", "", 100, 0, 100);
 
-    // after baseline correcting
-    h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
+    difftree = tfs->make<TTree>("difftree", "diffusion tree");
+    difftree->Branch("hit_peak_time", &hit_peak_time);
+    difftree->Branch("hit_peak_time", &hit_peak_time);
+    difftree->Branch("t0", &t0);
+    difftree->Branch("t0_tick", &t0_tick);
+    difftree->Branch("track_x_correction", &track_x_correction);
+    difftree->Branch("pulse_height", &pulse_height);
+    difftree->Branch("mean", &mean);        
+    difftree->Branch("sigma", &sigma);       
+    difftree->Branch("fit_chisq", &fit_chisq);  
+    difftree->Branch("waveform_x_correction", &waveform_x_correction);
+    difftree->Branch("bin_no", &bin_no);
 
     for (int i = 0; i < number_drift_bins; i++){
 
