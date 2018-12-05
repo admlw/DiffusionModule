@@ -32,6 +32,15 @@ namespace diffmod {
 
     }
 
+    double WaveformFunctions::convertTicksToX(int tick, int WAVEFORM_DRIFT_START_TICK, int WAVEFORM_DRIFT_SIZE, double X_WIDTH){
+
+      //double xPos = (tick - 812)/17.9427;
+      double xPos = (tick - WAVEFORM_DRIFT_START_TICK)/(WAVEFORM_DRIFT_SIZE/X_WIDTH);
+      return xPos;
+
+    }
+
+
     TH1D* WaveformFunctions::applyGlobalBaselineCorrection(TH1D* h_rawD, TH1D* h_rawDCorrected){
 
       // first loop over the bins and find the beginning and end of the ROI
@@ -227,14 +236,6 @@ namespace diffmod {
       returnVector = {mean, sigma, chisq};
 
       return returnVector;
-    }
-
-    double WaveformFunctions::convertTicksToX(int tick, int WAVEFORM_DRIFT_START_TICK, int WAVEFORM_DRIFT_SIZE, double X_WIDTH){
-
-      //double xPos = (tick - 812)/17.9427;
-      double xPos = (tick - WAVEFORM_DRIFT_START_TICK)/(WAVEFORM_DRIFT_SIZE/X_WIDTH);
-      return xPos;
-
     }
 
     double getMedian(TH1D* h){
