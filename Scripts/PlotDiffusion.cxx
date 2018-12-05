@@ -95,7 +95,8 @@ void makePlot(TString* inputFileName){
 
     // Find fit range for histogram 
     // Stop fit at 10% of maximum value (arbitrary?)
-    //TH1D *waveformHist_us = waveformHist;
+    TH1D *waveformHist_us = waveformHist;
+    /*
     TH1D *waveformHist_us = new TH1D("waveformHist_us", "", 
         waveformHist->GetNbinsX(), 
         waveformHist->GetBinLowEdge(1)*0.5,
@@ -107,10 +108,11 @@ void makePlot(TString* inputFileName){
       waveformHist_us->Fill(waveformHist->GetXaxis()->GetBinCenter(i+1)*0.5);
       cout << "Filling with " << waveformHist->GetXaxis()->GetBinLowEdge(i+1)*0.5 << endl;
     }
-    //waveformHist_us->SetName(waveformHist->GetName() );
-    //double lowConv = waveformHist_us->GetBinLowEdge(1)*0.5;
-    //double highConv = waveformHist_us->GetBinLowEdge(waveformHist_us->GetNbinsX()+1)*0.5;
-    //waveformHist_us->GetXaxis()->SetLimits(lowConv, highConv);
+    */
+    waveformHist_us->SetName(waveformHist->GetName() );
+    double lowConv = waveformHist_us->GetBinLowEdge(1)*0.5;
+    double highConv = waveformHist_us->GetBinLowEdge(waveformHist_us->GetNbinsX()+1)*0.5;
+    waveformHist_us->GetXaxis()->SetLimits(lowConv, highConv);
     double lowFit = 0, highFit = 0;
     double fitLimit = waveformHist_us->GetMaximum()*0.1;
 
