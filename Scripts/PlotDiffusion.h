@@ -9,6 +9,8 @@
 #include "TPaveText.h"
 #include "TStyle.h"
 #include "TVector.h"
+#include "TPad.h"
+#include "TGraphErrors.h"
 
 // cpp includes
 #include <numeric>

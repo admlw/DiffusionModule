@@ -75,7 +75,7 @@ void makePlot(TString* inputFileName){
   diffmod::WaveformFunctions waveFuncs;
   double lowConv, highConv; // Used for conversion from ticks to microseconds
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
-  double textSize = 0.045;
+  double titleSize = 0.045;
   double labelSize = 0.045;
 
   // Loop over bins, do the things
@@ -94,28 +94,15 @@ void makePlot(TString* inputFileName){
     }
 
     // Find fit range for histogram 
-    // Stop fit at 10% of maximum value (arbitrary?)
     TH1D *waveformHist_us = waveformHist;
-    /*
-    TH1D *waveformHist_us = new TH1D("waveformHist_us", "", 
-        waveformHist->GetNbinsX(), 
-        waveformHist->GetBinLowEdge(1)*0.5,
-        waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()+1)*0.5
-    );
-    cout << "Making new hist with bounds " << waveformHist->GetBinLowEdge(1)*0.5 
-      << " to " << waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()+1)*0.5 << endl;
-    for (int i = 0; i < waveformHist_us->GetNbinsX(); i++) {
-      waveformHist_us->Fill(waveformHist->GetXaxis()->GetBinCenter(i+1)*0.5);
-      cout << "Filling with " << waveformHist->GetXaxis()->GetBinLowEdge(i+1)*0.5 << endl;
-    }
-    */
     waveformHist_us->SetName(waveformHist->GetName() );
     double lowConv = waveformHist_us->GetBinLowEdge(1)*0.5;
     double highConv = waveformHist_us->GetBinLowEdge(waveformHist_us->GetNbinsX()+1)*0.5;
     waveformHist_us->GetXaxis()->SetLimits(lowConv, highConv);
     double lowFit = 0, highFit = 0;
+    
+    // Stop fit at 10% of maximum value (arbitrary?)
     double fitLimit = waveformHist_us->GetMaximum()*0.1;
-
     for (int i = waveformHist_us->GetMaximumBin(); i > 0; i--) {
       if (waveformHist_us->GetBinContent(i) < fitLimit) {
         lowFit = waveformHist_us->GetBinCenter(i);
@@ -131,43 +118,83 @@ void makePlot(TString* inputFileName){
 
     // Define fit range around the peak, else ROOT might derp out
     double chisqNdf = 10;
-    TF1 *fit = new TF1("fit", "gaus");
-    //TF1 *fit;
-    cout << "lowFit = " << lowFit << endl;
-    cout << "highFit = " << highFit << endl;
-    cout << "Max = " << waveformHist_us->GetXaxis()->GetBinCenter(waveformHist_us->GetMaximumBin() ) << endl;
+    TF1 *gausfit = new TF1("gausfit", "gaus");
     // Chi2 inflation
     while (chisqNdf > 1) {
-      waveformHist_us->Fit(fit, "", "", lowFit, highFit);
-      //fit = waveformHist_us->GetFunction("gaus");
-      chisqNdf = waveformHist_us->GetFunction("fit")->GetChisquare()/fit->GetNDF();
+      waveformHist_us->Fit(gausfit, "", "", lowFit, highFit);
+      chisqNdf = waveformHist_us->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
       increaseError(waveformHist_us);
     }
     
+    /*
     TCanvas *c = new TCanvas;
     waveformHist_us->Draw("hist");
-    fit->SetLineColor(kRed);
-    fit->Draw("same");
+    TF1* fitted_function = waveformHist_us->GetFunction("fit");
+    fitted_function->SetLineColor(kRed);
+    fitted_function->Draw("same");
     TString bin = Form("%i", i);
     c->SaveAs("testHist_"+bin+".png", "PNG");
-
-    cout << "Fit param 0: " << fit->GetParameter(0) << endl;
-    cout << "Fit param 1: " << fit->GetParameter(1) << endl;
-    cout << "Fit param 2: " << fit->GetParameter(2) << endl;
+    */
 
     // Get drift distance
     //double driftDistance = waveFuncs.convertTicksToX(peakTickVal);
-    double driftDistance = waveFuncs.convertTicksToX(fit->GetParameter(1) );
+    double driftDistance = waveFuncs.convertTicksToX(gausfit->GetParameter(1)*2 );
     driftDistances[i] = driftDistance;
     driftDistancesErrs[i] = 0.5*X_WIDTH/NUMBER_DRIFT_BINS; // x-error is 1/2 bin width for now
-    cout << "Drift distance = " << driftDistances[i] << " +/- " << driftDistancesErrs[i] << endl;
 
     // Get sigma^2 (pulse width squared)
-    sigmaVals[i] = std::pow(fit->GetParameter(2)/2, 2); // Divide by two to convert to microseconds
-    sigmaValsErrs[i] = 2*fit->GetParError(2); 
-    // Note: factor of 2 from squaring sigma 
+    sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); // Divide by two to convert to microseconds
+    // Note: factor of 2 in error calc from squaring sigma 
     // (see http://ipl.physics.harvard.edu/wp-uploads/2013/03/PS3_Error_Propagation_sp13.pdf)
-    cout << "Sigma^2 = " << sigmaVals[i] << " +/- " << sigmaValsErrs[i] << endl;
+    sigmaValsErrs[i] = 2*gausfit->GetParError(2); 
+
+    TCanvas *c1 = new TCanvas("c1", "c1", 1000, 700);
+    TPad *topPad = new TPad("topPad", "", 0.005, 0.005, 0.995, 0.995);
+    //TPad *midPad = new TPad("midPad", "", 0.005, 0.3, 0.995, 0.6);
+    //TPad *botPad = new TPad("botPad", "", 0.005, 0.005, 0.995, 0.3);
+    //topPad->cd();
+    // Diffusion plot
+    TGraphErrors *g1 = new TGraphErrors(NUMBER_DRIFT_BINS,
+        driftDistances, sigmaVals, 
+        driftDistancesErrs, sigmaValsErrs
+    );
+    g1->SetTitle("");
+    g1->GetXaxis()->SetTitle("Drift Distance (cm)");
+    g1->GetXaxis()->SetTitleSize(titleSize);
+    g1->GetXaxis()->SetLabelSize(labelSize);
+    g1->GetYaxis()->SetTitle("#sigma_{t}^{2} (#mus)");
+    g1->GetYaxis()->SetTitleSize(titleSize);
+    g1->GetYaxis()->SetTitleOffset(0.9);
+    g1->GetYaxis()->SetLabelSize(labelSize);
+    g1->Draw("ap");
+    g1->SetMarkerStyle(8);
+    g1->SetMarkerSize(0.8);
+    g1->GetYaxis()->SetRangeUser(0.001, 5.);
+    g1->GetXaxis()->SetRangeUser(0, X_WIDTH);
+
+    // Linear fit to diffusion plot
+    TF1* polFit = new TF1("polfit", "pol1");
+    g1->Fit("polfit", "", "", 0.1, X_WIDTH);
+    g1->GetFunction("polfit")->SetLineColor(kRed);
+    g1->GetFunction("polfit")->Draw("same");
+
+    // Get diffusion value from slope of linear fit
+    double diffusionValue = polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 3) * 1000000/2;
+    double diffusionValueErr = polFit->GetParError(1)*std::pow(DRIFT_VELOCITY, 3) * 1000000/2;
+    cout << "Diffusion value: " << diffusionValue << " +/- " << diffusionValueErr << endl; 
+
+    TPaveText *pt = new TPaveText(0.12, 0.75, 0.5, 0.9, "NDC");
+    pt->SetTextAlign(12);
+    pt->SetFillStyle(0);
+    pt->SetTextSize(0.045);
+    pt->SetBorderSize(0);
+    TString diffTextMeas = Form("Measured D_{L}: %0.2f +/- %0.2f cm^{2}/s", diffusionValue, diffusionValueErr);
+    TString diffTextInp = Form("Input D_{L}: 6.20 cm^{2}/s");
+    pt->AddText(diffTextMeas);
+    pt->AddText(diffTextInp);
+    pt->Draw("same");
+
+    c1->SaveAs("DiffusionPlot.png", "PNG");
 
   }
 
