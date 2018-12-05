@@ -131,16 +131,16 @@ void makePlot(TString* inputFileName){
 
     // Define fit range around the peak, else ROOT might derp out
     double chisqNdf = 10;
-    //TF1 *fit = new TF1("fit", "gaus", lowFit, highFit);
-    TF1 *fit;
+    TF1 *fit = new TF1("fit", "gaus");
+    //TF1 *fit;
     cout << "lowFit = " << lowFit << endl;
     cout << "highFit = " << highFit << endl;
     cout << "Max = " << waveformHist_us->GetXaxis()->GetBinCenter(waveformHist_us->GetMaximumBin() ) << endl;
     // Chi2 inflation
     while (chisqNdf > 1) {
-      waveformHist_us->Fit("gaus", "qr");
-      fit = waveformHist_us->GetFunction("gaus");
-      chisqNdf = fit->GetChisquare()/fit->GetNDF();
+      waveformHist_us->Fit(fit, "", "", lowFit, highFit);
+      //fit = waveformHist_us->GetFunction("gaus");
+      chisqNdf = waveformHist_us->GetFunction("fit")->GetChisquare()/fit->GetNDF();
       increaseError(waveformHist_us);
     }
     
