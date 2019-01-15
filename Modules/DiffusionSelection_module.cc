@@ -37,7 +37,7 @@
 #include "TH2.h"
 
 // local includes
-#include "ubana/DiffusionSelection/Algos/diffusionUtility.h"
+#include "ubana/DiffusionModule/Algorithms/diffusionUtility.h"
 
 class DiffusionSelection;
 

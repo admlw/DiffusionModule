@@ -72,6 +72,7 @@ class DiffusionFilter : public art::EDFilter {
     TTree* tree;
     std::string fTrackLabel;
     std::string fTrackTruthMatcherLabel;
+    std::string fT0Label;
     double fTrackLengthCut;
     double fTrackAngleCutXZLow;
     double fTrackAngleCutXZHigh;
@@ -113,6 +114,7 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
 
   fTrackLabel = p.get<std::string> ("TrackLabel");
   fTrackTruthMatcherLabel = p.get<std::string> ("TrackTruthMatcherLabel");
+  fT0Label = p.get<std::string> ("T0Label");
   fTrackLengthCut = p.get<double> ("TrackLengthCut");
   fTrackAngleCutXZLow  = p.get<double> ("TrackAngleCutXZLow");
   fTrackAngleCutXZHigh = p.get<double> ("TrackAngleCutXZHigh");
@@ -149,7 +151,8 @@ bool DiffusionFilter::filter(art::Event & e)
 
   //art::FindManyP<simb::MCParticle, anab::BackTrackerMatchingData> mcpsFromTracks(trackHandle, e, fTrackTruthMatcherLabel);
   art::FindManyP<recob::Hit> hitsFromTracks(trackHandle, e, fTrackLabel);
-  art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, "pandoraCosmicT0RecoLoose");
+  //art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, "pandoraCosmicT0RecoLoose");
+  art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, fT0Label);
 
   // produces a new trackCollection for passing tracks result is that we have
   // only events in which at least one track passes the selection, and only 

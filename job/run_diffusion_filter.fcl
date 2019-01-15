@@ -29,13 +29,14 @@ physics:
     {
 
       module_type:            "DiffusionFilter"
-      TrackLabel:             "pandoraCosmic"
+      TrackLabel:             "pandora"
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
+      T0Label:                "t0reco"
       TrackLengthCut:  50
-      TrackAngleCutXZLow: 17.5
-      TrackAngleCutXZHigh: 20
-      TrackAngleCutYZLow: 17.5
-      TrackAngleCutYZHigh: 20
+      TrackAngleCutXZLow: -180
+      TrackAngleCutXZHigh: 180
+      TrackAngleCutYZLow: -180
+      TrackAngleCutYZHigh: 180
 
     }
   }
