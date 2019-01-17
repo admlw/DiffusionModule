@@ -132,12 +132,12 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
 {
 
     // defaults set to be MCC9 defaults
-    track_label = p.get< std::string >("TrackLabel", "pandoraCosmic");
+    track_label = p.get< std::string >("TrackLabel", "pandora");
     wire_label  = p.get< std::string >("WireLabel", "butcher");
     hit_label   = p.get< std::string >("HitLabel", "gaushit");
 
-    track_hit_assn = p.get< std::string >("TrackHitAssn", "pandoraCosmic");
-    track_t0_assn  = p.get< std::string >("TrackT0Assn", "pandoraCosmicT0RecoLoose");
+    track_hit_assn = p.get< std::string >("TrackHitAssn", "pandora");
+    track_t0_assn  = p.get< std::string >("TrackT0Assn", "t0reco");
     hit_wire_assn  = p.get< std::string >("HitWireAssn", "gaushit");
 
     use_t0tagged_tracks   = p.get< bool >("UseT0TaggedTracks", true);
@@ -229,10 +229,15 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                     tick_window_left = 0;
                     tick_window_size = tick_window_right; 
                 }
-                if (tick_window_left > waveform_size){
+                //if (tick_window_left > waveform_size){
+                if (tick_window_right > waveform_size){
                     tick_window_right = waveform_size;
                     tick_window_size = tick_window_right - tick_window_left;
                 }
+
+                std::cout << "tick_window_size: " << tick_window_size << std::endl;
+                std::cout << "tick_window_left: " << tick_window_left << std::endl;
+                std::cout << "tick_window_right: " << tick_window_right << std::endl;
 
                 h_wire_in_window->SetBins(tick_window_size, tick_window_left, tick_window_right);
 
@@ -249,6 +254,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                     h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
 
                     if (value > peak_finder_threshold){
+
+                        // define peak search region
+                        if (tick_window_left == 0 || tick_window_right == (int)wire_from_hit->Signal().size())
+                          continue;
 
                         // make sure we only look for the peak
                         if (wire_from_hit->Signal().at(i_tick-1) < value

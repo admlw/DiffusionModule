@@ -146,12 +146,7 @@ bool DiffusionFilter::filter(art::Event & e)
   art::Handle< std::vector<recob::Track> > trackHandle;
   e.getByLabel(fTrackLabel, trackHandle);
 
-  //  art::Handle< std::vector<recob::OpFlash> > opFlashHandle;
-  //  e.getByLabel("simpleFlashCosmic", opFlashHandle);
-
-  //art::FindManyP<simb::MCParticle, anab::BackTrackerMatchingData> mcpsFromTracks(trackHandle, e, fTrackTruthMatcherLabel);
   art::FindManyP<recob::Hit> hitsFromTracks(trackHandle, e, fTrackLabel);
-  //art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, "pandoraCosmicT0RecoLoose");
   art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, fT0Label);
 
   // produces a new trackCollection for passing tracks result is that we have
