@@ -167,7 +167,7 @@ bool DiffusionFilter::filter(art::Event & e)
     // downward going tracks are yz = -pi/2
     //
     // the tracks we want are xz = 0, +/- pi. yz = 0, +/- pi
-    track_angle_xz = std::atan2(thisTrack.StartDirection().Z(), thisTrack.StartDirection().X()) * 180/TMath::Pi();
+    track_angle_xz = std::atan2(thisTrack.StartDirection().X(), thisTrack.StartDirection().Z()) * 180/TMath::Pi();
     track_angle_yz = std::atan2(thisTrack.StartDirection().Y(), thisTrack.StartDirection().Z()) * 180/TMath::Pi();
 
     std::vector< art::Ptr<anab::T0> > t0s = t0FromTracks.at(thisTrack.ID());
@@ -180,11 +180,15 @@ bool DiffusionFilter::filter(art::Event & e)
     tree->Fill();
 
     if (track_length < fTrackLengthCut) continue;
+      std::cout << "Track length: " << track_length << std::endl;
     
     if ((track_angle_xz <= fTrackAngleCutXZHigh && track_angle_xz >= fTrackAngleCutXZLow
           && track_angle_yz <= fTrackAngleCutYZHigh && track_angle_yz >= fTrackAngleCutYZLow) 
         || (track_angle_xz >= (180 - fTrackAngleCutXZHigh) && (track_angle_xz <= (180 - fTrackAngleCutXZLow)) 
           && track_angle_yz >= (180 - fTrackAngleCutYZHigh) && track_angle_yz <= (180 - fTrackAngleCutYZLow))){
+
+      std::cout << "Theta_xz: " << track_angle_xz << std::endl;
+      std::cout << "Theta_yz: " << track_angle_yz << std::endl;
 
       trackCollection->push_back(recob::Track(thisTrack.Trajectory(), 
             thisTrack.ParticleId(),

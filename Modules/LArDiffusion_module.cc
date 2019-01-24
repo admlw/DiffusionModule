@@ -33,6 +33,7 @@
 
 // ROOT
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TTree.h"
 
 // local
@@ -89,6 +90,8 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         int tick_window_left;
         int tick_window_right;
         int waveform_drift_size;
+        int track_startX;
+        
 
         // fhicl
         std::string track_label;
@@ -104,6 +107,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         int waveform_intime_start;
         int waveform_intime_end;
         int number_drift_bins;
+        float drift_distance;
         float peak_finder_threshold;
         int number_dropped_ticks;
 
@@ -115,6 +119,17 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
         // after baseline correcting
         TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
+
+        // Define troubleshooting histograms
+        TH1D *h_trackLength;
+        TH1D *h_cosTheta;
+        TH1D *h_startX;
+        TH1D *h_sigmaSq;
+        TH1D *h_pulseHeight;
+        TH1D *h_nWvfmsInBin;
+
+        TH2D *h_driftVsigma;
+        TH2D *h_driftVPulseHeight;
 
         // output histograms
         std::vector<TH1D*> h_summed_wire_info_per_bin; 
@@ -161,8 +176,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
     event = e.event();
     is_real_data = e.isRealData();
 
-    std::cout << "[DIFFMOD] --- Processing event " 
-        << run << "." << sub_run << "." << event << std::endl;
+    //std::cout << "[DIFFMOD] --- Processing event " 
+        //<< run << "." << sub_run << "." << event << std::endl;
 
     // get track information
     art::Handle< std::vector<recob::Track> > track_handle;
@@ -183,6 +198,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
     for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
 
         art::Ptr< recob::Track > thisTrack = track_ptr_vector.at(i_tr);
+
+        h_trackLength->Fill(thisTrack->Length() );
+        h_cosTheta->Fill(thisTrack->Theta() );
+        h_startX->Fill(thisTrack->Start().X() );
 
         std::vector< art::Ptr< anab::T0 > > t0_from_track = t0_from_tracks.at(thisTrack.key());
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
@@ -235,10 +254,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                     tick_window_size = tick_window_right - tick_window_left;
                 }
 
-                std::cout << "tick_window_size: " << tick_window_size << std::endl;
-                std::cout << "tick_window_left: " << tick_window_left << std::endl;
-                std::cout << "tick_window_right: " << tick_window_right << std::endl;
-
                 h_wire_in_window->SetBins(tick_window_size, tick_window_left, tick_window_right);
 
                 // using the peak time, go to the recob::Wire, and grab the 
@@ -262,7 +277,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                         // make sure we only look for the peak
                         if (wire_from_hit->Signal().at(i_tick-1) < value
                                 && wire_from_hit->Signal().at(i_tick+1) < value){
-                            std::cout << "found peak!" << std::endl;
+                            //std::cout << "found peak!" << std::endl;
 
                             peak_counter++;
                         }
@@ -272,7 +287,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                 }
 
                 if (peak_counter != 1){
-                    std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
+                    //std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
                     continue;
                 }
 
@@ -285,7 +300,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                 // t0-corrected pulse center is in each bin
                 // if it is then sum the pulses
 
-                std::cout << "maximum tick: " << maximum_tick << std::endl;
+                //std::cout << "maximum tick: " << maximum_tick << std::endl;
 
                 for (int bin_it = 0; bin_it < number_drift_bins; bin_it++){
 
@@ -312,6 +327,13 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                         mean         = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
                         sigma        = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
                         fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
+
+                        h_sigmaSq->Fill(sigma*sigma);
+                        h_pulseHeight->Fill(pulse_height);
+                        h_nWvfmsInBin->Fill(bin_it, 1);
+
+                        h_driftVsigma->Fill(bin_it, sigma);
+                        h_driftVPulseHeight->Fill(bin_it, pulse_height);
 
                         // now find the correction needed to minimise the rms of the sum of the 
                         // histograms
@@ -377,6 +399,19 @@ void diffmod::LArDiffusion::beginJob()
         h_summed_wire_info_per_bin.push_back(tfs->make<TH1D>(histo_name, "", number_ticks_per_bin, waveform_intime_start + (i * number_ticks_per_bin), waveform_intime_start + ((i+1) * number_ticks_per_bin)));
 
     }
+
+    // Troubleshooting histograms
+    //TH1I *h_nTrack = tfs->make<TH1I>("h_nTracks", ";No. Tracks/Event;", 100, 0, 100);
+    h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
+    h_cosTheta = tfs->make<TH1D>("h_cosTheta", ";Track cos(#theta);", 50, -1, 1); 
+    h_startX = tfs->make<TH1D>("h_startX", ";Starting x-Position (cm);", 36, -50, 310);
+    h_sigmaSq = tfs->make<TH1D>("h_sigmaSq", ";#sigma^{2};", 20, 0, 20);
+    h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 100, 0, 100);
+    h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
+    
+    h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma^{2};", 25, 0, 25, 20, 0, 20);
+    h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 256, 10, 0, 100);
+
 
 }
 
