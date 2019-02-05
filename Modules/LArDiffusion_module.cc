@@ -165,8 +165,8 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     number_dropped_ticks  = p.get< int >("NumberDroppedTicks", 2400);
     peak_finder_threshold = p.get< float >("PeakFinderThreshold", 3.0);
 
-    waveform_drift_size  = waveform_intime_end - waveform_intime_start;
-    number_ticks_per_bin = waveform_drift_size/number_drift_bins;
+    waveform_drift_size  = waveform_intime_end - waveform_intime_start; // 4600
+    number_ticks_per_bin = waveform_drift_size/number_drift_bins; // 184
 }
 
 void diffmod::LArDiffusion::analyze(art::Event const & e)
@@ -203,22 +203,41 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
         h_cosTheta->Fill(thisTrack->Theta() );
         h_startX->Fill(thisTrack->Start().X() );
 
-        std::vector< art::Ptr< anab::T0 > > t0_from_track = t0_from_tracks.at(thisTrack.key());
+        std::vector< art::Ptr< anab::T0 > > t0_from_track;
+        if (use_t0tagged_tracks) {
+            //std::vector< art::Ptr< anab::T0 > > t0_from_track = t0_from_tracks.at(thisTrack.key());
+            t0_from_track = t0_from_tracks.at(thisTrack.key());
+        }
+        // If not using t0-tagged sample, use default t0 of 800 microseconds
+        /*
+        else {
+            anab::T0 tmp;
+            tmp.Time() = 800.;
+            art::Ptr<anab::T0> tmpptr = (art::Ptr<anab::T0>) tmp;
+            t0_from_track.resize(1);
+            t0_from_track.at(0) = tmpptr;
+        }
+        */
+
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
-        // if a t0 exists (should, after diffusion filtering), then
+        // if a t0 exists (should, if using diffusion-filtered sample), then
         // go grab it and get the tick correction value
-        if (t0_from_track.size() == 1){
-
-            art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
-
+        if (t0_from_track.size() == 1 || !use_t0tagged_tracks){
             // correction time is the t0 of the track 
             // + the number of ticks we drop
             // + the tick at which we begin to be in time
-            // TODO: modify this to use fhicl where possible
-            t0 = thisT0->Time();
+            if (use_t0tagged_tracks) {
+              art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
+              t0 = thisT0->Time();
+              track_x_correction = t0 * drift_velocity;
+            }
+            else {
+              t0 = 800.; // 800 microsecond default value for single muon samples
+              track_x_correction = 0;
+            }
+
             t0_tick = t0 * 2;
-            track_x_correction = t0 * drift_velocity;
 
             std::cout << "t0: " << t0 << std::endl;
             std::cout << "drift velocity: " << drift_velocity << std::endl;
@@ -233,8 +252,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                 art::Ptr< recob::Hit > thisHit = hits_from_track.at(i_hit);
 
                 // if hit selection is not passed then ignore the hit
-                if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut)) 
-                    continue;
+                if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut)) continue;
 
                 // get wire information for hit
                 art::Ptr< recob::Wire > wire_from_hit = wire_from_hits.at(thisHit.key()).at(0);            
@@ -268,6 +286,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
                     h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
 
+                    // TODO: Check this value. Where does it come from? Is it reasonable?
                     if (value > peak_finder_threshold){
 
                         // define peak search region
@@ -287,32 +306,38 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                 }
 
                 if (peak_counter != 1){
-                    //std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
+                    std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
                     continue;
                 }
 
                 // get peak bin tick after t0 correction
-                int maximum_tick = h_wire_in_window->GetMaximumBin()
-                    + tick_window_left - t0_tick;
+                int maximum_tick;
+                if (use_t0tagged_tracks) 
+                    maximum_tick = h_wire_in_window->GetMaximumBin()
+                        + tick_window_left - t0_tick;
+                else 
+                    maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
 
                 // now the magic: 
                 // loop over the drift bins and check to see if the 
                 // t0-corrected pulse center is in each bin
                 // if it is then sum the pulses
 
-                //std::cout << "maximum tick: " << maximum_tick << std::endl;
-
                 for (int bin_it = 0; bin_it < number_drift_bins; bin_it++){
 
+                    std::cout << "maximum tick: " << maximum_tick << std::endl;
+                    std::cout << "Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin << std::endl;
+                    std::cout << "Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
                     // set binning for histograms
                     h_wire_baseline_corrected->SetBins(h_wire_in_window->GetNbinsX(),
-                            waveform_intime_start + (bin_it) * number_ticks_per_bin,
+                            waveform_intime_start + (bin_it) * number_ticks_per_bin, // 800 + bin_it*184
                             waveform_intime_start + (bin_it + 1) * number_ticks_per_bin);
 
                     if (maximum_tick >= (waveform_intime_start + bin_it * number_ticks_per_bin)
                             && maximum_tick < (waveform_intime_start + (bin_it + 1) * number_ticks_per_bin)) {
 
                         bin_no = bin_it;
+                        std::cout << "bin_no: " << bin_no << std::endl;
 
                         h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
@@ -392,14 +417,7 @@ void diffmod::LArDiffusion::beginJob()
     difftree->Branch("fit_chisq", &fit_chisq);  
     difftree->Branch("waveform_x_correction", &waveform_x_correction);
     difftree->Branch("bin_no", &bin_no);
-
-    for (int i = 0; i < number_drift_bins; i++){
-
-        TString histo_name = Form("histo_bin_%i", i);
-        h_summed_wire_info_per_bin.push_back(tfs->make<TH1D>(histo_name, "", number_ticks_per_bin, waveform_intime_start + (i * number_ticks_per_bin), waveform_intime_start + ((i+1) * number_ticks_per_bin)));
-
-    }
-
+    
     // Troubleshooting histograms
     //TH1I *h_nTrack = tfs->make<TH1I>("h_nTracks", ";No. Tracks/Event;", 100, 0, 100);
     h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
@@ -412,6 +430,12 @@ void diffmod::LArDiffusion::beginJob()
     h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma^{2};", 25, 0, 25, 20, 0, 20);
     h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 256, 10, 0, 100);
 
+    for (int i = 0; i < number_drift_bins; i++){
+
+        TString histo_name = Form("histo_bin_%i", i);
+        h_summed_wire_info_per_bin.push_back(tfs->make<TH1D>(histo_name, "", number_ticks_per_bin, waveform_intime_start + (i * number_ticks_per_bin), waveform_intime_start + ((i+1) * number_ticks_per_bin)));
+
+    }
 
 }
 

@@ -25,6 +25,21 @@ physics:
         diffusionmodule:{
             module_type: "LArDiffusion"
             DriftVelocity: 0.111436
+            UseT0TaggedTracks: false
+            HitGOFCut: 1.1
+            WaveformSize: 6400
+            WaveformIntimeStart: 800
+            WaveformIntimeEnd: 5400
+            NumberDriftBins: 25
+            NumberDroppedTicks: 2400
+            PeakFinderThreshold: 3.0
+
+            TrackLabel: "pandora"
+            WireLabel: "butcher"
+            HitLabel: "gaushit"
+            TrackHitAssn: "pandora"
+            TrackT0Assn: "t0reco"
+            HitWireAssn: "gaushit"
         }
     }
 

@@ -121,7 +121,6 @@ void makePlot(TString* inputFileName){
     // Define fit range around the peak, else ROOT might derp out
     double chisqNdf = 10;
     TF1 *gausfit = new TF1("gausfit", "gaus");
-    std::cout << "Done gaus fit" << std::endl;
     // Chi2 inflation
     while (chisqNdf > 1) {
       waveformHist_us->Fit(gausfit, "", "", lowFit, highFit);
@@ -175,7 +174,7 @@ void makePlot(TString* inputFileName){
   g1->GetYaxis()->SetTitleSize(titleSize);
   g1->GetYaxis()->SetTitleOffset(0.9);
   g1->GetYaxis()->SetLabelSize(labelSize);
-  g1->Draw("alp");
+  g1->Draw("ap");
   g1->SetMarkerStyle(8);
   g1->SetMarkerSize(0.8);
   g1->GetYaxis()->SetRangeUser(0.001, 10.);
