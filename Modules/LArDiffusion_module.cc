@@ -35,6 +35,7 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TTree.h"
+#include "TStyle.h"
 
 // local
 #include "ubana/DiffusionModule/Algorithms/WaveformFunctions.h"
@@ -128,7 +129,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         TH1D *h_pulseHeight;
         TH1D *h_nWvfmsInBin;
 
-        TH2D *h_driftVsigma;
+        TH2D *h_driftVsigmaSq;
         TH2D *h_driftVPulseHeight;
 
         // output histograms
@@ -176,8 +177,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
     event = e.event();
     is_real_data = e.isRealData();
 
-    //std::cout << "[DIFFMOD] --- Processing event " 
-        //<< run << "." << sub_run << "." << event << std::endl;
+    std::cout << "[DIFFMOD] --- Processing event " 
+        << run << "." << sub_run << "." << event << std::endl;
 
     // get track information
     art::Handle< std::vector<recob::Track> > track_handle;
@@ -208,16 +209,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
             //std::vector< art::Ptr< anab::T0 > > t0_from_track = t0_from_tracks.at(thisTrack.key());
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
-        // If not using t0-tagged sample, use default t0 of 800 microseconds
-        /*
-        else {
-            anab::T0 tmp;
-            tmp.Time() = 800.;
-            art::Ptr<anab::T0> tmpptr = (art::Ptr<anab::T0>) tmp;
-            t0_from_track.resize(1);
-            t0_from_track.at(0) = tmpptr;
-        }
-        */
 
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
@@ -239,12 +230,14 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
             t0_tick = t0 * 2;
 
+            /*
             std::cout << "t0: " << t0 << std::endl;
             std::cout << "drift velocity: " << drift_velocity << std::endl;
             std::cout << "track_x_correction: " << track_x_correction << std::endl;
             std::cout << "uncorr: track start x: " << thisTrack->Start().X() << " end x: " << thisTrack->End().X() << std::endl;
             std::cout << "corr+: track start x: " << thisTrack->Start().X()+track_x_correction << " end x: " << thisTrack->End().X()+track_x_correction << std::endl;
             std::cout << "corr-: track start x: " << thisTrack->Start().X()-track_x_correction << " end x: " << thisTrack->End().X()-track_x_correction << std::endl;
+            */
 
             // loop hits
             for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
@@ -287,7 +280,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                     h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
 
                     // TODO: Check this value. Where does it come from? Is it reasonable?
-                    if (value > peak_finder_threshold){
+                    if (value > peak_finder_threshold){ // 3.0 by default
 
                         // define peak search region
                         if (tick_window_left == 0 || tick_window_right == (int)wire_from_hit->Signal().size())
@@ -306,7 +299,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                 }
 
                 if (peak_counter != 1){
-                    std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
+                    //std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
                     continue;
                 }
 
@@ -325,9 +318,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
                 for (int bin_it = 0; bin_it < number_drift_bins; bin_it++){
 
-                    std::cout << "maximum tick: " << maximum_tick << std::endl;
-                    std::cout << "Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin << std::endl;
-                    std::cout << "Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
+                    //std::cout << "maximum tick: " << maximum_tick << std::endl;
+                    //std::cout << "Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin << std::endl;
+                    //std::cout << "Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
                     // set binning for histograms
                     h_wire_baseline_corrected->SetBins(h_wire_in_window->GetNbinsX(),
                             waveform_intime_start + (bin_it) * number_ticks_per_bin, // 800 + bin_it*184
@@ -337,7 +330,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                             && maximum_tick < (waveform_intime_start + (bin_it + 1) * number_ticks_per_bin)) {
 
                         bin_no = bin_it;
-                        std::cout << "bin_no: " << bin_no << std::endl;
+                        //std::cout << "bin_no: " << bin_no << std::endl;
 
                         h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
@@ -357,7 +350,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                         h_pulseHeight->Fill(pulse_height);
                         h_nWvfmsInBin->Fill(bin_it, 1);
 
-                        h_driftVsigma->Fill(bin_it, sigma);
+                        h_driftVsigmaSq->Fill(bin_no*10, sigma*sigma);
                         h_driftVPulseHeight->Fill(bin_it, pulse_height);
 
                         // now find the correction needed to minimise the rms of the sum of the 
@@ -373,6 +366,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                                         number_ticks_per_bin, mean);
 
                         
+                        std::cout << "Waveform x-correction: " << waveform_x_correction << std::endl;
 
                         TH1D* h_waveform_x_correction = 
                             new TH1D("h_waveform_x_correction", 
@@ -390,16 +384,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
                         // finally add to output histograms
                         h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_x_correction);
-
                     }
                 }
-
             }
-
         }
-
     }
-
 }
 
 void diffmod::LArDiffusion::beginJob()
@@ -423,11 +412,11 @@ void diffmod::LArDiffusion::beginJob()
     h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
     h_cosTheta = tfs->make<TH1D>("h_cosTheta", ";Track cos(#theta);", 50, -1, 1); 
     h_startX = tfs->make<TH1D>("h_startX", ";Starting x-Position (cm);", 36, -50, 310);
-    h_sigmaSq = tfs->make<TH1D>("h_sigmaSq", ";#sigma^{2};", 20, 0, 20);
+    h_sigmaSq = tfs->make<TH1D>("h_sigmaSq", ";#sigma^{2};", 100, 0, 10);
     h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 100, 0, 100);
     h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
     
-    h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma^{2};", 25, 0, 25, 20, 0, 20);
+    h_driftVsigmaSq = tfs->make<TH2D>("h_driftVsigmaSq", ";Drift Bin; #sigma^{2};", 25, 0, 256, 100, 0, 20);
     h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 256, 10, 0, 100);
 
     for (int i = 0; i < number_drift_bins; i++){

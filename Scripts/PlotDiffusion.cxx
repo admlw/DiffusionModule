@@ -44,7 +44,7 @@ void makePlot(TString* inputFileName){
   const int WAVEFORM_DRIFT_SIZE=4600; // End tick (5400 - 800)
   const double X_WIDTH=256.0;
   const int NUMBER_DRIFT_BINS=25;
-  const double DRIFT_VELOCITY=0.111436;
+  const double DRIFT_VELOCITY=0.1098;
 
   TFile* fInput = new TFile(*inputFileName, "READ");
   if (!fInput) {
@@ -95,7 +95,7 @@ void makePlot(TString* inputFileName){
       continue;
     }
 
-    // Find fit range for histogram 
+    // Convert tick histogram to microseconds, find fit range 
     TH1D *waveformHist_us = waveformHist;
     waveformHist_us->SetName(waveformHist->GetName() );
     double lowConv = waveformHist_us->GetBinLowEdge(1)*0.5;
@@ -123,33 +123,37 @@ void makePlot(TString* inputFileName){
     TF1 *gausfit = new TF1("gausfit", "gaus");
     // Chi2 inflation
     while (chisqNdf > 1) {
-      waveformHist_us->Fit(gausfit, "", "", lowFit, highFit);
+      waveformHist_us->Fit(gausfit, "q", "", lowFit, highFit);
       chisqNdf = waveformHist_us->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
       increaseError(waveformHist_us);
     }
     
-    /*
-    if (i == 5) {
-      TCanvas *c = new TCanvas;
-      waveformHist_us->Draw("hist");
-      TF1* fitted_function = waveformHist_us->GetFunction("fit");
-      fitted_function->SetLineColor(kRed);
-      fitted_function->Draw("same");
-      TString bin = Form("%i", i);
-      c->SaveAs("testHist_"+bin+".png", "PNG");
+    TCanvas *c_test = new TCanvas("c_test", "c_test", 1000, 700);
+    gStyle->SetOptFit(1);
+    waveformHist_us->Draw("hist");
+    TF1* fitted_function = waveformHist_us->GetFunction("gausfit");
+    if (!fitted_function) {
+        std::cout << "Bad fit function in test histogram" << std::endl;
+        break;
     }
-    std::cout << "Done sample waveform" << std::endl;
-    */
+    fitted_function->SetLineColor(kRed);
+    fitted_function->Draw("same");
+    TString bin = Form("%i", i);
+    c_test->SaveAs("testHist_"+bin+".png", "PNG");
+    delete c_test;
+    //std::cout << "Done sample waveform" << std::endl;
 
     // Get drift distance
     //double driftDistance = waveFuncs.convertTicksToX(peakTickVal);
+    // Mult. by 2 to get microsecond value into ticks for conversion
     double driftDistance = waveFuncs.convertTicksToX(gausfit->GetParameter(1)*2 );
     driftDistances[i] = driftDistance;
+    std::cout << "Drift distance: " << driftDistance << std::endl;
     driftDistancesErrs[i] = 0.5*X_WIDTH/NUMBER_DRIFT_BINS; // x-error is 1/2 bin width for now
 
     // Get sigma^2 (pulse width squared)
-    sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); // Divide by two to convert to microseconds
-    std::cout << "Sigma val, bin " << i << ": " << sigmaVals[i] << std::endl;
+    sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); 
+    std::cout << "Sigma^2 val: " << sigmaVals[i] << std::endl;
     // Note: factor of 2 in error calc from squaring sigma 
     // (see http://ipl.physics.harvard.edu/wp-uploads/2013/03/PS3_Error_Propagation_sp13.pdf)
     sigmaValsErrs[i] = 2*gausfit->GetParError(2); 
@@ -180,6 +184,16 @@ void makePlot(TString* inputFileName){
   g1->GetYaxis()->SetRangeUser(0.001, 10.);
   g1->GetXaxis()->SetRangeUser(0, X_WIDTH);
 
+  // Make sigma plot for verification
+  TCanvas *c_sig = new TCanvas("c_sig", "c_sig", 1000, 700);
+  TH2D *h_sig = (TH2D*)fInput->Get("diffusionmodule/h_driftVsigmaSq");
+  //h_sig->SetMarkerColor(kAzure+2);
+  h_sig->Draw("colz");
+  g1->Draw("p same");
+  c_sig->SaveAs("sigmaPlot.png", "PNG");
+  delete c_sig;
+
+
   // Linear fit to diffusion plot
   TF1* polFit = new TF1("polfit", "pol1");
   g1->Fit("polfit", "", "", 0.1, X_WIDTH);
@@ -205,6 +219,8 @@ void makePlot(TString* inputFileName){
   pt->Draw("same");
 
   c1->SaveAs("DiffusionPlot.png", "PNG");
+  delete c1;
+
   fOutput->Close();
   fInput->Close();
 

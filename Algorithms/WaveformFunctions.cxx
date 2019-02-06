@@ -134,6 +134,7 @@ namespace diffmod {
         centerBin = NUMBER_TICKS_PER_BIN/2;
       }
       else {
+        // First element of vector returned by getSigma gives the mean
         centerBin = summedWaveform->FindBin(waveFuncs.getSigma(summedWaveform).at(0));
       }
 
@@ -186,7 +187,7 @@ namespace diffmod {
       double maxVal = h_rawDCorrected->GetMaximum();
       double fitLowerLimit = 0;
       double fitHigherLimit = 0;
-      double percentageOfHeight = 1;
+      double percentageOfHeight = 2;
       double cutOff = maxVal* percentageOfHeight/100;
 
       for (int i = 0; i < 200; i++){
@@ -224,6 +225,7 @@ namespace diffmod {
         mean = h_rawDCorrected->GetFunction("gaus")->GetParameter(1);
         //mean_err = h_rawDCorrected->GetFunction("gaus")->GetParError(1);
         sigma = h_rawDCorrected->GetFunction("gaus")->GetParameter(2);
+        //std::cout << "Sigma from waveform functions: " << sigma << std::endl;
         chisq = h_rawDCorrected->GetFunction("gaus")->GetChisquare();
 
       }

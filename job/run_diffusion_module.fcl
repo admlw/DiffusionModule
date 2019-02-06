@@ -24,7 +24,7 @@ physics:
     {
         diffusionmodule:{
             module_type: "LArDiffusion"
-            DriftVelocity: 0.111436
+            DriftVelocity: 0.1098 # New MCC9 value! (cm/microsecond)
             UseT0TaggedTracks: false
             HitGOFCut: 1.1
             WaveformSize: 6400
