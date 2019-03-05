@@ -8,18 +8,20 @@ namespace diffmod {
         return true;
       }
       else {
+        /*
         if (hit->Multiplicity() != 1) {
-            //std::cout << "Hit multiplicity is " << hit->Multiplicity() << std::endl;
+            std::cout << "Hit multiplicity is " << hit->Multiplicity() << std::endl;
         }
         if (hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT) {
-            //std::cout << "Hit goodness-of-fit " << hit->GoodnessOfFit() << std::endl;
+            std::cout << "Hit goodness-of-fit " << hit->GoodnessOfFit() << std::endl;
         }
         if (hit->View() != 2) {
-            //std::cout << "Hit view " << hit->View() << std::endl;
+            std::cout << "Hit view " << hit->View() << std::endl;
         }
         if (hit->Channel() < 6150) {
-            //std::cout << "Hit in U-shorted region" << std::endl;
+            std::cout << "Hit in U-shorted region" << std::endl;
         }
+        */
         return false;
       }
     }
@@ -225,7 +227,6 @@ namespace diffmod {
         mean = h_rawDCorrected->GetFunction("gaus")->GetParameter(1);
         //mean_err = h_rawDCorrected->GetFunction("gaus")->GetParError(1);
         sigma = h_rawDCorrected->GetFunction("gaus")->GetParameter(2);
-        //std::cout << "Sigma from waveform functions: " << sigma << std::endl;
         chisq = h_rawDCorrected->GetFunction("gaus")->GetChisquare();
 
       }

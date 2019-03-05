@@ -7,7 +7,7 @@
 // from cetlib version v3_03_01.
 // 
 // authors: A. Lister (a.lister1@lancaster.ac.uk)
-//          A. Mogan (a.mogan@vols.utk.edu)
+//          A. Mogan (amogan@vols.utk.edu)
 //
 ////////////////////////////////////////////////////////////////////////
 
@@ -125,11 +125,11 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         TH1D *h_trackLength;
         TH1D *h_cosTheta;
         TH1D *h_startX;
-        TH1D *h_sigmaSq;
+        TH1D *h_sigma;
         TH1D *h_pulseHeight;
         TH1D *h_nWvfmsInBin;
 
-        TH2D *h_driftVsigmaSq;
+        TH2D *h_driftVsigma;
         TH2D *h_driftVPulseHeight;
 
         // output histograms
@@ -346,11 +346,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                         sigma        = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
                         fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
 
-                        h_sigmaSq->Fill(sigma*sigma);
+                        h_sigma->Fill(sigma);
+                        //std::cout << "Baseline sigma: " << sigma << std::endl;
                         h_pulseHeight->Fill(pulse_height);
                         h_nWvfmsInBin->Fill(bin_it, 1);
 
-                        h_driftVsigmaSq->Fill(bin_no*10, sigma*sigma);
+                        h_driftVsigma->Fill(bin_no*10, sigma);
                         h_driftVPulseHeight->Fill(bin_it, pulse_height);
 
                         // now find the correction needed to minimise the rms of the sum of the 
@@ -366,7 +367,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                                         number_ticks_per_bin, mean);
 
                         
-                        std::cout << "Waveform x-correction: " << waveform_x_correction << std::endl;
 
                         TH1D* h_waveform_x_correction = 
                             new TH1D("h_waveform_x_correction", 
@@ -381,9 +381,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                                     h_wire_baseline_corrected->GetBinContent(ntick+waveform_x_correction));
 
                         difftree->Fill();
+                        //double sigma2 = _waveform_func.getSigma(h_waveform_x_correction).at(1);
+                        //std::cout << "Corrected sigma: " << sigma2 << std::endl;
 
                         // finally add to output histograms
                         h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_x_correction);
+                        //std::cout << "Summed sigma: " << _waveform_func.getSigma(h_summed_wire_info_per_bin.at(bin_it)).at(1) << std::endl;
                     }
                 }
             }
@@ -412,12 +415,12 @@ void diffmod::LArDiffusion::beginJob()
     h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
     h_cosTheta = tfs->make<TH1D>("h_cosTheta", ";Track cos(#theta);", 50, -1, 1); 
     h_startX = tfs->make<TH1D>("h_startX", ";Starting x-Position (cm);", 36, -50, 310);
-    h_sigmaSq = tfs->make<TH1D>("h_sigmaSq", ";#sigma^{2};", 100, 0, 10);
-    h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 100, 0, 100);
+    h_sigma = tfs->make<TH1D>("h_sigma", ";#sigma^{2};", 100, 0, 10);
+    h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 50, 0, 100);
     h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
     
-    h_driftVsigmaSq = tfs->make<TH2D>("h_driftVsigmaSq", ";Drift Bin; #sigma^{2};", 25, 0, 256, 100, 0, 20);
-    h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 256, 10, 0, 100);
+    h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma;", 25, 0, 256, 100, 0, 20);
+    h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 25, 50, 0, 100);
 
     for (int i = 0; i < number_drift_bins; i++){
 

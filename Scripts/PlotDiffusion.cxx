@@ -56,7 +56,6 @@ void makePlot(TString* inputFileName){
     std::cout << "Bad output file" << std::endl;
   }
 
-  TH1D* waveformHist;
   //TH1D* histoNWvfms = (TH1D*)fInput->Get("h_nWvfmsInBin");
   //TH1D* h_peakTime = (TH1D*)fInput->Get("hit_peak_time");
   //TH1D* histoChisq = new TH1D("histoChisq", ";drift bin; chisq", NUMBER_DRIFT_BINS, 0, NUMBER_DRIFT_BINS);
@@ -78,6 +77,8 @@ void makePlot(TString* inputFileName){
   double titleSize = 0.045;
   double labelSize = 0.045;
 
+  TH1D* waveformHist;
+
   // Loop over bins, do the things
   for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
 
@@ -96,42 +97,40 @@ void makePlot(TString* inputFileName){
     }
 
     // Convert tick histogram to microseconds, find fit range 
-    TH1D *waveformHist_us = waveformHist;
-    waveformHist_us->SetName(waveformHist->GetName() );
-    double lowConv = waveformHist_us->GetBinLowEdge(1)*0.5;
-    double highConv = waveformHist_us->GetBinLowEdge(waveformHist_us->GetNbinsX()+1)*0.5;
-    waveformHist_us->GetXaxis()->SetLimits(lowConv, highConv);
+    double lowConv = waveformHist->GetBinLowEdge(1)*0.5;
+    double highConv = waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()+1)*0.5;
+    waveformHist->GetXaxis()->SetLimits(lowConv, highConv);
     double lowFit = 0, highFit = 0;
     
     // Stop fit at 10% of maximum value (arbitrary?)
-    double fitLimit = waveformHist_us->GetMaximum()*0.1;
-    for (int i = waveformHist_us->GetMaximumBin(); i > 0; i--) {
-      if (waveformHist_us->GetBinContent(i) < fitLimit) {
-        lowFit = waveformHist_us->GetBinCenter(i);
+    double fitLimit = waveformHist->GetMaximum()*0.1;
+    for (int i = waveformHist->GetMaximumBin(); i > 0; i--) {
+      if (waveformHist->GetBinContent(i) < fitLimit) {
+        lowFit = waveformHist->GetBinCenter(i);
         break;
       }
     }
-    for (int i = waveformHist_us->GetMaximumBin(); i < waveformHist_us->GetNbinsX(); i++) {
-      if (waveformHist_us->GetBinContent(i) < fitLimit) {
-        highFit = waveformHist_us->GetBinCenter(i);
+    for (int i = waveformHist->GetMaximumBin(); i < waveformHist->GetNbinsX(); i++) {
+      if (waveformHist->GetBinContent(i) < fitLimit) {
+        highFit = waveformHist->GetBinCenter(i);
         break;
       }
     }
 
-    // Define fit range around the peak, else ROOT might derp out
+    // Error inflation
     double chisqNdf = 10;
     TF1 *gausfit = new TF1("gausfit", "gaus");
     // Chi2 inflation
     while (chisqNdf > 1) {
-      waveformHist_us->Fit(gausfit, "q", "", lowFit, highFit);
-      chisqNdf = waveformHist_us->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
-      increaseError(waveformHist_us);
+      waveformHist->Fit(gausfit, "q", "", lowFit, highFit);
+      chisqNdf = waveformHist->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
+      increaseError(waveformHist);
     }
     
     TCanvas *c_test = new TCanvas("c_test", "c_test", 1000, 700);
     gStyle->SetOptFit(1);
-    waveformHist_us->Draw("hist");
-    TF1* fitted_function = waveformHist_us->GetFunction("gausfit");
+    waveformHist->Draw("hist");
+    TF1* fitted_function = waveformHist->GetFunction("gausfit");
     if (!fitted_function) {
         std::cout << "Bad fit function in test histogram" << std::endl;
         break;
@@ -141,14 +140,11 @@ void makePlot(TString* inputFileName){
     TString bin = Form("%i", i);
     c_test->SaveAs("testHist_"+bin+".png", "PNG");
     delete c_test;
-    //std::cout << "Done sample waveform" << std::endl;
 
-    // Get drift distance
-    //double driftDistance = waveFuncs.convertTicksToX(peakTickVal);
-    // Mult. by 2 to get microsecond value into ticks for conversion
+    // Get drift distance; factor of 2 to get microsecond value into ticks for conversion
     double driftDistance = waveFuncs.convertTicksToX(gausfit->GetParameter(1)*2 );
     driftDistances[i] = driftDistance;
-    std::cout << "Drift distance: " << driftDistance << std::endl;
+    //std::cout << "Drift distance: " << driftDistance << std::endl;
     driftDistancesErrs[i] = 0.5*X_WIDTH/NUMBER_DRIFT_BINS; // x-error is 1/2 bin width for now
 
     // Get sigma^2 (pulse width squared)
@@ -170,6 +166,7 @@ void makePlot(TString* inputFileName){
       driftDistances, sigmaVals, 
       driftDistancesErrs, sigmaValsErrs
   );
+  std::cout << "Making TGraph" << std::endl;
   g1->SetTitle("");
   g1->GetXaxis()->SetTitle("Drift Distance (cm)");
   g1->GetXaxis()->SetTitleSize(titleSize);
@@ -186,7 +183,7 @@ void makePlot(TString* inputFileName){
 
   // Make sigma plot for verification
   TCanvas *c_sig = new TCanvas("c_sig", "c_sig", 1000, 700);
-  TH2D *h_sig = (TH2D*)fInput->Get("diffusionmodule/h_driftVsigmaSq");
+  TH2D *h_sig = (TH2D*)fInput->Get("diffusionmodule/h_driftVsigma");
   //h_sig->SetMarkerColor(kAzure+2);
   h_sig->Draw("colz");
   g1->Draw("p same");
