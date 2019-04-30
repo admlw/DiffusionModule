@@ -8,15 +8,15 @@ set( ROOTLIB -L$ENV{ROOTSYS}/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpa
 link_libraries( ${LIB_NAME} -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB} )
 
 art_make( BASENAME_ONLY
-    LIBRARY_NAME     uboonecode_uboone_DiffusionModule
+    LIBRARY_NAME     ubana_DiffusionModule
     LIB_LIBRARIES
     ubobj_Trigger
     HitCosmicTag_Base 
     HitCosmicTag_Algorithms
     ubana_BasicTool_GeoAlgo
     uboone_UBFlashFinder
-    ubana_SelectionTool_OpT0FinderBase
-    ubana_SelectionTool_OpT0FinderAlgorithms
+    #ubana_SelectionTool_OpT0FinderBase
+    #ubana_SelectionTool_OpT0FinderAlgorithms
     larcorealg_Geometry
     larcore_Geometry_Geometry_service
     ubraw_RawData
@@ -62,14 +62,14 @@ art_make( BASENAME_ONLY
     ${ROOT_EG}
 
     MODULE_LIBRARIES
-    uboonecode_uboone_DiffusionModule_Algorithms 
+    ubana_DiffusionModule_Algorithms 
     HitCosmicTag_Base
     HitCosmicTag_Algorithms
     larsim_MCCheater_BackTrackerService_service
     larpandora_LArPandoraInterface
     ubana_BasicTool_GeoAlgo
-    ubana_SelectionTool_OpT0FinderBase
-    ubana_SelectionTool_OpT0FinderAlgorithms
+    #ubana_SelectionTool_OpT0FinderBase
+    #ubana_SelectionTool_OpT0FinderAlgorithms
     uboone_UBFlashFinder
     ubraw_RawData
     larreco_RecoAlg

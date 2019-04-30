@@ -39,12 +39,12 @@ set( hitfinder_tool_lib_list
     )
 
 art_make( BASENAME_ONLY
-          LIBRARY_NAME     uboonecode_uboone_DiffusionModule_Algorithms
+          LIBRARY_NAME     ubana_DiffusionModule_Algorithms
           LIB_LIBRARIES
                    ubana_BasicTool_GeoAlgo
                    uboone_UBFlashFinder
-		   ubana_SelectionTool_OpT0FinderBase
-		   ubana_SelectionTool_OpT0FinderAlgorithms
+                   #ubana_SelectionTool_OpT0FinderBase
+                   #ubana_SelectionTool_OpT0FinderAlgorithms
 	  	   larcorealg_Geometry
 		   larcore_Geometry_Geometry_service
                    ubraw_RawData
@@ -100,8 +100,8 @@ art_make( BASENAME_ONLY
                    #                   larpandora_LArPandoraContent
 
 		   ubana_BasicTool_GeoAlgo
-		   ubana_SelectionTool_OpT0FinderBase
-		   ubana_SelectionTool_OpT0FinderAlgorithms
+       #ubana_SelectionTool_OpT0FinderBase
+       #ubana_SelectionTool_OpT0FinderAlgorithms
                    uboone_UBFlashFinder
 
                    ubraw_RawData
