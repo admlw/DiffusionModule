@@ -210,7 +210,7 @@ void makePlot(TString* inputFileName){
   pt->SetTextSize(0.045);
   pt->SetBorderSize(0);
   TString diffTextMeas = Form("Measured D_{L}: %0.2f +/- %0.2f cm^{2}/s", diffusionValue, diffusionValueErr);
-  TString diffTextInp = Form("Input D_{L}: 6.20 cm^{2}/s");
+  TString diffTextInp = Form("Input D_{L}: 6.40 cm^{2}/s");
   pt->AddText(diffTextMeas);
   pt->AddText(diffTextInp);
   pt->Draw("same");
