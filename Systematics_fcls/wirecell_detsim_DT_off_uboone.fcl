@@ -1,0 +1,6 @@
+#include "wirecell_detsim_uboone.fcl"
+
+process_name: DetsimDToff
+outputs.out1.fileName: "%ifb_%tc_detsim_DToff.root"
+
+#include "sys_var_mcc9_DT_off_uboone.fcl"
