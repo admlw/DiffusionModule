@@ -32,6 +32,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/RecoBase/OpFlash.h"
+#include "art/Persistency/Common/PtrMaker.h"
 
 // ROOT includes
 #include "TTree.h"
@@ -39,6 +40,9 @@
 
 // local includes
 #include "ubana/DiffusionModule/Algorithms/diffusionUtility.h"
+
+// cp
+#include <exception>
 
 class DiffusionFilter;
 
@@ -82,27 +86,12 @@ class DiffusionFilter : public art::EDFilter {
     // flash stuff
     std::vector<recob::OpFlash> opFlashVec;
 
-    double track_length;
-    double track_angle_xz;
-    double track_angle_yz;
-    bool track_has_t0;
-
-    // other stuff
-    int channel;
-    int startTick;
-    int endTick;
-    float peakTime;
-    float sigmaPeakTime;
-    float rms;
-    float peakAmplitude;
-    float sigmaPeakAmplitude;
-    float summedAdc;
-    float hitIntegral;
-    float hitSigmaIntegral;
-    short int multiplicity;
-    short int local_index;
-    float goodnessOfFit;
-    int dof;
+    double allTrackLength;
+    double allTrackThetaXZ;
+    double allTrackThetaYZ;
+    double allTrackTheta;
+    double allTrackPhi;
+    bool isTrackHasT0;
 
 };
 
@@ -131,11 +120,14 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
 void DiffusionFilter::beginJob()
 {
 
-    tree = tfs->make< TTree >("difffiltertree", "diffusion filter tree");
-    tree->Branch("track_length", &track_length);
-    tree->Branch("track_angle_xz", &track_angle_xz);
-    tree->Branch("track_angle_yz", &track_angle_yz);
-    tree->Branch("track_has_t0", &track_has_t0);
+  tree = tfs->make< TTree >("difffiltertree", "diffusion filter tree");
+
+  tree->Branch("allTrackLength", &allTrackLength);
+  tree->Branch("allTrackTheta", &allTrackTheta);
+  tree->Branch("allTrackPhi", &allTrackPhi);
+  tree->Branch("allTrackThetaXZ", &allTrackThetaXZ);
+  tree->Branch("allTrackThetaYZ", &allTrackThetaYZ);
+  tree->Branch("isTrackHasT0", &isTrackHasT0);
 
 }
 
@@ -145,6 +137,8 @@ bool DiffusionFilter::filter(art::Event & e)
 
   art::Handle< std::vector<recob::Track> > trackHandle;
   e.getByLabel(fTrackLabel, trackHandle);
+  std::vector< art::Ptr< recob::Track > > trackPtrVector;
+  art::fill_ptr_vector(trackPtrVector, trackHandle);
 
   art::FindManyP<recob::Hit> hitsFromTracks(trackHandle, e, fTrackLabel);
   art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, fT0Label);
@@ -158,118 +152,94 @@ bool DiffusionFilter::filter(art::Event & e)
   std::unique_ptr< std::vector<recob::Hit> > hitCollection( new std::vector<recob::Hit> );
   std::unique_ptr< art::Assns<recob::Track, recob::Hit> > trackHitAssn( new art::Assns<recob::Track, recob::Hit>);
 
-  for (auto const& thisTrack : (*trackHandle)){
+  art::PtrMaker< recob::Track > makeTrackPtr(e);
+  art::PtrMaker< recob::Hit > makeHitPtr(e);
+  art::PtrMaker< anab::T0 > makeT0Ptr(e);
 
-    track_length = thisTrack.Length();
+  for (size_t iTrack = 0; iTrack < trackPtrVector.size(); iTrack++){
 
-    // track angles
-    // here we've defined it such that fwd/bwd going tracks are xz = 0, +/- pi
-    // downward going tracks are yz = -pi/2
-    //
-    // the tracks we want are xz = 0, +/- pi. yz = 0, +/- pi
-    track_angle_xz = std::atan2(thisTrack.StartDirection().X(), thisTrack.StartDirection().Z()) * 180/TMath::Pi();
-    track_angle_yz = std::atan2(thisTrack.StartDirection().Y(), thisTrack.StartDirection().Z()) * 180/TMath::Pi();
+    art::Ptr< recob::Track > thisTrack = trackPtrVector.at(iTrack);
 
-    std::vector< art::Ptr<anab::T0> > t0s = t0FromTracks.at(thisTrack.ID());
+    allTrackLength = thisTrack->Length();
+    allTrackTheta = thisTrack->Theta();
+    allTrackPhi = thisTrack->Phi();
+    allTrackThetaXZ 
+      = std::atan2(
+          thisTrack->StartDirection().X(), 
+          thisTrack->StartDirection().Z()) 
+      * 180/TMath::Pi();
+    allTrackThetaYZ 
+      = std::atan2(
+          thisTrack->StartDirection().Y(), 
+          thisTrack->StartDirection().Z()) 
+      * 180/TMath::Pi();
+
+    std::vector< art::Ptr<anab::T0> > t0s = t0FromTracks.at(thisTrack.key());
+
+    // make sure that the track has at least one associated t0
+    if (t0s.size() == 1){
+      isTrackHasT0 = true;
+
+      anab::T0 t0ForCollection = *((t0s.at(0)).get());
+      t0Collection->push_back(t0ForCollection);
+    }
+    else if (t0s.size() == 0)
+      isTrackHasT0 = false;
+    else {
+      std::string errMsg(
+          "Track "
+          + std::to_string(thisTrack->ID())
+          + " has "
+          + std::to_string(t0s.size())
+          + " associated t0s. That can't be right");
+      throw std::logic_error(errMsg);
+    }
+
+    recob::Track trackForCollection = *(thisTrack.get());
+    trackCollection->push_back(trackForCollection); 
+
+    art::Ptr< recob::Track > trackForCollectionPtr 
+      = makeTrackPtr(trackCollection->size()-1);
+
+    std::vector< art::Ptr<recob::Hit> > hits 
+      = hitsFromTracks.at(thisTrack->ID());
+    std::vector< art::Ptr< recob::Hit > > hitPtrCollection;
     
-    track_has_t0 = false;
-    
-    if (t0s.size() == 1)
-        track_has_t0 = true;
-   
-    tree->Fill();
+    for (art::Ptr<recob::Hit>& thisHit : hits){
 
-    if (track_length < fTrackLengthCut) continue;
-      std::cout << "Track length: " << track_length << std::endl;
-    
-    if ((track_angle_xz <= fTrackAngleCutXZHigh && track_angle_xz >= fTrackAngleCutXZLow
-          && track_angle_yz <= fTrackAngleCutYZHigh && track_angle_yz >= fTrackAngleCutYZLow) 
-        || (track_angle_xz >= (180 - fTrackAngleCutXZHigh) && (track_angle_xz <= (180 - fTrackAngleCutXZLow)) 
-          && track_angle_yz >= (180 - fTrackAngleCutYZHigh) && track_angle_yz <= (180 - fTrackAngleCutYZLow))){
+      recob::Hit hitForCollection = *(thisHit.get());
+      hitCollection->push_back(hitForCollection);
 
-      std::cout << "Theta_xz: " << track_angle_xz << std::endl;
-      std::cout << "Theta_yz: " << track_angle_yz << std::endl;
+      art::Ptr< recob::Hit > hitForCollectionPtr 
+        = makeHitPtr(hitCollection->size()-1);
+      hitPtrCollection.push_back(hitForCollectionPtr);
 
-      trackCollection->push_back(recob::Track(thisTrack.Trajectory(), 
-            thisTrack.ParticleId(),
-            thisTrack.Chi2(),
-            thisTrack.Ndof(),
-            thisTrack.VertexCovarianceLocal5D(),
-            thisTrack.EndCovarianceLocal5D(),
-            thisTrack.ID()));
-
-      if (t0s.size() != 1) {
-
-        std::cout << "nT0: " << t0s.size() << std::endl; 
-
-        continue;
-      }
-      else {
-
-        t0Collection->push_back(*(t0s.at(0).get()));
-
-        std::cout << ">> T0 INFORMATION "
-          << "\n >> T0 tagged time: " << t0s.at(0)->Time() << std::endl;
-
-      }
-
-      std::vector< art::Ptr<recob::Hit> > hits = hitsFromTracks.at(thisTrack.ID());
-
-      for (auto const& thisHit : hits){
-
-        channel = thisHit->Channel();     
-        startTick = thisHit->StartTick();
-        endTick = thisHit->EndTick();
-        peakTime = thisHit->PeakTime();
-        sigmaPeakTime = thisHit->SigmaPeakTime();
-        rms = thisHit->RMS();
-        peakAmplitude = thisHit->PeakAmplitude();
-        sigmaPeakAmplitude = thisHit->SigmaPeakAmplitude();
-        summedAdc = thisHit->SummedADC();
-        hitIntegral = thisHit->Integral();
-        hitSigmaIntegral = thisHit->SigmaIntegral();
-        multiplicity = thisHit->Multiplicity();
-        local_index = thisHit->LocalIndex();
-        goodnessOfFit = thisHit->GoodnessOfFit();
-        dof = thisHit->DegreesOfFreedom();
-        auto view = thisHit->View();
-        auto signalType = thisHit->SignalType();
-        auto wireID = thisHit->WireID();
-
-        hitCollection->push_back(recob::Hit(channel, 
-              startTick,
-              endTick,
-              peakTime,
-              sigmaPeakTime,
-              rms,
-              peakAmplitude,
-              sigmaPeakAmplitude,
-              summedAdc,
-              hitIntegral,
-              hitSigmaIntegral,
-              multiplicity,
-              local_index,
-              goodnessOfFit,
-              dof,
-              view,
-              signalType,
-              wireID));
-
-      }
-
-      std::cout << "!!Hit collection size: " << hitCollection->size() << std::endl;
-
-      art::Ptr<recob::Track> trkPtr(trackHandle, (size_t)thisTrack.ID());
-
-      util::CreateAssn(*this, e, *trackCollection, *hitCollection, *trackHitAssn, 0, hitCollection->size());
-      util::CreateAssn(*this, e, *trackCollection, *t0Collection, *trackT0Assn, 0, t0Collection->size());
-
-      isPass = true;
-      break;
 
     }
 
+
+    util::CreateAssn(
+        *this, 
+        e, 
+        trackForCollectionPtr, 
+        hitPtrCollection,
+        *trackHitAssn);
+
+    if (isTrackHasT0){
+      art::Ptr< anab::T0 > t0ForCollectionPtr 
+        = makeT0Ptr(t0Collection->size()-1);
+
+      util::CreateAssn(
+          *this,
+          e,
+          t0ForCollectionPtr,
+          trackForCollectionPtr,
+          *trackT0Assn);
+    }
+
   }
+
+  tree->Fill();
 
   e.put(std::move(trackCollection));
   e.put(std::move(t0Collection));
