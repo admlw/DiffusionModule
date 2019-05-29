@@ -1,24 +1,31 @@
 #include "WaveformFunctions.h"
 
 namespace diffmod {
-    bool WaveformFunctions::passesHitSelection(art::Ptr< recob::Hit > hit, double HIT_GOODNESSOFFIT_CUT){
+    bool WaveformFunctions::passesHitSelection(art::Ptr< recob::Hit > hit, 
+        double HIT_GOODNESSOFFIT_CUT, 
+        int HIT_MULTIPLICITY, 
+        int HIT_VIEW, 
+        unsigned int HIT_MIN_CHANNEL){
 
-      if (hit->Multiplicity() == 1 && hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT && hit->View() ==2 && hit->Channel() > 6150) {
+      if (hit->Multiplicity() == HIT_MULTIPLICITY && 
+          hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT && 
+          hit->View() == HIT_VIEW && 
+          hit->Channel() > HIT_MIN_CHANNEL) {
         //std::cout << "Hit passed" << std::endl;
         return true;
       }
       else {
         /*
-        if (hit->Multiplicity() != 1) {
+        if (hit->Multiplicity() != HIT_MULTIPLICITY) {
             std::cout << "Hit multiplicity is " << hit->Multiplicity() << std::endl;
         }
         if (hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT) {
             std::cout << "Hit goodness-of-fit " << hit->GoodnessOfFit() << std::endl;
         }
-        if (hit->View() != 2) {
+        if (hit->View() != HIT_VIEW) {
             std::cout << "Hit view " << hit->View() << std::endl;
         }
-        if (hit->Channel() < 6150) {
+        if (hit->Channel() < HIT_MIN_CHANNEL) {
             std::cout << "Hit in U-shorted region" << std::endl;
         }
         */

@@ -36,6 +36,8 @@
 #include "TH2D.h"
 #include "TTree.h"
 #include "TStyle.h"
+#include "TFile.h"
+#include "TString.h"
 
 // local
 #include "ubana/DiffusionModule/Algorithms/WaveformFunctions.h"
@@ -69,23 +71,31 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
         TTree* difftree;
 
-        // variables
+        // Variables for tree/histograms
         int run;
         int sub_run;
         int event;
         int is_real_data;
 
-        float hit_peak_time;
-        float t0;
-        float t0_tick;
-        float track_x_correction;
+        double drift_time;
+        double track_length;
+        double cos_theta;
+        double theta_xz;
+        double start_x;
+        double hit_peak_time;
+        double t0;
+        double t0_tick;
+        double track_t_correction;
         double pulse_height;
         double mean;
         double sigma;       
         double fit_chisq;   
-        double waveform_x_correction;
+        double waveform_tick_correction;
         int bin_no;
+        int num_waveforms;
+        TVector3 track_start;
 
+        // For calculations 
         int number_ticks_per_bin;
         int tick_window_size;
         int tick_window_left;
@@ -102,12 +112,16 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         std::string track_t0_assn;
         std::string hit_wire_assn;
         bool use_t0tagged_tracks;
+        bool make_sigma_map;
         float drift_velocity;
         double hit_GOF_cut;
+        int hit_multiplicity;
+        int hit_view;
+        int hit_min_channel;
         int waveform_size;
         int waveform_intime_start;
         int waveform_intime_end;
-        int number_drift_bins;
+        int number_time_bins;
         float drift_distance;
         float peak_finder_threshold;
         int number_dropped_ticks;
@@ -122,6 +136,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
         // Define troubleshooting histograms
+        /*
         TH1D *h_trackLength;
         TH1D *h_cosTheta;
         TH1D *h_startX;
@@ -131,9 +146,15 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
         TH2D *h_driftVsigma;
         TH2D *h_driftVPulseHeight;
+        */
 
         // output histograms
         std::vector<TH1D*> h_summed_wire_info_per_bin; 
+        std::vector<TH1D*> h_sigma_hists; 
+        std::vector<TH1D*> h_pulse_height_hists; 
+        TH2D *h_sigma_v_bin;
+        TH2D *h_pulse_height_v_bin;
+        TH2D *h_theta_xz_v_bin;
 
         // other classes
         diffmod::WaveformFunctions _waveform_func;
@@ -157,21 +178,24 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     hit_wire_assn  = p.get< std::string >("HitWireAssn", "gaushit");
 
     use_t0tagged_tracks   = p.get< bool >("UseT0TaggedTracks", true);
+    make_sigma_map        = p.get< bool >("MakeSigmaMap", false);
     drift_velocity        = p.get< float >("DriftVelocity");
     hit_GOF_cut           = p.get< double >("HitGOFCut", 1.1);
+    hit_multiplicity      = p.get< int >("HitMultiplicity", 1);
+    hit_view              = p.get< int >("HitView", 1);
+    hit_min_channel       = p.get< unsigned int >("HitMinChannel", 6150);
     waveform_size         = p.get< int >("WaveformSize", 6400);
     waveform_intime_start = p.get< int >("WaveformIntimeStart", 800);
     waveform_intime_end   = p.get< int >("WaveformIntimeEnd", 5400);
-    number_drift_bins     = p.get< int >("NumberDriftBins", 25);
+    number_time_bins     = p.get< int >("NumberTimeBins", 25);
     number_dropped_ticks  = p.get< int >("NumberDroppedTicks", 2400);
     peak_finder_threshold = p.get< float >("PeakFinderThreshold", 3.0);
 
     waveform_drift_size  = waveform_intime_end - waveform_intime_start; // 4600
-    number_ticks_per_bin = waveform_drift_size/number_drift_bins; // 184
+    number_ticks_per_bin = waveform_drift_size/number_time_bins; // 184
 }
 
-void diffmod::LArDiffusion::analyze(art::Event const & e)
-{
+void diffmod::LArDiffusion::analyze(art::Event const & e) {
     run = e.run();
     sub_run = e.subRun();
     event = e.event();
@@ -200,9 +224,13 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
         art::Ptr< recob::Track > thisTrack = track_ptr_vector.at(i_tr);
 
-        h_trackLength->Fill(thisTrack->Length() );
-        h_cosTheta->Fill(thisTrack->Theta() );
-        h_startX->Fill(thisTrack->Start().X() );
+        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
+        theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
+
+        track_length = thisTrack->Length();
+        cos_theta = thisTrack->Theta();
+        track_start = thisTrack->Start<TVector3>();
+        start_x = track_start.X();
 
         std::vector< art::Ptr< anab::T0 > > t0_from_track;
         if (use_t0tagged_tracks) {
@@ -214,152 +242,165 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 
         // if a t0 exists (should, if using diffusion-filtered sample), then
         // go grab it and get the tick correction value
-        if (t0_from_track.size() == 1 || !use_t0tagged_tracks){
-            // correction time is the t0 of the track 
-            // + the number of ticks we drop
-            // + the tick at which we begin to be in time
-            if (use_t0tagged_tracks) {
-              art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
-              t0 = thisT0->Time();
-              track_x_correction = t0 * drift_velocity;
+
+        if (t0_from_track.size() == 1 && use_t0tagged_tracks) {
+          art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
+          t0 = thisT0->Time();
+          //track_x_correction = t0 * drift_velocity;
+        }
+        else {
+          // TODO check units. Is it 800 ticks or microseconds? Want this in ticks
+          t0 = 800.; // 800 microsecond default value for single muon samples
+          //track_x_correction = 0;
+        }
+
+        t0_tick = t0 * 2;
+
+        /*
+         correction time is the t0 of the track 
+         + the number of ticks we drop
+         + the tick at which we begin to be in time
+        std::cout << "t0: " << t0 << std::endl;
+        std::cout << "drift velocity: " << drift_velocity << std::endl;
+        std::cout << "track_x_correction: " << track_x_correction << std::endl;
+        std::cout << "uncorr: track start x: " << thisTrack->Start().X() << " end x: " << thisTrack->End().X() << std::endl;
+        std::cout << "corr+: track start x: " << thisTrack->Start().X()+track_x_correction << " end x: " << thisTrack->End().X()+track_x_correction << std::endl;
+        std::cout << "corr-: track start x: " << thisTrack->Start().X()-track_x_correction << " end x: " << thisTrack->End().X()-track_x_correction << std::endl;
+        */
+
+        // loop hits
+        for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
+
+            art::Ptr< recob::Hit > thisHit = hits_from_track.at(i_hit);
+
+            // if hit selection is not passed then ignore the hit
+            if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut, hit_multiplicity, hit_view, hit_min_channel)) continue;
+
+            // get wire information for hit
+            art::Ptr< recob::Wire > wire_from_hit = wire_from_hits.at(thisHit.key()).at(0);            
+            hit_peak_time = thisHit->PeakTime(); 
+            tick_window_size = number_ticks_per_bin;
+            tick_window_left  = hit_peak_time - tick_window_size/2;
+            tick_window_right = hit_peak_time + tick_window_size/2;
+
+            // make sure that the window stops at the edge of the waveform
+            if (tick_window_left < 0){
+                tick_window_left = 0;
+                tick_window_size = tick_window_right; 
             }
-            else {
-              t0 = 800.; // 800 microsecond default value for single muon samples
-              track_x_correction = 0;
+            if (tick_window_right > waveform_size){
+                tick_window_right = waveform_size;
+                tick_window_size = tick_window_right - tick_window_left;
             }
 
-            t0_tick = t0 * 2;
+            h_wire_in_window->SetBins(tick_window_size, tick_window_left, tick_window_right);
 
-            /*
-            std::cout << "t0: " << t0 << std::endl;
-            std::cout << "drift velocity: " << drift_velocity << std::endl;
-            std::cout << "track_x_correction: " << track_x_correction << std::endl;
-            std::cout << "uncorr: track start x: " << thisTrack->Start().X() << " end x: " << thisTrack->End().X() << std::endl;
-            std::cout << "corr+: track start x: " << thisTrack->Start().X()+track_x_correction << " end x: " << thisTrack->End().X()+track_x_correction << std::endl;
-            std::cout << "corr-: track start x: " << thisTrack->Start().X()-track_x_correction << " end x: " << thisTrack->End().X()-track_x_correction << std::endl;
-            */
+            // using the peak time, go to the recob::Wire, and grab the 
+            // information within some number of ticks of the peak
+            //
+            // also check to ensure that we only have one peak above
+            // threshold
+            int peak_counter = 0;
+            for (int i_tick = tick_window_left; i_tick < tick_window_right; i_tick++){
 
-            // loop hits
-            for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
+                float value = wire_from_hit->Signal().at(i_tick);
 
-                art::Ptr< recob::Hit > thisHit = hits_from_track.at(i_hit);
+                h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
 
-                // if hit selection is not passed then ignore the hit
-                if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut)) continue;
+                if (value > peak_finder_threshold) {
 
-                // get wire information for hit
-                art::Ptr< recob::Wire > wire_from_hit = wire_from_hits.at(thisHit.key()).at(0);            
-                hit_peak_time = thisHit->PeakTime(); 
-                tick_window_size = number_ticks_per_bin;
-                tick_window_left  = hit_peak_time - tick_window_size/2;
-                tick_window_right = hit_peak_time + tick_window_size/2;
+                    // define peak search region
+                    if (tick_window_left == 0 || tick_window_right == (int)wire_from_hit->Signal().size())
+                      continue;
 
-                // make sure that the window stops at the edge of the waveform
-                if (tick_window_left < 0){
-                    tick_window_left = 0;
-                    tick_window_size = tick_window_right; 
-                }
-                //if (tick_window_left > waveform_size){
-                if (tick_window_right > waveform_size){
-                    tick_window_right = waveform_size;
-                    tick_window_size = tick_window_right - tick_window_left;
-                }
-
-                h_wire_in_window->SetBins(tick_window_size, tick_window_left, tick_window_right);
-
-                // using the peak time, go to the recob::Wire, and grab the 
-                // information within some number of ticks of the peak
-                //
-                // also check to ensure that we only have one peak above
-                // threshold
-                int peak_counter = 0;
-                for (int i_tick = tick_window_left; i_tick < tick_window_right; i_tick++){
-
-                    float value = wire_from_hit->Signal().at(i_tick);
-
-                    h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
-
-                    // TODO: Check this value. Where does it come from? Is it reasonable?
-                    if (value > peak_finder_threshold){ // 3.0 by default
-
-                        // define peak search region
-                        if (tick_window_left == 0 || tick_window_right == (int)wire_from_hit->Signal().size())
-                          continue;
-
-                        // make sure we only look for the peak
-                        if (wire_from_hit->Signal().at(i_tick-1) < value
-                                && wire_from_hit->Signal().at(i_tick+1) < value){
-                            //std::cout << "found peak!" << std::endl;
-
-                            peak_counter++;
-                        }
-
+                    // make sure we only look for the peak
+                    if (wire_from_hit->Signal().at(i_tick-1) < value
+                        && wire_from_hit->Signal().at(i_tick+1) < value){
+                        //std::cout << "found peak!" << std::endl;
+                        peak_counter++;
                     }
 
                 }
 
-                if (peak_counter != 1){
-                    //std::cout << "peak counter: " << peak_counter << ", skipping channel" << std::endl;
-                    continue;
-                }
+            }
 
-                // get peak bin tick after t0 correction
-                int maximum_tick;
-                if (use_t0tagged_tracks) 
-                    maximum_tick = h_wire_in_window->GetMaximumBin()
-                        + tick_window_left - t0_tick;
-                else 
-                    maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
+            if (peak_counter != 1) continue;
 
-                // now the magic: 
-                // loop over the drift bins and check to see if the 
-                // t0-corrected pulse center is in each bin
-                // if it is then sum the pulses
+            // get peak bin tick after t0 correction
+            int maximum_tick;
+            if (use_t0tagged_tracks) {
+                maximum_tick = h_wire_in_window->GetMaximumBin()
+                    + tick_window_left - t0_tick;
+            }
+            else {
+                maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
+            }
 
-                for (int bin_it = 0; bin_it < number_drift_bins; bin_it++){
+            // now the magic: 
+            // loop over the drift bins and check to see if the 
+            // t0-corrected pulse center is in each bin
+            // if it is then sum the pulses
 
-                    //std::cout << "maximum tick: " << maximum_tick << std::endl;
-                    //std::cout << "Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin << std::endl;
-                    //std::cout << "Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
-                    // set binning for histograms
-                    h_wire_baseline_corrected->SetBins(h_wire_in_window->GetNbinsX(),
-                            waveform_intime_start + (bin_it) * number_ticks_per_bin, // 800 + bin_it*184
-                            waveform_intime_start + (bin_it + 1) * number_ticks_per_bin);
+            for (int bin_it = 0; bin_it < number_time_bins; bin_it++){
 
-                    if (maximum_tick >= (waveform_intime_start + bin_it * number_ticks_per_bin)
-                            && maximum_tick < (waveform_intime_start + (bin_it + 1) * number_ticks_per_bin)) {
+                /*
+                std::cout << "[DIFFMOD]: Bin no. " << bin_it << std::endl;
+                std::cout << "[DIFFMOD]: Maximum tick: " << maximum_tick << std::endl;
+                std::cout << "[DIFFMOD]: Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin << std::endl;
+                std::cout << "[DIFFMOD]: Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
+                */
 
-                        bin_no = bin_it;
-                        //std::cout << "bin_no: " << bin_no << std::endl;
+                // Set binning for histograms
+                h_wire_baseline_corrected->SetBins(h_wire_in_window->GetNbinsX(),
+                        waveform_intime_start + (bin_it) * number_ticks_per_bin, // 800 + bin_it*184
+                        waveform_intime_start + (bin_it + 1) * number_ticks_per_bin);
 
-                        h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
+                if (maximum_tick >= (waveform_intime_start + bin_it * number_ticks_per_bin)
+                        && maximum_tick < (waveform_intime_start + (bin_it + 1) * number_ticks_per_bin)) {
 
-                        // apply baseline correction
-                        h_wire_baseline_corrected = 
-                            _waveform_func.applyGlobalBaselineCorrection(
-                                    h_wire_in_window, 
-                                    h_wire_baseline_corrected); 
+                    bin_no = bin_it;
 
-                        // calculate sigma
-                        pulse_height = h_wire_baseline_corrected->GetMaximum();
-                        mean         = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
-                        sigma        = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
-                        fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
+                    h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
-                        h_sigma->Fill(sigma);
-                        //std::cout << "Baseline sigma: " << sigma << std::endl;
-                        h_pulseHeight->Fill(pulse_height);
-                        h_nWvfmsInBin->Fill(bin_it, 1);
+                    // apply baseline correction
+                    h_wire_baseline_corrected = 
+                        _waveform_func.applyGlobalBaselineCorrection(
+                                h_wire_in_window, 
+                                h_wire_baseline_corrected); 
 
-                        h_driftVsigma->Fill(bin_no*10, sigma);
-                        h_driftVPulseHeight->Fill(bin_it, pulse_height);
+                    // calculate sigma
+                    pulse_height = h_wire_baseline_corrected->GetMaximum();
+                    mean         = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
+                    sigma        = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
+                    fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
+
+                    if (make_sigma_map) {
+                        h_pulse_height_hists.at(bin_no)->Fill(pulse_height);
+                        /*
+                        h_pulse_height_v_bin->Fill(bin_no, pulse_height);
+                        if (theta_xz < 90)
+                            h_theta_xz_v_bin->Fill(bin_it, theta_xz);
+                        if (theta_xz > 90)
+                            h_theta_xz_v_bin->Fill(bin_it, 180-theta_xz);
+                        h_sigma_hists.at(bin_no)->Fill(sigma);
+                        h_sigma_v_bin->Fill(bin_it, sigma);
+                        */
+                    }
+
+                    else {
+                        //h_sigma->Fill(sigma);
+                        //h_pulseHeight->Fill(pulse_height);
+                        //h_nWvfmsInBin->Fill(bin_it, 1);
+
+                        //h_driftVsigma->Fill(bin_no*10, sigma);
+                        //h_driftVPulseHeight->Fill(bin_it, pulse_height);
 
                         // now find the correction needed to minimise the rms of the sum of the 
                         // histograms
                         if (h_summed_wire_info_per_bin.at(bin_it)->Integral() == 0) 
-                            waveform_x_correction = 0;
+                            waveform_tick_correction = 0;
                         else
-                            waveform_x_correction = 
+                            waveform_tick_correction = 
                                 _waveform_func.findXCorrection(
                                         _waveform_func, 
                                         h_summed_wire_info_per_bin.at(bin_it), 
@@ -367,26 +408,25 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
                                         number_ticks_per_bin, mean);
 
                         
-
-                        TH1D* h_waveform_x_correction = 
-                            new TH1D("h_waveform_x_correction", 
+                        TH1D* h_waveform_tick_correction = 
+                            new TH1D("h_waveform_tick_correction", 
                                     "", 
                                     number_ticks_per_bin, 
                                     h_wire_baseline_corrected->GetXaxis()->GetXmin(), 
                                     h_wire_baseline_corrected->GetXaxis()->GetXmax()); 
 
                         for (int ntick = 1; ntick <= h_wire_baseline_corrected->GetNbinsX(); ntick++)
-                            h_waveform_x_correction->SetBinContent(
+                            h_waveform_tick_correction->SetBinContent(
                                     ntick, 
-                                    h_wire_baseline_corrected->GetBinContent(ntick+waveform_x_correction));
+                                    h_wire_baseline_corrected->GetBinContent(ntick+waveform_tick_correction));
 
                         difftree->Fill();
-                        //double sigma2 = _waveform_func.getSigma(h_waveform_x_correction).at(1);
+                        //double sigma2 = _waveform_func.getSigma(h_waveform_tick_correction).at(1);
                         //std::cout << "Corrected sigma: " << sigma2 << std::endl;
 
                         // finally add to output histograms
-                        h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_x_correction);
-                        //std::cout << "Summed sigma: " << _waveform_func.getSigma(h_summed_wire_info_per_bin.at(bin_it)).at(1) << std::endl;
+                        h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_tick_correction);
+                        //std::cout << "[DIFFMOD]: Summed sigma: " << _waveform_func.getSigma(h_summed_wire_info_per_bin.at(bin_it)).at(1) << std::endl;
                     }
                 }
             }
@@ -397,36 +437,53 @@ void diffmod::LArDiffusion::analyze(art::Event const & e)
 void diffmod::LArDiffusion::beginJob()
 {
 
-    difftree = tfs->make<TTree>("difftree", "diffusion tree");
-    difftree->Branch("hit_peak_time", &hit_peak_time);
-    difftree->Branch("hit_peak_time", &hit_peak_time);
-    difftree->Branch("t0", &t0);
-    difftree->Branch("t0_tick", &t0_tick);
-    difftree->Branch("track_x_correction", &track_x_correction);
-    difftree->Branch("pulse_height", &pulse_height);
-    difftree->Branch("mean", &mean);        
-    difftree->Branch("sigma", &sigma);       
-    difftree->Branch("fit_chisq", &fit_chisq);  
-    difftree->Branch("waveform_x_correction", &waveform_x_correction);
-    difftree->Branch("bin_no", &bin_no);
-    
-    // Troubleshooting histograms
-    //TH1I *h_nTrack = tfs->make<TH1I>("h_nTracks", ";No. Tracks/Event;", 100, 0, 100);
-    h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
-    h_cosTheta = tfs->make<TH1D>("h_cosTheta", ";Track cos(#theta);", 50, -1, 1); 
-    h_startX = tfs->make<TH1D>("h_startX", ";Starting x-Position (cm);", 36, -50, 310);
-    h_sigma = tfs->make<TH1D>("h_sigma", ";#sigma^{2};", 100, 0, 10);
-    h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 50, 0, 100);
-    h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
-    
-    h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma;", 25, 0, 256, 100, 0, 20);
-    h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 25, 50, 0, 100);
+    if (!make_sigma_map) {
+        difftree = tfs->make<TTree>("difftree", "diffusion tree");
+        difftree->Branch("drift_time", &drift_time);
+        difftree->Branch("track_length", &track_length);
+        difftree->Branch("cos_theta", &cos_theta);
+        difftree->Branch("theta_xz", &theta_xz);
+        difftree->Branch("start_x", &start_x);
+        difftree->Branch("hit_peak_time", &hit_peak_time);
+        difftree->Branch("t0", &t0);
+        difftree->Branch("t0_tick", &t0_tick);
+        difftree->Branch("pulse_height", &pulse_height);
+        difftree->Branch("mean", &mean);        
+        difftree->Branch("sigma", &sigma);       
+        difftree->Branch("fit_chisq", &fit_chisq);  
+        difftree->Branch("waveform_tick_correction", &waveform_tick_correction);
+        difftree->Branch("bin_no", &bin_no);
+        difftree->Branch("num_waveforms", &num_waveforms);
+        
+        // Troubleshooting histograms
+        /*
+        //TH1I *h_nTrack = tfs->make<TH1I>("h_nTracks", ";No. Tracks/Event;", 100, 0, 100);
+        h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
+        h_cosTheta = tfs->make<TH1D>("h_cosTheta", ";Track cos(#theta);", 50, -1, 1); 
+        h_startX = tfs->make<TH1D>("h_startX", ";Starting x-Position (cm);", 36, -50, 310);
+        h_sigma = tfs->make<TH1D>("h_sigma", ";#sigma^{2};", 100, 0, 10);
+        h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 50, 0, 100);
+        h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
+        
+        h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma;", 25, 0, 256, 100, 0, 20);
+        h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 25, 50, 0, 100);
+        */
 
-    for (int i = 0; i < number_drift_bins; i++){
+        for (int i = 0; i < number_time_bins; i++){
+            TString histo_name = Form("summed_waveform_bin_%i", i);
+            h_summed_wire_info_per_bin.push_back(tfs->make<TH1D>(histo_name, "", number_ticks_per_bin, waveform_intime_start + (i * number_ticks_per_bin), waveform_intime_start + ((i+1) * number_ticks_per_bin)));
 
-        TString histo_name = Form("histo_bin_%i", i);
-        h_summed_wire_info_per_bin.push_back(tfs->make<TH1D>(histo_name, "", number_ticks_per_bin, waveform_intime_start + (i * number_ticks_per_bin), waveform_intime_start + ((i+1) * number_ticks_per_bin)));
-
+        }
+    }
+    else {
+        //tfs->make<TFile>("sigma_map.root", "RECREATE");
+        h_sigma_hists.resize(number_time_bins);
+        h_pulse_height_hists.resize(number_time_bins);
+        for (int n = 0; n < number_time_bins; n++) {
+            TString pulseHeightHistName = Form("pulse_height_%i", n);
+            h_pulse_height_hists.push_back(tfs->make<TH1D>(pulseHeightHistName, ";Pulse Height;", 200, 0, 100);
+        }
+      
     }
 
 }

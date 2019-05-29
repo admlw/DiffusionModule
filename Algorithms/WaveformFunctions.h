@@ -25,7 +25,8 @@ namespace diffmod {
 
     class WaveformFunctions {
         public: 
-          bool passesHitSelection(art::Ptr< recob::Hit > hit, double HIT_GOODNESSOFFIT_CUT); 
+          bool passesHitSelection(art::Ptr< recob::Hit > hit, double HIT_GOODNESSOFFIT_CUT, 
+              int HIT_MULTIPILCITY, int HIT_VIEW, unsigned int HIT_MIN_CHANNEL); 
 
           double convertXToTicks(double xPosition, int WAVEFORM_DRIFT_START_TICK, int WAVEFORM_DRIFT_SIZE, double X_WIDTH);
 
