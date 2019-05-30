@@ -196,8 +196,8 @@ namespace diffmod {
       double maxVal = h_rawDCorrected->GetMaximum();
       double fitLowerLimit = 0;
       double fitHigherLimit = 0;
-      double percentageOfHeight = 2;
-      double cutOff = maxVal* percentageOfHeight/100;
+      double percentageOfHeight = 2.;
+      double cutOff = maxVal* percentageOfHeight/100.;
 
       for (int i = 0; i < 200; i++){
 
@@ -232,7 +232,6 @@ namespace diffmod {
       if (h_rawDCorrected->GetFunction("gaus")){
 
         mean = h_rawDCorrected->GetFunction("gaus")->GetParameter(1);
-        //mean_err = h_rawDCorrected->GetFunction("gaus")->GetParError(1);
         sigma = h_rawDCorrected->GetFunction("gaus")->GetParameter(2);
         chisq = h_rawDCorrected->GetFunction("gaus")->GetChisquare();
 

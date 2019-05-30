@@ -135,20 +135,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         // after baseline correcting
         TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
-        // Define troubleshooting histograms
-        /*
-        TH1D *h_trackLength;
-        TH1D *h_cosTheta;
-        TH1D *h_startX;
-        TH1D *h_sigma;
-        TH1D *h_pulseHeight;
-        TH1D *h_nWvfmsInBin;
-
-        TH2D *h_driftVsigma;
-        TH2D *h_driftVPulseHeight;
-        */
-
-        // output histograms
+        // Output histograms
         std::vector<TH1D*> h_summed_wire_info_per_bin; 
         std::vector<TH1D*> h_sigma_hists; 
         std::vector<TH1D*> h_pulse_height_hists; 
@@ -251,7 +238,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         else {
           // TODO check units. Is it 800 ticks or microseconds? Want this in ticks
           t0 = 800.; // 800 microsecond default value for single muon samples
-          //track_x_correction = 0;
         }
 
         t0_tick = t0 * 2;
@@ -316,7 +302,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                     // make sure we only look for the peak
                     if (wire_from_hit->Signal().at(i_tick-1) < value
                         && wire_from_hit->Signal().at(i_tick+1) < value){
-                        //std::cout << "found peak!" << std::endl;
                         peak_counter++;
                     }
 
@@ -375,22 +360,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                     fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
 
                     if (make_sigma_map) {
+                        h_sigma_hists.at(bin_no)->Fill(sigma);
+                        h_sigma_v_bin->Fill(bin_no, sigma);
                         h_pulse_height_hists.at(bin_no)->Fill(pulse_height);
-                        /*
                         h_pulse_height_v_bin->Fill(bin_no, pulse_height);
                         if (theta_xz < 90)
                             h_theta_xz_v_bin->Fill(bin_it, theta_xz);
                         if (theta_xz > 90)
                             h_theta_xz_v_bin->Fill(bin_it, 180-theta_xz);
-                        h_sigma_hists.at(bin_no)->Fill(sigma);
-                        h_sigma_v_bin->Fill(bin_it, sigma);
-                        */
                     }
 
                     else {
-                        //h_sigma->Fill(sigma);
-                        //h_pulseHeight->Fill(pulse_height);
-                        //h_nWvfmsInBin->Fill(bin_it, 1);
 
                         //h_driftVsigma->Fill(bin_no*10, sigma);
                         //h_driftVPulseHeight->Fill(bin_it, pulse_height);
@@ -421,8 +401,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                                     h_wire_baseline_corrected->GetBinContent(ntick+waveform_tick_correction));
 
                         difftree->Fill();
-                        //double sigma2 = _waveform_func.getSigma(h_waveform_tick_correction).at(1);
-                        //std::cout << "Corrected sigma: " << sigma2 << std::endl;
 
                         // finally add to output histograms
                         h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_tick_correction);
@@ -437,6 +415,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 void diffmod::LArDiffusion::beginJob()
 {
 
+        h_sigma_v_bin = tfs->make<TH2D>("h_sigma_v_bin", ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", number_time_bins, 0, number_time_bins, 100, 0, 10);
+        h_pulse_height_v_bin = tfs->make<TH2D>("h_pulse_height_v_bin", ";Bin no. ; Pulse Height (Arb. Units);", number_time_bins, 0, number_time_bins, 200, 0, 100);
+        h_theta_xz_v_bin = tfs->make<TH2D>("h_theta_xz_v_bin", ";Bin no. ; #theta_{xz} (Deg.);", number_time_bins, 0, number_time_bins, 100, 0, 20);
+        
     if (!make_sigma_map) {
         difftree = tfs->make<TTree>("difftree", "diffusion tree");
         difftree->Branch("drift_time", &drift_time);
@@ -454,6 +436,7 @@ void diffmod::LArDiffusion::beginJob()
         difftree->Branch("waveform_tick_correction", &waveform_tick_correction);
         difftree->Branch("bin_no", &bin_no);
         difftree->Branch("num_waveforms", &num_waveforms);
+        
         
         // Troubleshooting histograms
         /*
@@ -476,12 +459,11 @@ void diffmod::LArDiffusion::beginJob()
         }
     }
     else {
-        //tfs->make<TFile>("sigma_map.root", "RECREATE");
-        h_sigma_hists.resize(number_time_bins);
-        h_pulse_height_hists.resize(number_time_bins);
         for (int n = 0; n < number_time_bins; n++) {
+            TString sigmaHistName = Form("sigma_%i", n);
+            h_sigma_hists.push_back(tfs->make<TH1D>(sigmaHistName, ";#sigma_{t};", 200, 0, 100) );
             TString pulseHeightHistName = Form("pulse_height_%i", n);
-            h_pulse_height_hists.push_back(tfs->make<TH1D>(pulseHeightHistName, ";Pulse Height;", 200, 0, 100);
+            h_pulse_height_hists.push_back(tfs->make<TH1D>(pulseHeightHistName, ";Pulse Height;", 200, 0, 100) );
         }
       
     }
