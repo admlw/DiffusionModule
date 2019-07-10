@@ -5,6 +5,8 @@ diffusionconfig:{
   DriftVelocity: 0.1098 # New MCC9 value! (cm/microsecond)
   UseT0TaggedTracks: false
   MakeSigmaMap: false
+  SigmaCut: 1.0
+  PulseHeightCut: 100.0
   HitGOFCut: 1.1
   HitMultiplicity: 1
   HitView: 2 # Collection plane

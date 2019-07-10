@@ -231,7 +231,7 @@ namespace diffmod {
 
       if (h_rawDCorrected->GetFunction("gaus")){
 
-        mean = h_rawDCorrected->GetFunction("gaus")->GetParameter(1);
+        mean =  h_rawDCorrected->GetFunction("gaus")->GetParameter(1);
         sigma = h_rawDCorrected->GetFunction("gaus")->GetParameter(2);
         chisq = h_rawDCorrected->GetFunction("gaus")->GetChisquare();
 
@@ -247,10 +247,15 @@ namespace diffmod {
       return returnVector;
     }
 
-    double getMedian(TH1D* h){
+    double WaveformFunctions::getMedian(TH1D* h){
 
       double quantile = 0.5;
       double median; 
+
+      if(h->Integral() == 0) {
+          median = 0.0;
+          return median;
+      }
 
       h->GetQuantiles(1,&median,&quantile);                                
 

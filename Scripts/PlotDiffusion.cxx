@@ -2,48 +2,102 @@
 using std::cout;
 using std::endl;
 
-void increaseError(TH1D *h);
-
-// Define necessary WaveformFunctions (see ../Algorithms/WaveformFunctions.*)
-namespace diffmod {
-
-    double WaveformFunctions::convertXToTicks(double xPosition){
-
-      const int WAVEFORM_DRIFT_START_TICK=800;
-      const int WAVEFORM_DRIFT_SIZE=4600; // End tick (5400 - 800)
-      const double X_WIDTH=256.0;
-
-      double tick = WAVEFORM_DRIFT_START_TICK + (((double)WAVEFORM_DRIFT_SIZE/X_WIDTH)*xPosition);
-      return tick;
-
-    }
-
-    double WaveformFunctions::convertTicksToX(int tickVal) {
-
-      const int WAVEFORM_DRIFT_START_TICK=800;
-      const int WAVEFORM_DRIFT_SIZE=4600; // End tick (5400 - 800)
-      const double X_WIDTH=256.0;
-
-      double xPos = (tickVal - WAVEFORM_DRIFT_START_TICK) / (WAVEFORM_DRIFT_SIZE/X_WIDTH); 
-      return xPos;
-
-    }
-}
-
 void increaseError(TH1D* h){
   for (int i = 0; i < h->GetNbinsX(); i++){
     h->SetBinError(i+1, h->GetBinError(i+1)*1.02);
   }
 }
 
+std::pair<int, int> getBinXError(TH1D* driftHisto){
+
+    std::pair<int, int> errLowHigh;
+    double lowBinVal = driftHisto->GetBinContent(1);
+    double highBinVal = driftHisto->GetBinContent(driftHisto->GetNbinsX());
+    double midBinVal = driftHisto->GetBinContent((int)driftHisto->GetNbinsX()/2);
+
+    // deal with U-shaped bins
+    if (lowBinVal > midBinVal && highBinVal > midBinVal){
+        errLowHigh.first = driftHisto->GetBinLowEdge(1);
+        errLowHigh.second = driftHisto->GetBinLowEdge(driftHisto->GetNbinsX());
+     
+        return errLowHigh;
+    }
+   
+    // find max bin nearest mean
+    double driftMean = driftHisto->GetMean();
+    double driftStdDev = driftHisto->GetStdDev();
+    double maximum = 0;
+    double maximumbin = 0;
+    for (int i = 0; i < driftHisto->GetNbinsX(); i++){
+       double binVal = driftHisto->GetBinContent(i);
+       if (binVal > maximum){
+           maximum = binVal;
+           maximumbin = i;
+       }
+       if (binVal == maximum){
+           if (std::abs(driftMean - driftHisto->GetBinCenter(i)) < std::abs(driftMean - driftHisto->GetBinCenter(maximumbin))){
+               maximum = binVal;
+               maximumbin = i;
+           }
+       }
+
+    }
+   
+    int driftMaxBin = driftHisto->GetMaximumBin();
+    double driftMaxBinContent = driftHisto->GetBinContent(driftMaxBin);
+    double driftIntegral = driftHisto->Integral();
+    
+    int lowBin = driftMaxBin;
+    int highBin = driftMaxBin;
+     
+    double fractionOfTotal = driftMaxBinContent/driftIntegral; 
+      
+    while (fractionOfTotal < 0.68){
+       
+        // find whether to step left or right
+        lowBinVal = driftHisto->GetBinContent(lowBin-1);
+        highBinVal = driftHisto->GetBinContent(highBin+1);
+        
+        if (lowBinVal > highBinVal && lowBin > 1){
+            lowBin = lowBin-1;
+            fractionOfTotal+=(lowBinVal/driftIntegral);
+        }
+        else if (highBin < driftHisto->GetNbinsX()){
+            highBin = highBin+1;
+            fractionOfTotal+=(highBinVal/driftIntegral);
+        }
+        else if(highBinVal == 0  && lowBinVal == 0){
+            lowBin = lowBin-1;
+            highBin = highBin+1;
+        }
+        else{
+            std::cout << "---ERRORS ARE NOT GOOD" << std::endl;
+            std::cout << "lowBinVal: " << lowBinVal << " highBinVal: " << highBinVal << std::endl;
+            std::cout << "lowBin: " << lowBin << " highBin: " << highBin << std::endl;
+            std::cout << "nBins: " << driftHisto->GetNbinsX() << std::endl;
+        }
+
+        //std::cout << "lowbin: " << lowBin << " highbin: " << highBin << std::endl; 
+ 
+    }
+  
+    errLowHigh.first = driftHisto->GetBinLowEdge(lowBin+1);
+    errLowHigh.second = driftHisto->GetBinLowEdge(highBin-1);
+  
+    return errLowHigh;
+}
+
 
 void makePlot(TString* inputFileName){
 
   // Initialization 
-  const int WAVEFORM_DRIFT_START_TICK=800;
-  const int WAVEFORM_DRIFT_SIZE=4600; // End tick (5400 - 800)
-  const double X_WIDTH=256.0;
+  const int waveformDriftStartTick=800;
+  const int waveformDriftEndTick=5400;
+  const int WAVEFORM_DRIFT_SIZE=waveformDriftEndTick-waveformDriftStartTick; // End tick (5400 - 800)
   const int NUMBER_DRIFT_BINS=25;
+  int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
+  const int minTime = waveformDriftStartTick/2;
+  const int maxTime = waveformDriftEndTick/2;
   const double DRIFT_VELOCITY=0.1098;
 
   TFile* fInput = new TFile(*inputFileName, "READ");
@@ -56,16 +110,21 @@ void makePlot(TString* inputFileName){
     std::cout << "Bad output file" << std::endl;
   }
 
-  //TH1D* histoNWvfms = (TH1D*)fInput->Get("h_nWvfmsInBin");
+  TH1D* histoNWvfms = (TH1D*)fInput->Get("DiffusionModule/h_nWvfmsInBin");
+  //TH1D* histoNWvfms = (TH1D*)fInput->Get("diffusionmodule/h_nWvfmsInBin");
+  if (!histoNWvfms) {
+    std::cout << "Bad waveform hist" << std::endl;
+    return;
+  }
   //TH1D* h_peakTime = (TH1D*)fInput->Get("hit_peak_time");
   //TH1D* histoChisq = new TH1D("histoChisq", ";drift bin; chisq", NUMBER_DRIFT_BINS, 0, NUMBER_DRIFT_BINS);
   //h_wire_in_window
   //h_wire_baseline_corrected
 
-  double driftDistances[NUMBER_DRIFT_BINS];
-  //double driftDistancesErrsLow[NUMBER_DRIFT_BINS];
-  //double driftDistancesErrsHigh[NUMBER_DRIFT_BINS];
-  double driftDistancesErrs[NUMBER_DRIFT_BINS]; // bin width/2 for now
+  double driftTimes[NUMBER_DRIFT_BINS];
+  //double driftTimesErrsLow[NUMBER_DRIFT_BINS];
+  //double driftTimesErrsHigh[NUMBER_DRIFT_BINS];
+  double driftTimesErrs[NUMBER_DRIFT_BINS]; // bin width/2 for now
   double sigmaVals[NUMBER_DRIFT_BINS]; 
   //double sigmaValsErrsLow[NUMBER_DRIFT_BINS];
   //double sigmaValsErrsHigh[NUMBER_DRIFT_BINS];
@@ -73,25 +132,24 @@ void makePlot(TString* inputFileName){
 
   diffmod::WaveformFunctions waveFuncs;
   double lowConv, highConv; // Used for conversion from ticks to microseconds
-  int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
-  double titleSize = 0.045;
-  double labelSize = 0.045;
+  double titleSize = 0.1;
+  double textSize = 0.07;
+  double labelSize = 0.07;
 
   TH1D* waveformHist;
 
   // Loop over bins, do the things
   for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
 
-    std::cout << "************* BIN NUMBER " << i << " **********************" << std::endl;
-
-    //if (histoNWvfms->GetBinContent(i+1) < 500) continue;
+    if (histoNWvfms->GetBinContent(i+1) < 500) continue;
 
     fOutput->cd();
-    waveformHist = (TH1D*)fInput->Get(Form("diffusionmodule/histo_bin_%i", i));
+    waveformHist = (TH1D*)fInput->Get(Form("DiffusionModule/summed_waveform_bin_%i", i));
+    //waveformHist = (TH1D*)fInput->Get(Form("diffusionmodule/histo_bin_%i", i));
     // Ensure histogram is filled
     if (waveformHist->Integral() == 0){
       std::cout << "bin " << i << " is empty!" << std::endl;
-      driftDistances[i] = -1; 
+      driftTimes[i] = -1; 
       sigmaVals[i] = 0;
       continue;
     }
@@ -102,7 +160,7 @@ void makePlot(TString* inputFileName){
     waveformHist->GetXaxis()->SetLimits(lowConv, highConv);
     double lowFit = 0, highFit = 0;
     
-    // Stop fit at 10% of maximum value (arbitrary?)
+    // Stop fit at 10% of maximum value 
     double fitLimit = waveformHist->GetMaximum()*0.1;
     for (int i = waveformHist->GetMaximumBin(); i > 0; i--) {
       if (waveformHist->GetBinContent(i) < fitLimit) {
@@ -127,61 +185,72 @@ void makePlot(TString* inputFileName){
       increaseError(waveformHist);
     }
     
-    TCanvas *c_test = new TCanvas("c_test", "c_test", 1000, 700);
-    gStyle->SetOptFit(1);
-    waveformHist->Draw("hist");
-    TF1* fitted_function = waveformHist->GetFunction("gausfit");
-    if (!fitted_function) {
-        std::cout << "Bad fit function in test histogram" << std::endl;
-        break;
-    }
-    fitted_function->SetLineColor(kRed);
-    fitted_function->Draw("same");
-    TString bin = Form("%i", i);
-    c_test->SaveAs("testHist_"+bin+".png", "PNG");
-    delete c_test;
-
-    // Get drift distance; factor of 2 to get microsecond value into ticks for conversion
-    double driftDistance = waveFuncs.convertTicksToX(gausfit->GetParameter(1)*2 );
-    driftDistances[i] = driftDistance;
-    //std::cout << "Drift distance: " << driftDistance << std::endl;
-    driftDistancesErrs[i] = 0.5*X_WIDTH/NUMBER_DRIFT_BINS; // x-error is 1/2 bin width for now
+    // Get drift time
+    driftTimes[i] = gausfit->GetParameter(1);
+    // Two factors of 0.5: one for converting to mus, one for halving the bin width
+    driftTimesErrs[i] = 0.5*0.5*NUMBER_TICKS_PER_BIN; // x-error is 1/2 bin width for now
 
     // Get sigma^2 (pulse width squared)
     sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); 
-    std::cout << "Sigma^2 val: " << sigmaVals[i] << std::endl;
-    // Note: factor of 2 in error calc from squaring sigma 
-    // (see http://ipl.physics.harvard.edu/wp-uploads/2013/03/PS3_Error_Propagation_sp13.pdf)
-    sigmaValsErrs[i] = 2*gausfit->GetParError(2); 
+    sigmaValsErrs[i] = sqrt(2)*std::pow(waveformHist->GetFunction("gausfit")->GetParameter(2),2)*(waveformHist->GetFunction("gausfit")->GetParError(2))/(waveformHist->GetFunction("gausfit")->GetParameter(2));
+    //std::cout << "Sigma^2 val: " << sigmaVals[i] << std::endl;
+    //cout << "Sigma vals errs " << i << " = " << sigmaValsErrs[i] << endl;
 
   }
 
-  TCanvas *c1 = new TCanvas("c1", "c1", 1000, 700);
-  TPad *topPad = new TPad("topPad", "", 0.005, 0.005, 0.995, 0.995);
-  //TPad *midPad = new TPad("midPad", "", 0.005, 0.3, 0.995, 0.6);
-  //TPad *botPad = new TPad("botPad", "", 0.005, 0.005, 0.995, 0.3);
-  //topPad->cd();
+  // Checking fit range
+  /*
+  for (int k = 0; k < 12; k++) {
+      if (sigmaVals[k]!=0) sigmaVals[k] = 0;
+      if (driftTimes[k]!=-1) driftTimes[k] = -1;
+      //sigmaValsErrs[k] = 0;
+      //driftTimesErrs[k] = -1;
+  }
+  */
+
+
+  TCanvas *c1 = new TCanvas("c1", "c1", 1000, 1000);
+  gStyle->SetTextFont(22);
+  TPad *topPad = new TPad("topPad", "", 0.005, 0.58, 0.995, 0.995);
+  TPad *midPad = new TPad("midPad", "", 0.005, 0.33, 0.995, 0.57);
+  TPad *botPad = new TPad("botPad", "", 0.005, 0.005, 0.995, 0.33);
+  topPad->SetBottomMargin(0.01);
+  topPad->SetLeftMargin(0.15);
+  midPad->SetLeftMargin(0.15);
+  midPad->SetTopMargin(0.07);
+  midPad->SetBottomMargin(0.05);
+  midPad->SetGridy(1);
+  botPad->SetTopMargin(0.07);
+  botPad->SetLeftMargin(0.15);
+  botPad->SetBottomMargin(0.35);
+  botPad->SetLineStyle(2);
+  topPad->Draw();
+  midPad->Draw();
+  botPad->Draw();
+
+  topPad->cd();
+
   // Diffusion plot
-  TGraphErrors *g1 = new TGraphErrors(NUMBER_DRIFT_BINS,
-      driftDistances, sigmaVals, 
-      driftDistancesErrs, sigmaValsErrs
+  TGraphErrors *gr1 = new TGraphErrors(NUMBER_DRIFT_BINS,
+      driftTimes, sigmaVals, 
+      driftTimesErrs, sigmaValsErrs
   );
-  std::cout << "Making TGraph" << std::endl;
-  g1->SetTitle("");
-  g1->GetXaxis()->SetTitle("Drift Distance (cm)");
-  g1->GetXaxis()->SetTitleSize(titleSize);
-  g1->GetXaxis()->SetLabelSize(labelSize);
-  g1->GetYaxis()->SetTitle("#sigma_{t}^{2} (#mus)");
-  g1->GetYaxis()->SetTitleSize(titleSize);
-  g1->GetYaxis()->SetTitleOffset(0.9);
-  g1->GetYaxis()->SetLabelSize(labelSize);
-  g1->Draw("ap");
-  g1->SetMarkerStyle(8);
-  g1->SetMarkerSize(0.8);
-  g1->GetYaxis()->SetRangeUser(0.001, 10.);
-  g1->GetXaxis()->SetRangeUser(0, X_WIDTH);
+  gr1->SetTitle("");
+  //g1->GetXaxis()->SetTitle("Drift Time (#mus)");
+  gr1->GetXaxis()->SetTitleSize(titleSize);
+  gr1->GetXaxis()->SetLabelSize(labelSize);
+  gr1->GetYaxis()->SetTitle("#sigma_{t}^{2} (#mus)");
+  gr1->GetYaxis()->SetTitleSize(titleSize);
+  gr1->GetYaxis()->SetTitleOffset(0.5);
+  gr1->GetYaxis()->SetLabelSize(labelSize);
+  gr1->Draw("ap");
+  gr1->SetMarkerStyle(8);
+  gr1->SetMarkerSize(0.8);
+  gr1->GetYaxis()->SetRangeUser(0.001, 10.);
+  gr1->GetXaxis()->SetRangeUser(minTime, maxTime);
 
   // Make sigma plot for verification
+  /*
   TCanvas *c_sig = new TCanvas("c_sig", "c_sig", 1000, 700);
   TH2D *h_sig = (TH2D*)fInput->Get("diffusionmodule/h_driftVsigma");
   //h_sig->SetMarkerColor(kAzure+2);
@@ -189,33 +258,95 @@ void makePlot(TString* inputFileName){
   g1->Draw("p same");
   c_sig->SaveAs("sigmaPlot.png", "PNG");
   delete c_sig;
+  */
 
 
   // Linear fit to diffusion plot
   TF1* polFit = new TF1("polfit", "pol1");
-  g1->Fit("polfit", "", "", 0.1, X_WIDTH);
-  g1->GetFunction("polfit")->SetLineColor(kRed);
-  g1->GetFunction("polfit")->Draw("same");
+  gr1->Fit("polfit", "", "", minTime, maxTime);
+  gr1->GetFunction("polfit")->SetLineColor(kRed);
+  gr1->GetFunction("polfit")->Draw("same");
 
   // Get diffusion value from slope of linear fit
-  double diffusionValue = polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 3) * 1000000/2;
-  std::cout << "Slope = " << polFit->GetParameter(1) << std::endl;
-  std::cout << "Slope * v^3 = " << polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 3) << std::endl; 
-  double diffusionValueErr = polFit->GetParError(1)*std::pow(DRIFT_VELOCITY, 3) * 1000000/2;
+  //double diffusionValue = polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 2) * 1000000/2;
+  double diffusionValue = polFit->GetParameter(1)*DRIFT_VELOCITY*DRIFT_VELOCITY* 1000000/2;
+  //std::cout << "Slope = " << polFit->GetParameter(1) << std::endl;
+  //std::cout << "Slope * v^2 = " << polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 2) << std::endl; 
+  double diffusionValueErr = polFit->GetParError(1)*std::pow(DRIFT_VELOCITY, 2) * 1000000/2;
   cout << "Diffusion value: " << diffusionValue << " +/- " << diffusionValueErr << endl; 
 
-  TPaveText *pt = new TPaveText(0.12, 0.75, 0.5, 0.9, "NDC");
+  TPaveText *pt = new TPaveText(0.16, 0.55, 0.6, 0.87, "NDC");
   pt->SetTextAlign(12);
   pt->SetFillStyle(0);
-  pt->SetTextSize(0.045);
+  pt->SetTextSize(textSize);
   pt->SetBorderSize(0);
   TString diffTextMeas = Form("Measured D_{L}: %0.2f +/- %0.2f cm^{2}/s", diffusionValue, diffusionValueErr);
   TString diffTextInp = Form("Input D_{L}: 6.40 cm^{2}/s");
+  TString chi2 = Form("#chi^{2}/NDF: %0.2f", polFit->GetChisquare()/polFit->GetNDF() );
+  TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(400), polFit->GetParError(0) );
   pt->AddText(diffTextMeas);
   pt->AddText(diffTextInp);
+  pt->AddText(chi2);
+  pt->AddText(sigma0);
   pt->Draw("same");
 
+  midPad->cd();
+  double sigmaValsBottom[NUMBER_DRIFT_BINS]; 
+  double sigmaValsErrsBottom[NUMBER_DRIFT_BINS];
+  TF1* f2 = (TF1*)gr1->GetFunction("polfit");
+
+  for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
+
+    sigmaValsBottom[i] = (sigmaVals[i] - (f2->Eval(driftTimes[i])))/f2->Eval(driftTimes[i]);
+    sigmaValsErrsBottom[i] = (double)sigmaValsErrs[i]/f2->Eval(driftTimes[i]);
+    //cout << "Sigma errs " << i << ": " << sigmaValsErrs[i] << std::endl;
+    //cout << "Sigma errs " << i << ": " << sigmaValsErrsBottom[i] << std::endl;
+
+  }
+
+  TGraphErrors* gr2 = new TGraphErrors(NUMBER_DRIFT_BINS, 
+                                       driftTimes, sigmaValsBottom, 
+                                       driftTimesErrs, sigmaValsErrsBottom);
+  gr2->GetYaxis()->SetRangeUser(-0.05, 0.05);
+  gr2->SetMarkerStyle(8);
+  gr2->SetMarkerSize(0.8);
+  gr2->SetTitle("");
+  gr2->GetYaxis()->SetTitle("(#sigma_{t}^{2} - Fit)/Fit");
+  gr2->GetXaxis()->SetLimits(minTime, maxTime);
+  gr2->GetXaxis()->SetTitleSize(0);
+  gr2->GetXaxis()->SetLabelSize(0);
+  gr2->GetYaxis()->SetNdivisions(505);
+  gr2->GetYaxis()->SetTitleOffset(0.35);
+  gr2->GetYaxis()->SetTitleSize(titleSize*1.3);
+  gr2->GetYaxis()->SetLabelSize(labelSize*1.3);
+
+  gr2->Draw("ap");
+
+  TF1* f3 = new TF1("f3", "0.", minTime, maxTime);
+  f3->Draw("same");
+
+  botPad->cd();
+  gStyle->SetOptStat(0);
+  histoNWvfms->GetXaxis()->SetTitle("Drift Time (#mus)");
+  histoNWvfms->SetFillColor(kBlack);
+  histoNWvfms->SetLineColor(kBlack);
+  histoNWvfms->GetXaxis()->SetTitleSize(titleSize);
+  histoNWvfms->GetXaxis()->SetLabelSize(labelSize);
+  histoNWvfms->GetXaxis()->SetNdivisions(505);
+  histoNWvfms->GetYaxis()->SetTitle("No. Waveforms");
+  histoNWvfms->GetYaxis()->SetMaxDigits(3); 
+  histoNWvfms->GetYaxis()->SetNdivisions(304); 
+  histoNWvfms->GetYaxis()->SetTitleOffset(0.5);
+  histoNWvfms->SetMinimum(0);
+  histoNWvfms->GetYaxis()->SetTitleSize(titleSize);
+  histoNWvfms->GetYaxis()->SetLabelSize(labelSize);
+  histoNWvfms->GetXaxis()->SetLimits(minTime, maxTime);
+
+  histoNWvfms->Draw();
+
+  c1->cd();
   c1->SaveAs("DiffusionPlot.png", "PNG");
+  c1->SaveAs("DiffusionPlot.pdf", "PDF");
   delete c1;
 
   fOutput->Close();
@@ -226,6 +357,10 @@ void makePlot(TString* inputFileName){
 int main(int argv, char** argc){
 
   TString* inputFileName = new TString(argc[1]);
+  if (!inputFileName) {
+    cout << "No input file specified" << endl;
+    return 1;
+  }
 
   makePlot(inputFileName);
   return 0;
