@@ -139,6 +139,7 @@ void makePlot(TString* inputFileName){
   TH1D* waveformHist;
 
   // Loop over bins, do the things
+  //for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
   for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
 
     if (histoNWvfms->GetBinContent(i+1) < 500) continue;
@@ -193,21 +194,22 @@ void makePlot(TString* inputFileName){
     // Get sigma^2 (pulse width squared)
     sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); 
     sigmaValsErrs[i] = sqrt(2)*std::pow(waveformHist->GetFunction("gausfit")->GetParameter(2),2)*(waveformHist->GetFunction("gausfit")->GetParError(2))/(waveformHist->GetFunction("gausfit")->GetParameter(2));
-    //std::cout << "Sigma^2 val: " << sigmaVals[i] << std::endl;
-    //cout << "Sigma vals errs " << i << " = " << sigmaValsErrs[i] << endl;
 
   }
 
-  // Checking fit range
+  // For checking fit range
   /*
-  for (int k = 0; k < 12; k++) {
-      if (sigmaVals[k]!=0) sigmaVals[k] = 0;
-      if (driftTimes[k]!=-1) driftTimes[k] = -1;
-      //sigmaValsErrs[k] = 0;
-      //driftTimesErrs[k] = -1;
+  for (int k = 12; k < NUMBER_DRIFT_BINS; k++) {
+      if (sigmaVals[k]!=0) {
+        sigmaVals[k] = 0;
+        sigmaValsErrs[k] = 0;
+      }
+      if (driftTimes[k]!=-1) {
+        driftTimes[k] = -1;
+        driftTimesErrs[k] = -1;
+      }
   }
   */
-
 
   TCanvas *c1 = new TCanvas("c1", "c1", 1000, 1000);
   gStyle->SetTextFont(22);
@@ -236,7 +238,7 @@ void makePlot(TString* inputFileName){
       driftTimesErrs, sigmaValsErrs
   );
   gr1->SetTitle("");
-  //g1->GetXaxis()->SetTitle("Drift Time (#mus)");
+  //gr1->GetXaxis()->SetTitle("Drift Time (#mus)");
   gr1->GetXaxis()->SetTitleSize(titleSize);
   gr1->GetXaxis()->SetLabelSize(labelSize);
   gr1->GetYaxis()->SetTitle("#sigma_{t}^{2} (#mus)");
@@ -246,23 +248,13 @@ void makePlot(TString* inputFileName){
   gr1->Draw("ap");
   gr1->SetMarkerStyle(8);
   gr1->SetMarkerSize(0.8);
-  gr1->GetYaxis()->SetRangeUser(0.001, 10.);
+  //gr1->GetYaxis()->SetRangeUser(0.001, 10.);
+  gr1->GetYaxis()->SetRangeUser(0.001, 12.);
   gr1->GetXaxis()->SetRangeUser(minTime, maxTime);
-
-  // Make sigma plot for verification
-  /*
-  TCanvas *c_sig = new TCanvas("c_sig", "c_sig", 1000, 700);
-  TH2D *h_sig = (TH2D*)fInput->Get("diffusionmodule/h_driftVsigma");
-  //h_sig->SetMarkerColor(kAzure+2);
-  h_sig->Draw("colz");
-  g1->Draw("p same");
-  c_sig->SaveAs("sigmaPlot.png", "PNG");
-  delete c_sig;
-  */
-
 
   // Linear fit to diffusion plot
   TF1* polFit = new TF1("polfit", "pol1");
+  //gr1->Fit("polfit", "", "", minTime, 1450);
   gr1->Fit("polfit", "", "", minTime, maxTime);
   gr1->GetFunction("polfit")->SetLineColor(kRed);
   gr1->GetFunction("polfit")->Draw("same");

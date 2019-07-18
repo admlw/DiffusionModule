@@ -81,6 +81,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         double track_length;
         double cos_theta;
         double theta_xz;
+        double theta_yz;
         double start_x;
         double hit_peak_time;
         double t0;
@@ -137,6 +138,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         // after baseline correcting
         TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
+        TH1D *h_single_waveform;
         TH1D *h_nWvfmsInBin;
 
         // For dynamic sigma cut
@@ -151,6 +153,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         TH2D *h_sigma_v_bin_postcut;
         TH2D *h_pulse_height_v_bin;
         TH2D *h_theta_xz_v_bin;
+        TH2D *h_theta_yz_v_bin;
 
         // other classes
         diffmod::WaveformFunctions _waveform_func;
@@ -257,6 +260,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
         ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
         theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
+        theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
         track_length = thisTrack->Length();
         cos_theta = thisTrack->Theta();
@@ -397,6 +401,24 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                                 h_wire_in_window, 
                                 h_wire_baseline_corrected); 
 
+                    //std::cout << "baseline corrected max " << h_wire_baseline_corrected->GetMaximum() << std::endl;
+                    //std::cout << "baseline corrected maxbin " << h_wire_baseline_corrected->GetMaximumBin() << std::endl;
+
+                    // Save individual waveform for plotting
+                    if (run == 1 && sub_run == 785 && event == 35281) {
+                        double lowVal = 0., highVal = 0.;
+                        lowVal = h_wire_in_window->GetBinLowEdge(1);
+                        highVal = h_wire_in_window->GetBinLowEdge(h_wire_in_window->GetNbinsX() );
+                        h_single_waveform->GetXaxis()->SetLimits(lowVal, highVal);
+                        //h_single_waveform->GetXaxis()->SetLimits(4300, 4500);
+                        h_single_waveform->GetYaxis()->SetRangeUser(-1, 8);
+                        for (int i_wv = 1; i_wv < 101; i_wv++) {
+                            h_single_waveform->SetBinContent(i_wv, h_wire_in_window->GetBinContent(i_wv+50) );
+                            //std::cout << "wvfm bin " << i_wv << " has " << h_single_waveform->GetBinContent(i_wv) << std::endl;
+                            //std::cout << "Should be " << h_wire_in_window->GetBinContent(i_wv) << std::endl;
+                        }
+                    }   
+
                     // calculate sigma
                     pulse_height = h_wire_baseline_corrected->GetMaximum();
                     mean         = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
@@ -412,6 +434,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                             h_theta_xz_v_bin->Fill(bin_no, theta_xz);
                         if (theta_xz > 90)
                             h_theta_xz_v_bin->Fill(bin_no, 180-theta_xz);
+                        if (theta_yz < 90)
+                            h_theta_yz_v_bin->Fill(bin_no, theta_yz);
+                        if (theta_yz > 90)
+                            h_theta_yz_v_bin->Fill(bin_no, 180-theta_yz);
                     }
 
                     else {
@@ -445,6 +471,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                             h_theta_xz_v_bin->Fill(bin_no, theta_xz);
                         if (theta_xz > 90)
                             h_theta_xz_v_bin->Fill(bin_no, 180-theta_xz);
+                        if (theta_yz < 90)
+                            h_theta_yz_v_bin->Fill(bin_no, theta_yz);
+                        if (theta_yz > 90)
+                            h_theta_yz_v_bin->Fill(bin_no, 180-theta_yz);
 
                         h_nWvfmsInBin->Fill(bin_it, 1);
 
@@ -492,6 +522,7 @@ void diffmod::LArDiffusion::beginJob()
         h_sigma_v_bin_postcut = tfs->make<TH2D>("h_sigma_v_bin_postcut", ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", number_time_bins, 0, number_time_bins, 100, 0, 10);
         h_pulse_height_v_bin = tfs->make<TH2D>("h_pulse_height_v_bin", ";Bin no. ; Pulse Height (Arb. Units);", number_time_bins, 0, number_time_bins, 200, 0, 100);
         h_theta_xz_v_bin = tfs->make<TH2D>("h_theta_xz_v_bin", ";Bin no. ; #theta_{xz} (Deg.);", number_time_bins, 0, number_time_bins, 100, 0, 20);
+        h_theta_yz_v_bin = tfs->make<TH2D>("h_theta_yz_v_bin", ";Bin no. ; #theta_{yz} (Deg.);", number_time_bins, 0, number_time_bins, 100, 0, 20);
         
     if (!make_sigma_map) {
         difftree = tfs->make<TTree>("difftree", "diffusion tree");
@@ -499,6 +530,7 @@ void diffmod::LArDiffusion::beginJob()
         difftree->Branch("track_length", &track_length);
         difftree->Branch("cos_theta", &cos_theta);
         difftree->Branch("theta_xz", &theta_xz);
+        difftree->Branch("theta_yz", &theta_yz);
         difftree->Branch("start_x", &start_x);
         difftree->Branch("hit_peak_time", &hit_peak_time);
         difftree->Branch("t0", &t0);
@@ -511,6 +543,7 @@ void diffmod::LArDiffusion::beginJob()
         difftree->Branch("bin_no", &bin_no);
         difftree->Branch("num_waveforms", &num_waveforms);
 
+        h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
         h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
         
         // Troubleshooting histograms
