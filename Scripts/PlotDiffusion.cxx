@@ -96,8 +96,8 @@ void makePlot(TString* inputFileName){
   const int WAVEFORM_DRIFT_SIZE=waveformDriftEndTick-waveformDriftStartTick; // End tick (5400 - 800)
   const int NUMBER_DRIFT_BINS=25;
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
-  const int minTime = waveformDriftStartTick/2;
-  const int maxTime = waveformDriftEndTick/2;
+  const int minTime = waveformDriftStartTick/2; // 400 microseconds
+  const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
   const double DRIFT_VELOCITY=0.1098;
 
   TFile* fInput = new TFile(*inputFileName, "READ");
@@ -108,10 +108,21 @@ void makePlot(TString* inputFileName){
   TFile *fOutput = new TFile("fits_"+*inputFileName, "RECREATE");
   if (!fOutput) {
     std::cout << "Bad output file" << std::endl;
+    return;
   }
 
-  TH1D* histoNWvfms = (TH1D*)fInput->Get("DiffusionModule/h_nWvfmsInBin");
-  //TH1D* histoNWvfms = (TH1D*)fInput->Get("diffusionmodule/h_nWvfmsInBin");
+  TCanvas *c = new TCanvas();
+  TH1D *h_correctedTicks = new TH1D("h_correctedTicks", "", 1150, 800, 5400); // Range is 800 to 5400
+  TTree *t = (TTree*)fInput->Get("DiffusionModule/difftree");
+  if (!t) {
+      cout << "Bad tree" << endl;
+      return;
+  }
+  c->cd();
+  t->Draw("hit_peak_time>>h_correctedTicks");
+  c->SaveAs("hit_peak_time.png", "PNG");
+
+  TH1D *histoNWvfms = (TH1D*)fInput->Get("DiffusionModule/h_nWvfmsInBin");
   if (!histoNWvfms) {
     std::cout << "Bad waveform hist" << std::endl;
     return;
@@ -142,7 +153,13 @@ void makePlot(TString* inputFileName){
   //for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
   for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
 
-    if (histoNWvfms->GetBinContent(i+1) < 500) continue;
+    std::cout << "Bin " << i << std::endl;
+    std::cout << "-------------------------------" << std::endl;
+
+    if (histoNWvfms->GetBinContent(i+1) < 500) {
+        std::cout << "Skipping bin " << i << " due to low stats" << std::endl;
+        continue;
+    }
 
     fOutput->cd();
     waveformHist = (TH1D*)fInput->Get(Form("DiffusionModule/summed_waveform_bin_%i", i));
@@ -176,24 +193,61 @@ void makePlot(TString* inputFileName){
       }
     }
 
+    TF1 *gausfit = new TF1("gausfit", "gaus");
+    waveformHist->Fit(gausfit, "q", "", lowFit, highFit);
+    /*
+    double chisq = waveformHist->GetFunction("gausfit")->GetChisquare();
+    double Ndf = gausfit->GetNDF();
+    double chisqNdf = gausfit->GetChisquare()/gausfit->GetNDF();
+    std::cout << "chi^2 = " <<  chisq << std::endl;
+    std::cout << "NDF = " <<  Ndf << std::endl;
+    std::cout << "chi^2/NDF = " <<  chisqNdf << std::endl;
+    */
+
     // Error inflation
     double chisqNdf = 10;
-    TF1 *gausfit = new TF1("gausfit", "gaus");
     // Chi2 inflation
     while (chisqNdf > 1) {
       waveformHist->Fit(gausfit, "q", "", lowFit, highFit);
       chisqNdf = waveformHist->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
       increaseError(waveformHist);
     }
+
+    double chisq = waveformHist->GetFunction("gausfit")->GetChisquare();
+    double Ndf = gausfit->GetNDF();
+    std::cout << "chi^2 = " <<  chisq << std::endl;
+    std::cout << "NDF = " <<  Ndf << std::endl;
+    std::cout << "chi^2/NDF = " <<  (double)chisq/Ndf << std::endl;
+
+    /*
+    std::cout << "Setting waveformHist bounds to " << waveformHist->GetBinLowEdge(0) - waveformDriftStartTick << 
+                 " and " << waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1)-waveformDriftStartTick << std::endl;
+    h_correctedTicks->GetXaxis()->SetRangeUser(waveformHist->GetBinLowEdge(0) - waveformDriftStartTick, 
+                                               waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1)-waveformDriftStartTick);
+    */
+    // Factors of two to convert
+    h_correctedTicks->GetXaxis()->SetLimits(lowConv, highConv);
+    std::cout << "Setting waveformHist bounds to " << waveformHist->GetBinLowEdge(1) << 
+                 " and " << waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1) << std::endl;
+    h_correctedTicks->GetXaxis()->SetRangeUser(waveformHist->GetBinLowEdge(1), 
+                                               waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1));
+    double binMean = h_correctedTicks->GetMean();
+    double binStdDev = h_correctedTicks->GetStdDev();
+    int N = h_correctedTicks->GetEntries();
     
     // Get drift time
-    driftTimes[i] = gausfit->GetParameter(1);
+    //driftTimes[i] = gausfit->GetParameter(1);
+    std::cout << "Filling drift time with " << binMean << " as opposed to " << gausfit->GetParameter(1) << std::endl;
+    driftTimes[i] = binMean;
+    // Use (1/sqrt(N)) * 0.5/2 (half a tick width, if not using hit information)
+    //driftTimesErrs[i] = binStdDev; 
+    driftTimesErrs[i] = (1/sqrt(N) ) * (0.5/2.);
     // Two factors of 0.5: one for converting to mus, one for halving the bin width
-    driftTimesErrs[i] = 0.5*0.5*NUMBER_TICKS_PER_BIN; // x-error is 1/2 bin width for now
+    //driftTimesErrs[i] = 0.5*0.5*NUMBER_TICKS_PER_BIN; // x-error is 1/2 bin width for now
 
     // Get sigma^2 (pulse width squared)
     sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); 
-    sigmaValsErrs[i] = sqrt(2)*std::pow(waveformHist->GetFunction("gausfit")->GetParameter(2),2)*(waveformHist->GetFunction("gausfit")->GetParError(2))/(waveformHist->GetFunction("gausfit")->GetParameter(2));
+    sigmaValsErrs[i] = sqrt(2)*sigmaVals[i]*(waveformHist->GetFunction("gausfit")->GetParError(2))/(waveformHist->GetFunction("gausfit")->GetParameter(2));
 
   }
 
@@ -249,7 +303,7 @@ void makePlot(TString* inputFileName){
   gr1->SetMarkerStyle(8);
   gr1->SetMarkerSize(0.8);
   //gr1->GetYaxis()->SetRangeUser(0.001, 10.);
-  gr1->GetYaxis()->SetRangeUser(0.001, 12.);
+  gr1->GetYaxis()->SetRangeUser(0.001, 10.);
   gr1->GetXaxis()->SetRangeUser(minTime, maxTime);
 
   // Linear fit to diffusion plot
@@ -260,9 +314,8 @@ void makePlot(TString* inputFileName){
   gr1->GetFunction("polfit")->Draw("same");
 
   // Get diffusion value from slope of linear fit
-  //double diffusionValue = polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 2) * 1000000/2;
   double diffusionValue = polFit->GetParameter(1)*DRIFT_VELOCITY*DRIFT_VELOCITY* 1000000/2;
-  //std::cout << "Slope = " << polFit->GetParameter(1) << std::endl;
+  std::cout << "Slope = " << polFit->GetParameter(1) << " +/- " << polFit->GetParError(1) << " microseconds" << std::endl;
   //std::cout << "Slope * v^2 = " << polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 2) << std::endl; 
   double diffusionValueErr = polFit->GetParError(1)*std::pow(DRIFT_VELOCITY, 2) * 1000000/2;
   cout << "Diffusion value: " << diffusionValue << " +/- " << diffusionValueErr << endl; 
@@ -274,7 +327,7 @@ void makePlot(TString* inputFileName){
   pt->SetBorderSize(0);
   TString diffTextMeas = Form("Measured D_{L}: %0.2f +/- %0.2f cm^{2}/s", diffusionValue, diffusionValueErr);
   TString diffTextInp = Form("Input D_{L}: 6.40 cm^{2}/s");
-  TString chi2 = Form("#chi^{2}/NDF: %0.2f", polFit->GetChisquare()/polFit->GetNDF() );
+  TString chi2 = Form("#chi^{2}/NDF: %0.2f/%i = %0.2f", polFit->GetChisquare(), polFit->GetNDF(), polFit->GetChisquare()/polFit->GetNDF() );
   TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(400), polFit->GetParError(0) );
   pt->AddText(diffTextMeas);
   pt->AddText(diffTextInp);
@@ -292,7 +345,7 @@ void makePlot(TString* inputFileName){
     sigmaValsBottom[i] = (sigmaVals[i] - (f2->Eval(driftTimes[i])))/f2->Eval(driftTimes[i]);
     sigmaValsErrsBottom[i] = (double)sigmaValsErrs[i]/f2->Eval(driftTimes[i]);
     //cout << "Sigma errs " << i << ": " << sigmaValsErrs[i] << std::endl;
-    //cout << "Sigma errs " << i << ": " << sigmaValsErrsBottom[i] << std::endl;
+    //cout << "Sigma errs bottom " << i << ": " << sigmaValsErrsBottom[i] << std::endl;
 
   }
 
@@ -348,6 +401,8 @@ void makePlot(TString* inputFileName){
 
 int main(int argv, char** argc){
 
+  //std::string dir = "/uboone/app/users/amogan/mcc9_diffusion/workdir/";
+  //TString* inputFileName = new TString(dir+argc[1]);
   TString* inputFileName = new TString(argc[1]);
   if (!inputFileName) {
     cout << "No input file specified" << endl;

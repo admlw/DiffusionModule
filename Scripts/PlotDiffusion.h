@@ -12,6 +12,7 @@
 #include "TVector.h"
 #include "TPad.h"
 #include "TGraphErrors.h"
+#include "TTree.h"
 
 // cpp includes
 #include <numeric>

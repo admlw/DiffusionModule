@@ -98,6 +98,7 @@ namespace diffmod {
 
       double baseline  = 0;
       if (tickCounter !=0) baseline = cumulativeSum/tickCounter;
+      //std::cout << "[WAVEFORMFUNCS] Baseline = " << baseline << std::endl;
 
       // correct baseline and return histogram
       for (int i = 0; i <= h_rawDCorrected->GetNbinsX(); i++){ 
