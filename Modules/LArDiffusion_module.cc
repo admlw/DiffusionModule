@@ -230,67 +230,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     std::cout << "[DIFFMOD] --- Processing event " 
         << run << "." << sub_run << "." << event << std::endl;
 
-    // Import sigmaMap, assuming it already exists
-    /*
-    if(!make_sigma_map) {
-
-        std::cout << "[DIFFMOD]: Running without producing sigma map. Checking that it exists..." << std::endl;
-        std::cout << "[DIFFMOD]: Getting sigma map..." << std::endl;
-        TString sigma_map_dir = "";
-        TFile sigmaMap(sigma_map_dir+"sigma_map.root", "READ");
-
-        if (sigmaMap.IsOpen() == false){
-            std::cout << "[DIFFMOD]: No sigma map! Run module using run_sigma_map.fcl first, " << 
-                         "or check that you're in the right directory.\n" << std::endl;
-        }
-
-        std::cout << "[DIFFMOD]: Got sigma map" << std::endl;
-        std::cout << "[DIFFMOD]: Geting sigma and pulse heights hists..." << std::endl;
-
-
-        for (int i = 0; i < number_time_bins; i++){
-
-            TString sigmaMapHistoName = Form("h_sigma_%i", i); 
-            h_sigma_hists.push_back((TH1D*)sigmaMap.Get("DiffusionModule/"+sigmaMapHistoName) );
-
-            TString pulseHeightHistoName = Form("h_pulse_height_%i", i); 
-            h_pulse_height_hists.push_back((TH1D*)sigmaMap.Get("DiffusionModule/"+pulseHeightHistoName) );
-
-            // Calculate medians in each bin
-            sigmaMedians.push_back(_waveform_func.getMedian(h_sigma_hists.at(i) ) );
-            pulseHeightMedians.push_back(_waveform_func.getMedian(h_pulse_height_hists.at(i) ) );
-            
-            // Calculate maximum in each bin
-            int sigmaMaxBin = h_sigma_hists.at(i)->GetMaximumBin();
-            int pulseHeightMaxBin = h_pulse_height_hists.at(i)->GetMaximumBin();
-            sigmaMaxs.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(sigmaMaxBin) );
-            pulseHeightMaxs.push_back(h_pulse_height_hists.at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin) );
-
-            // Take sigma hist and calculate truncated mean 
-            trunc_mean = 0.;
-            for (int j = 1; j < h_sigma_hists.at(i)->GetNbinsX()+1; j++) {
-                if (h_sigma_hists.at(i)->GetBinContent(j) > 0) {
-                    //sigmaDistsPerBin.push_back(h_sigma_hists.at(i)->GetBinContent(j) );
-                    sigmaDistsPerBin.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) );
-                    //std::cout << "Filling sigma dist bin " << i << " with " << h_sigma_hists.at(i)->GetBinContent(j) << std::endl;
-                }
-            }
-            std::sort(sigmaDistsPerBin.begin(), sigmaDistsPerBin.end() );
-            trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(sigmaDistsPerBin,80,400,0,100,0.02,2 );
-            //trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(sigmaDistsPerBin,20,100,0,100,0.02,sigmaMedians.at(i) );
-
-            std::cout << "sigma max bin = " << sigmaMaxBin << std::endl;
-            std::cout << "Median = " << sigmaMedians.at(i) << std::endl;
-            std::cout << "Max = " << sigmaMaxs.at(i) << std::endl;
-            std::cout << "TruncMean = " << trunc_mean << std::endl;
-            //std::cout << "Diff = " << sigmaMedians.at(i) - sigmaMaxs.at(i) << std::endl;
-            std::cout << "-------------------" << std::endl;
-
-        }
-    }
-    */
-    //std::cout << "[DIFFMOD]: Got sigma map hists" << std::endl;
-
     // Tracks
     art::Handle< std::vector<recob::Track> > track_handle;
     e.getByLabel(track_label, track_handle);
