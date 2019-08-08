@@ -35,6 +35,7 @@ art_make( BASENAME_ONLY
     lardata_Utilities
     larpandora_LArPandoraInterface
     nusimdata_SimulationBase
+    larana_TruncatedMean_Algorithm
     ${PANDORASDK}
     ${PANDORAMONITORING}
     #larpandora_LArPandoraContent
@@ -83,6 +84,7 @@ art_make( BASENAME_ONLY
     lardata_Utilities
     larsim_Simulation lardataobj_Simulation 
     nusimdata_SimulationBase
+    larana_TruncatedMean_Algorithm
     ${UBOONECODE_LIB}
     ${LARDATA_LIB}
     ${ART_FRAMEWORK_CORE}
