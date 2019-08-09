@@ -202,7 +202,7 @@ bool DiffusionFilter::filter(art::Event & e)
 
     std::vector< art::Ptr<anab::T0> > t0s = t0FromTracks.at(thisTrack.key());
 
-    thisTrackIsPassLengthCut = (thisTrackLength < fTrackLengthCut);
+    thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
 
     thisTrackIsPassAngularCut = 
       (( thisTrackThetaXZ <= fTrackAngleCutXZHigh 
