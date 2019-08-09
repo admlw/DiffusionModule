@@ -1,28 +1,48 @@
 #include "services_microboone.fcl"
 #include "messageservice.fcl"
+#include "triggeralgo_service.fcl"
 #include "time_memory_tracker_microboone.fcl"
+#include "T0RecoAnodeCathodePiercing.fcl"
 
-process_name: diffusionselection
+process_name: diffusionselectiont
 
 services:
 {
 
-  TFileService:  {fileName: "diffusionSelectionInfo.root"}
-  TimeTracker:   @local::microboone_time_tracker
-  MemoryTracker: @local::microboone_memory_tracker
-                 @table::microboone_simulation_services
+  TFileService           : {fileName : "diffusionSelectionInfo.root"}
+  #TimeTracker            : @local::microboone_time_tracker
+  #MemoryTracker          : @local::microboone_memory_tracker
+  ExptGeoHelperInterface : @local::microboone_geometry_helper
+  Geometry               : @local::microboone_geo
+  DetectorProperties     : @local::microboone_detproperties
+  LArProperties          : @local::microboone_properties
+  DetectorClocksService  : @local::microboone_detectorclocks
+  FileCatalogMetadata    : @local::art_file_catalog_mc
+  RandomNumberGenerator  : {} # art native random number generator
+                           @table::microboone_simulation_services
 
 } # services
 
 source:
 {
-
   module_type: RootInput
   inputCommands: [ "keep *_*_*_*" ]
 }
 
 physics:
 {
+  producers:
+  {
+
+    rns:
+    {
+      module_type: RandomNumberSaver
+    }
+
+    t0reco: @local::T0RecoAnodeCathodePiercing_mc
+
+  }
+  
   filters:
   {
     diffsel:
@@ -42,8 +62,9 @@ physics:
   }
 
   stream1: [ out1 ]
-  analysis: [ diffsel ]
-  trigger_paths: [ analysis ]
+  producerlist: [ rns, t0reco ]
+  filterlist: [ diffsel ]
+  trigger_paths: [ filterlist ] #[ producerlist, filterlist ]
   end_paths: [ stream1 ]
 } #physics
 
@@ -54,8 +75,12 @@ outputs:
     module_type: RootOutput
     dataTier: "diffusion_filtered"
     fileName: "%ifb_%tc_diffusionFiltered.root"
-    SelectEvents: [ analysis ]
+    SelectEvents: [ filterlist ]
   }
 }
 
+# for t0reco
 services.DetectorClocksService.InheritClockConfig: false
+services.DetectorClocksService.TriggerOffsetTPC: -0.400e3
+services.DetectorProperties.NumberTimeSamples: 6400
+services.DetectorProperties.ReadOutWindowSize: 6400
