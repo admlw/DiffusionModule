@@ -234,6 +234,11 @@ bool DiffusionFilter::filter(art::Event & e)
       throw std::logic_error(errMsg);
     }
 
+    trackLength          ->push_back(thisTrackLength);
+    trackTheta           ->push_back(thisTrackTheta);
+    trackPhi             ->push_back(thisTrackPhi);
+    trackThetaXZ         ->push_back(thisTrackThetaXZ);
+    trackThetaYZ         ->push_back(thisTrackThetaYZ);
     trackIsPassLengthCut ->push_back(thisTrackIsPassLengthCut);
     trackIsPassAngularCut->push_back(thisTrackIsPassAngularCut);
     trackIsHasT0         ->push_back(thisTrackIsHasT0);
@@ -293,13 +298,11 @@ bool DiffusionFilter::filter(art::Event & e)
 
   tree->Fill();
 
-  if (isPass){
-    e.put(std::move(trackCollection));
-    e.put(std::move(t0Collection));
-    e.put(std::move(hitCollection));
-    e.put(std::move(trackT0Assn));
-    e.put(std::move(trackHitAssn));
-  }
+  e.put(std::move(trackCollection));
+  e.put(std::move(t0Collection));
+  e.put(std::move(hitCollection));
+  e.put(std::move(trackT0Assn));
+  e.put(std::move(trackHitAssn));
 
   return isPass;
 
