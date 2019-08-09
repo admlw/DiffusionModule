@@ -120,11 +120,22 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
   fTrackAngleCutYZLow  = p.get<double> ("TrackAngleCutYZLow");
   fTrackAngleCutYZHigh = p.get<double> ("TrackAngleCutYZHigh");
 
+  std::cout << "--- Printing Configuration: " << std::endl;
+  std::cout << "TrackLabel          : " << fTrackLabel << std::endl;
+  std::cout << "fT0Label            : " << fT0Label << std::endl;
+  std::cout << "TrackLengthCut      : " << fTrackLengthCut << std::endl;
+  std::cout << "TrackAngleCutXZLow  : " << fTrackAngleCutXZLow << std::endl;
+  std::cout << "TrackAngleCutXZHigh : " << fTrackAngleCutXZHigh << std::endl;
+  std::cout << "TrackAngleCutYZLow  : " << fTrackAngleCutYZLow << std::endl;
+  std::cout << "TrackAngleCutYZHigh : " << fTrackAngleCutYZHigh << std::endl;
+  std::cout << "---------------------------" << std::endl;
+
   produces< std::vector< recob::Track > >();
   produces< std::vector< anab::T0> >();
   produces< art::Assns< recob::Track, anab::T0 > >();
   produces< std::vector< recob::Hit > >();
   produces< art::Assns< recob::Track, recob::Hit > >();
+
 }
 
 void DiffusionFilter::beginJob()
@@ -162,18 +173,17 @@ bool DiffusionFilter::filter(art::Event & e)
   // produces a new trackCollection for passing tracks result is that we have
   // only events in which at least one track passes the selection, and only 
   // those tracks are reconstructed
-  std::unique_ptr< std::vector<recob::Track> > trackCollection( new std::vector<recob::Track>);
-  std::unique_ptr< std::vector<anab::T0> > t0Collection( new std::vector<anab::T0>);
-  std::unique_ptr< art::Assns<recob::Track, anab::T0> > trackT0Assn( new art::Assns<recob::Track, anab::T0>);
-  std::unique_ptr< std::vector<recob::Hit> > hitCollection( new std::vector<recob::Hit> );
+  std::unique_ptr< std::vector<recob::Track> >            trackCollection( new std::vector<recob::Track>);
+  std::unique_ptr< std::vector<anab::T0> >                t0Collection( new std::vector<anab::T0>);
+  std::unique_ptr< art::Assns<recob::Track, anab::T0> >   trackT0Assn( new art::Assns<recob::Track, anab::T0>);
+  std::unique_ptr< std::vector<recob::Hit> >              hitCollection( new std::vector<recob::Hit> );
   std::unique_ptr< art::Assns<recob::Track, recob::Hit> > trackHitAssn( new art::Assns<recob::Track, recob::Hit>);
 
   art::PtrMaker< recob::Track > makeTrackPtr(e);
-  art::PtrMaker< recob::Hit > makeHitPtr(e);
-  art::PtrMaker< anab::T0 > makeT0Ptr(e);
+  art::PtrMaker< recob::Hit >   makeHitPtr(e);
+  art::PtrMaker< anab::T0 >     makeT0Ptr(e);
 
   for (size_t iTrack = 0; iTrack < trackPtrVector.size(); iTrack++){
-
     art::Ptr< recob::Track > thisTrack = trackPtrVector.at(iTrack);
 
     thisTrackLength = thisTrack->Length();
@@ -194,38 +204,40 @@ bool DiffusionFilter::filter(art::Event & e)
 
     thisTrackIsPassLengthCut = (thisTrackLength < fTrackLengthCut);
 
-    thisTrackIsPassAngularCut = ((thisTrackThetaXZ <= fTrackAngleCutXZHigh 
-          && thisTrackThetaXZ >= fTrackAngleCutXZLow
-          && thisTrackThetaYZ <= fTrackAngleCutYZHigh 
-          && thisTrackThetaYZ >= fTrackAngleCutYZLow)) 
-        ||((thisTrackThetaXZ >= (180 - fTrackAngleCutXZHigh) 
-          && thisTrackThetaXZ <= (180 - fTrackAngleCutXZLow)) 
-        && thisTrackThetaYZ >= (180 - fTrackAngleCutYZHigh) 
-        && thisTrackThetaYZ <= (180 - fTrackAngleCutYZLow));
+    thisTrackIsPassAngularCut = 
+      (( thisTrackThetaXZ <= fTrackAngleCutXZHigh 
+         && thisTrackThetaXZ >= fTrackAngleCutXZLow
+         && thisTrackThetaYZ <= fTrackAngleCutYZHigh 
+         && thisTrackThetaYZ >= fTrackAngleCutYZLow)) 
+      ||
+      (( thisTrackThetaXZ >= (180 - fTrackAngleCutXZHigh) 
+         && thisTrackThetaXZ <= (180 - fTrackAngleCutXZLow)) 
+       && thisTrackThetaYZ >= (180 - fTrackAngleCutYZHigh) 
+       && thisTrackThetaYZ <= (180 - fTrackAngleCutYZLow));
 
-      // make sure that the track has at least one associated t0
-      if (t0s.size() == 1){
-        thisTrackIsHasT0 = true;
+    // make sure that the track has at least one associated t0
+    if (t0s.size() == 1){
+      thisTrackIsHasT0 = true;
 
-        anab::T0 t0ForCollection = *((t0s.at(0)).get());
-        t0Collection->push_back(t0ForCollection);
-      }
-      else if (t0s.size() == 0)
-        thisTrackIsHasT0 = false;
-      else {
-        std::string errMsg(
-            "Track "
-            + std::to_string(thisTrack->ID())
-            + " has "
-            + std::to_string(t0s.size())
-            + " associated t0s. That can't be right");
-        throw std::logic_error(errMsg);
-      }
+      anab::T0 t0ForCollection = *((t0s.at(0)).get());
+      t0Collection->push_back(t0ForCollection);
+    }
+    else if (t0s.size() == 0)
+      thisTrackIsHasT0 = false;
+    else {
+      std::string errMsg(
+          "Track "
+          + std::to_string(thisTrack->ID())
+          + " has "
+          + std::to_string(t0s.size())
+          + " associated t0s. That can't be right");
+      throw std::logic_error(errMsg);
+    }
 
-    trackIsPassLengthCut->push_back(thisTrackIsPassLengthCut);
+    trackIsPassLengthCut ->push_back(thisTrackIsPassLengthCut);
     trackIsPassAngularCut->push_back(thisTrackIsPassAngularCut);
-    trackIsHasT0->push_back(thisTrackIsHasT0);
-    trackIsSelected->push_back((trackIsPassLengthCut && trackIsPassAngularCut && trackIsHasT0));
+    trackIsHasT0         ->push_back(thisTrackIsHasT0);
+    trackIsSelected      ->push_back((thisTrackIsPassLengthCut && thisTrackIsPassAngularCut && thisTrackIsHasT0));
 
     if (trackIsSelected->at(iTrack)){
 
@@ -233,24 +245,28 @@ bool DiffusionFilter::filter(art::Event & e)
 
       // now create collections for the event
       recob::Track trackForCollection = *(thisTrack.get());
+
       trackCollection->push_back(trackForCollection); 
 
       art::Ptr< recob::Track > trackForCollectionPtr 
         = makeTrackPtr(trackCollection->size()-1);
 
-      std::vector< art::Ptr<recob::Hit> > hits 
-        = hitsFromTracks.at(thisTrack->ID());
+
+      std::vector< art::Ptr<recob::Hit> > hits;
       std::vector< art::Ptr< recob::Hit > > hitPtrCollection;
+      if ((int)hitsFromTracks.at(thisTrack->ID()).size() > 0){
+        hits  = hitsFromTracks.at(thisTrack->ID());
 
-      for (art::Ptr<recob::Hit>& thisHit : hits){
+        for (art::Ptr<recob::Hit>& thisHit : hits){
 
-        recob::Hit hitForCollection = *(thisHit.get());
-        hitCollection->push_back(hitForCollection);
+          recob::Hit hitForCollection = *(thisHit.get());
+          hitCollection->push_back(hitForCollection);
 
-        art::Ptr< recob::Hit > hitForCollectionPtr 
-          = makeHitPtr(hitCollection->size()-1);
-        hitPtrCollection.push_back(hitForCollectionPtr);
+          art::Ptr< recob::Hit > hitForCollectionPtr 
+            = makeHitPtr(hitCollection->size()-1);
 
+          hitPtrCollection.push_back(hitForCollectionPtr);
+        }
       }
 
 
@@ -284,8 +300,6 @@ bool DiffusionFilter::filter(art::Event & e)
     e.put(std::move(trackT0Assn));
     e.put(std::move(trackHitAssn));
   }
-
-
 
   return isPass;
 
