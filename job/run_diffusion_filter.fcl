@@ -4,7 +4,7 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "T0RecoAnodeCathodePiercing.fcl"
 
-process_name: diffusionselectiont
+process_name: diffusionselection
 
 services:
 {
@@ -53,10 +53,10 @@ physics:
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
       T0Label:                "t0reco"
       TrackLengthCut:  50
-      TrackAngleCutXZLow:  -180
-      TrackAngleCutXZHigh: 180
-      TrackAngleCutYZLow:  -180
-      TrackAngleCutYZHigh: 180
+      TrackAngleCutXZLow:  -10
+      TrackAngleCutXZHigh: 10
+      TrackAngleCutYZLow:  -40
+      TrackAngleCutYZHigh: 40
 
     }
   }
