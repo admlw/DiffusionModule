@@ -32,15 +32,30 @@
     <stage name="t0prod">
         <inputdef>prodgenie_bnb_nu_corsika_v08_00_00_13_reco2</inputdef>
         <fcl>run_diffusion_T0RecoAnodeCathodePiercing.fcl</fcl>
-        <bookdir>&data_dir;diff_filter</bookdir>
-        <workdir>&resilient_dir;diff_filter</workdir>
-        <outdir>&scratch_dir;diff_filter</outdir>
-        <logdir>&scratch_dir;diff_filter</logdir>
-        <numjobs>10</numjobs>
-        <numevents>10</numevents>
+        <bookdir>&data_dir;t0prod</bookdir>
+        <workdir>&resilient_dir;t0prod</workdir>
+        <outdir>&scratch_dir;t0prod</outdir>
+        <logdir>&scratch_dir;t0prod</logdir>
+        <numjobs>2552</numjobs>
+        <numevents>50</numevents>
         <maxfilesperjob>1</maxfilesperjob>
         <memory>2000</memory>
-        <datatier>diff_filtered</datatier>
+        <datatier>t0prod</datatier>
+        <schema>root</schema>
+   </stage>
+
+   <stage name="diffusionfilter">
+        <inputlist>/pnfs/uboone/scratch/users/alister1/t0.list</inputlist>
+        <fcl>run_diffusion_filter.fcl</fcl>
+        <bookdir>&data_dir;diffusion_filter</bookdir>
+        <workdir>&resilient_dir;diffusion_filter</workdir>
+        <outdir>&scratch_dir;diffusion_filter</outdir>
+        <logdir>&scratch_dir;diffusion_filter</logdir>
+        <numjobs>2550</numjobs>
+        <numevents>50</numevents>
+        <maxfilesperjob>1</maxfilesperjob>
+        <memory>2000</memory>
+        <datatier>diffusionfilter</datatier>
         <schema>root</schema>
    </stage>
 
