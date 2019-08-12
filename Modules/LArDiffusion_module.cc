@@ -465,7 +465,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
                         // Dynamic sigma cut: check if pulseHeight, sigma, 
                         // fall within some region around the median
-                        /*
                         double sigma_lowerLimit = 
                         sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
                         double sigma_higherLimit = 
@@ -474,8 +473,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                         pulseHeightMedians.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
                         double pulseHeight_higherLimit = 
                         pulseHeightMedians.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-                        */
 
+                        /*
                         double sigma_lowerLimit = 
                         sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
                         double sigma_higherLimit = 
@@ -484,6 +483,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                         pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
                         double pulseHeight_higherLimit = 
                         pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+                        */
                         
                         if (sigma < sigma_lowerLimit 
                             || sigma > sigma_higherLimit 
@@ -493,7 +493,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                             continue;
                         }
 
-                        h_sigma_hists.at(bin_no)->Fill(sigma);
+                        //h_sigma_hists.at(bin_no)->Fill(sigma);
                         h_sigma_v_bin_postcut->Fill(bin_no, sigma);
                         h_pulse_height_hists.at(bin_no)->Fill(pulse_height);
                         h_pulse_height_v_bin_postcut->Fill(bin_no, pulse_height);
@@ -646,22 +646,18 @@ void diffmod::LArDiffusion::beginJob()
                 pulseHeightMaxs.push_back(h_pulse_height_hists.at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin) );
 
                 // Take sigma hist and calculate truncated mean 
-                trunc_mean = 0.;
                 for (int j = 1; j < h_sigma_hists.at(i)->GetNbinsX()+1; j++) {
-                    if (h_sigma_hists.at(i)->GetBinContent(j) > 0) {
-                        /*
-                        std::cout << "Filling sigma dist bin " << i << " with " 
-                                  << h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) 
-                                  << " " << h_sigma_hists.at(i)->GetBinContent(j) << " times " << std::endl;
-                        */
+                    /*
+                    std::cout << "Filling sigma dist bin " << i << " with " 
+                              << h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) 
+                              << " " << h_sigma_hists.at(i)->GetBinContent(j) << " times " << std::endl;
+                    */
 
-                        for (int k = 0; k < h_sigma_hists.at(i)->GetBinContent(j); k++ ) {
-                                sigmaDistsPerBin.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) );
-                        }
+                    for (int k = 0; k < h_sigma_hists.at(i)->GetBinContent(j); k++ ) {
+                        sigmaDistsPerBin.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) );
                     }
                 }
-                std::sort(sigmaDistsPerBin.begin(), sigmaDistsPerBin.end() );
-                trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(sigmaDistsPerBin,20,100,0,100,0.02,sigmaMedians.at(i) );
+                trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(sigmaDistsPerBin,0,1,0,100,0.02,10,sigmaMedians.at(i) );
 
                 /*
                 std::cout << "sigma max bin = " << sigmaMaxBin << std::endl;
