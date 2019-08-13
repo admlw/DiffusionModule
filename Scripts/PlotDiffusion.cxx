@@ -100,12 +100,15 @@ void makePlot(TString* inputFileName){
   const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
   const double DRIFT_VELOCITY=0.1098;
 
-  TFile* fInput = new TFile(*inputFileName, "READ");
+  TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
+  TString *dir = &dirname;
+  TFile *fInput = new TFile(*dir+*inputFileName, "READ");
   if (!fInput) {
     std::cout << "Bad file" << std::endl;
     return;
   }
-  TFile *fOutput = new TFile("fits_"+*inputFileName, "RECREATE");
+    
+  TFile *fOutput = new TFile(*dir+"fits_"+*inputFileName, "RECREATE");
   if (!fOutput) {
     std::cout << "Bad output file" << std::endl;
     return;
@@ -127,18 +130,10 @@ void makePlot(TString* inputFileName){
     std::cout << "Bad waveform hist" << std::endl;
     return;
   }
-  //TH1D* h_peakTime = (TH1D*)fInput->Get("hit_peak_time");
-  //TH1D* histoChisq = new TH1D("histoChisq", ";drift bin; chisq", NUMBER_DRIFT_BINS, 0, NUMBER_DRIFT_BINS);
-  //h_wire_in_window
-  //h_wire_baseline_corrected
 
   double driftTimes[NUMBER_DRIFT_BINS];
-  //double driftTimesErrsLow[NUMBER_DRIFT_BINS];
-  //double driftTimesErrsHigh[NUMBER_DRIFT_BINS];
   double driftTimesErrs[NUMBER_DRIFT_BINS]; // bin width/2 for now
   double sigmaVals[NUMBER_DRIFT_BINS]; 
-  //double sigmaValsErrsLow[NUMBER_DRIFT_BINS];
-  //double sigmaValsErrsHigh[NUMBER_DRIFT_BINS];
   double sigmaValsErrs[NUMBER_DRIFT_BINS]; // Error on Gaussian fit? Maybe?
 
   diffmod::WaveformFunctions waveFuncs;
@@ -150,11 +145,10 @@ void makePlot(TString* inputFileName){
   TH1D* waveformHist;
 
   // Loop over bins, do the things
-  //for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
   for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
 
-    std::cout << "Bin " << i << std::endl;
     std::cout << "-------------------------------" << std::endl;
+    std::cout << "BIN " << i << std::endl;
 
     if (histoNWvfms->GetBinContent(i+1) < 500) {
         std::cout << "Skipping bin " << i << " due to low stats" << std::endl;
@@ -163,7 +157,6 @@ void makePlot(TString* inputFileName){
 
     fOutput->cd();
     waveformHist = (TH1D*)fInput->Get(Form("DiffusionModule/summed_waveform_bin_%i", i));
-    //waveformHist = (TH1D*)fInput->Get(Form("diffusionmodule/histo_bin_%i", i));
     // Ensure histogram is filled
     if (waveformHist->Integral() == 0){
       std::cout << "bin " << i << " is empty!" << std::endl;
@@ -195,14 +188,6 @@ void makePlot(TString* inputFileName){
 
     TF1 *gausfit = new TF1("gausfit", "gaus");
     waveformHist->Fit(gausfit, "q", "", lowFit, highFit);
-    /*
-    double chisq = waveformHist->GetFunction("gausfit")->GetChisquare();
-    double Ndf = gausfit->GetNDF();
-    double chisqNdf = gausfit->GetChisquare()/gausfit->GetNDF();
-    std::cout << "chi^2 = " <<  chisq << std::endl;
-    std::cout << "NDF = " <<  Ndf << std::endl;
-    std::cout << "chi^2/NDF = " <<  chisqNdf << std::endl;
-    */
 
     // Error inflation
     double chisqNdf = 10;
@@ -235,15 +220,10 @@ void makePlot(TString* inputFileName){
     double binStdDev = h_correctedTicks->GetStdDev();
     int N = h_correctedTicks->GetEntries();
     
-    // Get drift time
-    //driftTimes[i] = gausfit->GetParameter(1);
-    std::cout << "Filling drift time with " << binMean << " as opposed to " << gausfit->GetParameter(1) << std::endl;
+    // Get drift time from truncated mean of sigma distribution in each bin
+    // Error is (1/sqrt(N)) * 0.5/2 (half a tick width, if not using hit information)
     driftTimes[i] = binMean;
-    // Use (1/sqrt(N)) * 0.5/2 (half a tick width, if not using hit information)
-    //driftTimesErrs[i] = binStdDev; 
     driftTimesErrs[i] = (1/sqrt(N) ) * (0.5/2.);
-    // Two factors of 0.5: one for converting to mus, one for halving the bin width
-    //driftTimesErrs[i] = 0.5*0.5*NUMBER_TICKS_PER_BIN; // x-error is 1/2 bin width for now
 
     // Get sigma^2 (pulse width squared)
     sigmaVals[i] = std::pow(gausfit->GetParameter(2), 2); 
@@ -390,8 +370,9 @@ void makePlot(TString* inputFileName){
   histoNWvfms->Draw();
 
   c1->cd();
-  c1->SaveAs("DiffusionPlot.png", "PNG");
-  c1->SaveAs("DiffusionPlot.pdf", "PDF");
+  TString output_plot_dir = "DiffusionPlots/";
+  c1->SaveAs(output_plot_dir+"DiffusionPlot.png", "PNG");
+  c1->SaveAs(output_plot_dir+"DiffusionPlot.pdf", "PDF");
   delete c1;
 
   fOutput->Close();
@@ -401,8 +382,6 @@ void makePlot(TString* inputFileName){
 
 int main(int argv, char** argc){
 
-  //std::string dir = "/uboone/data/users/amogan/v08_00_00_13/output_diffmod_files/";
-  //TString* inputFileName = new TString(dir+argc[1]);
   TString* inputFileName = new TString(argc[1]);
   if (!inputFileName) {
     cout << "No input file specified" << endl;

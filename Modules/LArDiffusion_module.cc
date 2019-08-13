@@ -277,6 +277,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         if (t0_from_track.size() == 1 && use_t0tagged_tracks) {
           art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
           t0 = thisT0->Time();
+          std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
           //track_x_correction = t0 * drift_velocity;
         }
         else {
@@ -719,15 +720,7 @@ void diffmod::LArDiffusion::beginJob()
                     0.02,                // convergence limit
                     1);                  // nsigma
                 }
-                /*
-                std::cout << "sigma max bin = " << sigmaMaxBin << std::endl;
-                std::cout << "Median = " << sigmaMedians.at(i) << std::endl;
-                std::cout << "Max = " << sigmaMaxs.at(i) << std::endl;
-                std::cout << "TruncMean = " << trunc_mean << std::endl;
-                std::cout << "-------------------" << std::endl;
-                */
                 std::cout << sigmaMedians.at(i) << "\t" << sigmaMaxs.at(i) << "\t" << trunc_mean << std::endl;
-
             }
         }
     }

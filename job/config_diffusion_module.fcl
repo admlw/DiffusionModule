@@ -3,7 +3,7 @@ BEGIN_PROLOG
 diffusionconfig       : {
   module_type         : "LArDiffusion"
 
-  SigmaMapFilePath     : ""
+  SigmaMapFilePath     : "/uboone/data/users/amogan/v08_00_00_19/output_sigma_map_files/sigma_map.root"
   SigmaMapDirectoryFile: "DiffusionModule"
 
   DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)

@@ -31,7 +31,7 @@ physics:
 } #physics
 
 services.DetectorClocksService.InheritClockConfig: false
-physics.analyzers.DiffusionModule.MakeSigmaMap: true
+physics.analyzers.DiffusionModule.MakeSigmaMap: false
 physics.analyzers.DiffusionModule.SigmaMapFilePath: ""
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
