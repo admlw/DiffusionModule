@@ -38,10 +38,7 @@
 #include "TTree.h"
 #include "TMath.h"
 
-// local includes
-#include "ubana/DiffusionModule/Algorithms/diffusionUtility.h"
-
-// cp
+// cpp
 #include <exception>
 
 class DiffusionFilter;
