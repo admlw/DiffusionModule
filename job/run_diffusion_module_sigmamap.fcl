@@ -7,7 +7,7 @@ process_name: diffmod
 
 services:
 {
-    TFileService:  {fileName: "diffmod.root"}
+    TFileService:  {fileName: "sigma_map.root"}
 #TimeTracker:   @local::microboone_time_tracker
 #MemoryTracker: @local::microboone_memory_tracker
     @table::microboone_simulation_services
