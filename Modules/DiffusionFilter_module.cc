@@ -72,7 +72,6 @@ class DiffusionFilter : public art::EDFilter {
 
     // service and class instances
     art::ServiceHandle< art::TFileService > tfs;
-    diffUtil::diffusionUtility _diffutilInstance;
 
     // fhicl
     std::string fTrackLabel;
