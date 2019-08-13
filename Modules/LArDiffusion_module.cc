@@ -126,6 +126,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         std::string track_hit_assn;
         std::string track_t0_assn;
         std::string hit_wire_assn;
+        std::string sigma_map_file_path;
         bool use_t0tagged_tracks;
         bool make_sigma_map;
         double sigma_cut;
@@ -200,6 +201,8 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     track_hit_assn        = p.get< std::string >("TrackHitAssn" , "pandora");
     track_t0_assn         = p.get< std::string >("TrackT0Assn"  , "t0reco");
     hit_wire_assn         = p.get< std::string >("HitWireAssn"  , "gaushit");
+
+    sigma_map_file_path   = p.get< std::string >("SigmaMapFilePath", "");
 
     use_t0tagged_tracks   = p.get< bool         >("UseT0TaggedTracks"   , true);
     make_sigma_map        = p.get< bool         >("MakeSigmaMap"        , false);
@@ -662,8 +665,7 @@ void diffmod::LArDiffusion::beginJob()
 
             std::cout << "[DIFFMOD]: Running without producing sigma map. Checking that it exists..." << std::endl;
             std::cout << "[DIFFMOD]: Getting sigma map..." << std::endl;
-            TString sigma_map_dir = "";
-            TFile sigmaMap(sigma_map_dir+"sigma_map.root", "READ");
+            TFile sigmaMap((sigma_map_file_path+std::string("/sigma_map.root")).c_str(), "READ");
 
             if (sigmaMap.IsOpen() == false){
                 std::cout << "[DIFFMOD]: No sigma map! Run module using run_sigma_map.fcl first, " << 

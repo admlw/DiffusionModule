@@ -2,6 +2,9 @@ BEGIN_PROLOG
 
 diffusionconfig       : {
   module_type         : "LArDiffusion"
+
+  SigmaMapFilePath    : ""
+
   DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
