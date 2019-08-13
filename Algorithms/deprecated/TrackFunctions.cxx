@@ -7,15 +7,13 @@ namespace diffmod {
                             double trackAngleXZLowBound,
                             double trackAngleXZHighBound,
                             double trackAngleYZLowBound,
-                            double trackAngleYZHighBound )
+                            double trackAngleYZHighBound,
+                            double trackLengthLowBound)
     {
-        double trackLength = track.Length();
-        if (trackLength < 25) {
-            return false;
-        }
 
         //double trackBeginningEndAngle = trackFuncs.findTrackStraightness(track, vecFuncs);
 
+        double trackLength = track.Length();
         float trackAngleXZ = vecFuncs.getAngle(track, vecFuncs, "xz");
         float trackAngleYZ = vecFuncs.getAngle(track, vecFuncs, "yz");
 
@@ -28,7 +26,7 @@ namespace diffmod {
           //std::cout << "Angle " << trackAngleYZ << " out of YZ bound" << std::endl;   
           return false;
         }
-        else if (trackLength < 25){
+        else if (trackLength < trackLengthLowBound){
           //std::cout << "Track too short" << std::endl;
           return false;
         }

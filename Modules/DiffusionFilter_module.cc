@@ -38,10 +38,7 @@
 #include "TTree.h"
 #include "TMath.h"
 
-// local includes
-#include "ubana/DiffusionModule/Algorithms/diffusionUtility.h"
-
-// cp
+// cpp
 #include <exception>
 
 class DiffusionFilter;
@@ -72,7 +69,6 @@ class DiffusionFilter : public art::EDFilter {
 
     // service and class instances
     art::ServiceHandle< art::TFileService > tfs;
-    diffUtil::diffusionUtility _diffutilInstance;
 
     // fhicl
     std::string fTrackLabel;
