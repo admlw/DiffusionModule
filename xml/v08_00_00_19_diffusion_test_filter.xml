@@ -4,9 +4,10 @@
 <!DOCTYPE project [
 <!ENTITY release "08_00_00_19">
 <!ENTITY name "v08_00_00_19_diffusion">
-<!ENTITY scratch_dir "/pnfs/uboone/scratch/users/alister1/&name;/">
-<!ENTITY resilient_dir "/pnfs/uboone/resilient/users/alister1/&name;/">
-<!ENTITY data_dir "/pnfs/uboone/scratch/users/alister1/&name;_data/">
+<!ENTITY user "amogan">
+<!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&name;/">
+<!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&name;/">
+<!ENTITY data_dir "/pnfs/uboone/scratch/users/&user;/&name;_data/">
 ]>
 
 <job>
