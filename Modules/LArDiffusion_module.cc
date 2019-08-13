@@ -127,6 +127,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         std::string track_t0_assn;
         std::string hit_wire_assn;
         std::string sigma_map_file_path;
+        std::string sigma_map_directory_file;
         bool use_t0tagged_tracks;
         bool make_sigma_map;
         double sigma_cut;
@@ -202,7 +203,8 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     track_t0_assn         = p.get< std::string >("TrackT0Assn"  , "t0reco");
     hit_wire_assn         = p.get< std::string >("HitWireAssn"  , "gaushit");
 
-    sigma_map_file_path   = p.get< std::string >("SigmaMapFilePath", "");
+    sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
+    sigma_map_directory_file = p.get< std::string >("SigmaMapDirectoryFile", "DiffusionModule");
 
     use_t0tagged_tracks   = p.get< bool         >("UseT0TaggedTracks"   , true);
     make_sigma_map        = p.get< bool         >("MakeSigmaMap"        , false);
@@ -665,7 +667,7 @@ void diffmod::LArDiffusion::beginJob()
 
             std::cout << "[DIFFMOD]: Running without producing sigma map. Checking that it exists..." << std::endl;
             std::cout << "[DIFFMOD]: Getting sigma map..." << std::endl;
-            TFile sigmaMap((sigma_map_file_path+std::string("/sigma_map.root")).c_str(), "READ");
+            TFile sigmaMap(sigma_map_file_path.c_str(), "READ");
 
             if (sigmaMap.IsOpen() == false){
                 std::cout << "[DIFFMOD]: No sigma map! Run module using run_sigma_map.fcl first, " << 
@@ -679,11 +681,14 @@ void diffmod::LArDiffusion::beginJob()
 
                 sigmaDistsPerBin.resize(0);
 
-                TString sigmaMapHistoName = Form("h_sigma_%i", i); 
-                h_sigma_hists.push_back((TH1D*)sigmaMap.Get("DiffusionModule/"+sigmaMapHistoName) );
+                TString sigmaMapFilePath(sigma_map_directory_file);
+                TString sigmaMapHistoName = Form("/h_sigma_%i", i); 
+                TString t = sigmaMapFilePath+sigmaMapHistoName;
+                h_sigma_hists.push_back((TH1D*)sigmaMap.Get(t.Data()));
 
-                TString pulseHeightHistoName = Form("h_pulse_height_%i", i); 
-                h_pulse_height_hists.push_back((TH1D*)sigmaMap.Get("DiffusionModule/"+pulseHeightHistoName) );
+                TString pulseHeightHistoName = Form("/h_pulse_height_%i", i); 
+                TString t2 = sigmaMapFilePath+pulseHeightHistoName;
+                h_pulse_height_hists.push_back((TH1D*)sigmaMap.Get(t2.Data()));
 
                 // Calculate medians in each bin
                 sigmaMedians.push_back(_waveform_func.getMedian(h_sigma_hists.at(i) ) );
