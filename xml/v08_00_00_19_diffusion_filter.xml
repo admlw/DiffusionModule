@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<!-- project details -->
+<!DOCTYPE project [
+<!ENTITY release "08_00_00_19">
+<!ENTITY name "v08_00_00_19_diffusion">
+<!ENTITY scratch_dir "/pnfs/uboone/scratch/users/alister1/&name;/">
+<!ENTITY resilient_dir "/pnfs/uboone/resilient/users/alister1/&name;/">
+<!ENTITY data_dir "/pnfs/uboone/scratch/users/alister1/&name;_data/">
+]>
+
+<job>
+
+<project name="&name;">
+
+    <!-- project size -->
+    <numevents>100000</numevents>
+
+    <!-- batchOS -->
+    <os>SL6</os>
+
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+
+    <!-- larsoft info -->
+    <larsoft>
+        <tag>&release;</tag>
+        <qual>e17:prof</qual>
+        <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local>
+    </larsoft>
+
+    <!-- t0 production -->
+    <stage name="t0prod">
+        <inputdef>prodgenie_bnb_nu_corsika_v08_00_00_13_reco2</inputdef>
+        <fcl>run_diffusion_T0RecoAnodeCathodePiercing.fcl</fcl>
+        <bookdir>&data_dir;t0prod</bookdir>
+        <workdir>&resilient_dir;t0prod</workdir>
+        <outdir>&scratch_dir;t0prod</outdir>
+        <logdir>&scratch_dir;t0prod</logdir>
+        <numjobs>2552</numjobs>
+        <numevents>50</numevents>
+        <maxfilesperjob>1</maxfilesperjob>
+        <memory>2000</memory>
+        <datatier>t0prod</datatier>
+        <schema>root</schema>
+   </stage>
+
+   <!-- diffusion filter -->
+   <stage name="diffusionfilter">
+        <inputlist>/pnfs/uboone/scratch/users/alister1/t0.list</inputlist>
+        <fcl>run_diffusion_filter.fcl</fcl>
+        <bookdir>&data_dir;diffusion_filter</bookdir>
+        <workdir>&resilient_dir;diffusion_filter</workdir>
+        <outdir>&scratch_dir;diffusion_filter</outdir>
+        <logdir>&scratch_dir;diffusion_filter</logdir>
+        <numjobs>2550</numjobs>
+        <numevents>50</numevents>
+        <maxfilesperjob>1</maxfilesperjob>
+        <memory>2000</memory>
+        <datatier>diffusionfilter</datatier>
+        <schema>root</schema>
+   </stage>
+
+   <!-- diffusion sigma map production -->
+   <stage name="diffusionsigmamap">
+        <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist>
+        <fcl>run_diffusion_module_sigmamap.fcl</fcl>
+        <bookdir>&data_dir;diffusion_sigmamap</bookdir>
+        <workdir>&resilient_dir;diffusion_sigmamap</workdir>
+        <outdir>&scratch_dir;diffusion_sigmamap</outdir>
+        <logdir>&scratch_dir;diffusion_sigmamap</logdir>
+        <!--<numjobs>2545</numjobs>-->
+        <numjobs>10</numjobs>
+        <numevents>50</numevents>
+        <maxfilesperjob>1</maxfilesperjob>
+        <memory>2000</memory>
+        <datatier>diffusionsigmamap</datatier>
+        <schema>root</schema>
+   </stage>
+
+   <!-- diffusion ana -->
+   <!-- Remember that you need to hadd the output files from above 
+        and configure the path in this fhicl file in order for this 
+        to work -->
+   <stage name="diffusionana">
+        <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist>
+        <fcl>run_diffusion_module_ana.fcl</fcl>
+        <bookdir>&data_dir;diffusion_ana</bookdir>
+        <workdir>&resilient_dir;diffusion_ana</workdir>
+        <outdir>&scratch_dir;diffusion_ana</outdir>
+        <logdir>&scratch_dir;diffusion_ana</logdir>
+        <numjobs>2545</numjobs>
+        <numevents>50</numevents>
+        <maxfilesperjob>1</maxfilesperjob>
+        <memory>2000</memory>
+        <datatier>diffusionana</datatier>
+        <schema>root</schema>
+   </stage>
+
+</project>
+
+</job>
