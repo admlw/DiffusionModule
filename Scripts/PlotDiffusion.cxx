@@ -401,7 +401,7 @@ void makePlot(TString* inputFileName){
 
 int main(int argv, char** argc){
 
-  //std::string dir = "/uboone/app/users/amogan/mcc9_diffusion/workdir/";
+  //std::string dir = "/uboone/data/users/amogan/v08_00_00_13/output_diffmod_files/";
   //TString* inputFileName = new TString(dir+argc[1]);
   TString* inputFileName = new TString(argc[1]);
   if (!inputFileName) {
