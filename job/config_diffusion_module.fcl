@@ -1,29 +1,29 @@
 BEGIN_PROLOG
 
-diffusionconfig:{
-  module_type: "LArDiffusion"
-  DriftVelocity: 0.1098 # New MCC9 value! (cm/microsecond)
-  UseT0TaggedTracks: false
-  MakeSigmaMap: false
-  SigmaCut: 1.0 # Nominal 1.0
-  PulseHeightCut: 100.0 # Nominal 100.0
-  HitGOFCut: 1.1
-  HitMultiplicityCut: 1
-  HitView: 2 # Collection plane
-  HitMinChannel: 6150 # Avoids overlap with U-shorted region
-  WaveformSize: 6400
-  WaveformIntimeStart: 800
-  WaveformIntimeEnd: 5400
-  NumberDriftBins: 25
-  NumberDroppedTicks: 2400
-  PeakFinderThreshold: 3.0
-
-  TrackLabel: "pandora"
-  WireLabel: "butcher"
-  HitLabel: "gaushit"
-  TrackHitAssn: "pandora"
-  TrackT0Assn: "t0reco"
-  HitWireAssn: "gaushit"
+diffusionconfig       : {
+  module_type         : "LArDiffusion"
+  DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
+  UseT0TaggedTracks   : false
+  MakeSigmaMap        : false
+  SigmaCut            : 1.0 # Nominal 1.0
+  PulseHeightCut      : 100.0 # Nominal 100.0
+  HitGOFCut           : 1.1
+  HitMultiplicityCut  : 1
+  HitView             : 2 # Collection plane
+  HitMinChannel       : 6150 # Avoids overlap with U-shorted region
+  WaveformSize        : 6400
+  WaveformIntimeStart : 800
+  WaveformIntimeEnd   : 5400
+  NumberDriftBins     : 25
+  NumberDroppedTicks  : 2400
+  PeakFinderThreshold : 3.0
+ 
+  TrackLabel          : "pandora"
+  WireLabel           : "butcher"
+  HitLabel            : "gaushit"
+  TrackHitAssn        : "pandora"
+  TrackT0Assn         : "t0reco"
+  HitWireAssn         : "gaushit"
 }
 
 END_PROLOG
