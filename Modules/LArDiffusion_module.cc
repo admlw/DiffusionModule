@@ -629,6 +629,8 @@ void diffmod::LArDiffusion::beginJob()
 
             for (int i = 0; i < number_time_bins; i++){
 
+                sigmaDistsPerBin.resize(0);
+
                 TString sigmaMapHistoName = Form("h_sigma_%i", i); 
                 h_sigma_hists.push_back((TH1D*)sigmaMap.Get("DiffusionModule/"+sigmaMapHistoName) );
 
@@ -661,8 +663,16 @@ void diffmod::LArDiffusion::beginJob()
                     }
                 }
                 std::sort(sigmaDistsPerBin.begin(), sigmaDistsPerBin.end() );
-                trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(sigmaDistsPerBin,20,100,0,100,0.02,sigmaMedians.at(i) );
-
+                if (sigmaDistsPerBin.size() > 0){
+                trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(
+                    sigmaDistsPerBin,    // v
+                    0,                   // nmin
+                    1000,                // nmax
+                    0,                   // currentiteration
+                    0,                 // lmin
+                    0.02,                // convergence limit
+                    1);                  // nsigma
+                }
                 /*
                 std::cout << "sigma max bin = " << sigmaMaxBin << std::endl;
                 std::cout << "Median = " << sigmaMedians.at(i) << std::endl;
