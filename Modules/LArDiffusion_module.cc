@@ -78,6 +78,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         int event;
         int is_real_data;
 
+        int numTracks;
         double maximum_tick;
         double track_length;
         double cos_theta;
@@ -259,13 +260,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     art::FindManyP< recob::Wire > wire_from_hits(hit_handle, e, hit_wire_assn);
 
     // loop tracks, get associated hits
+    std::cout << "[DIFFMOD] " << track_ptr_vector.size() << " tracks in this event" << std::endl;
     for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
 
         art::Ptr< recob::Track > thisTrack = track_ptr_vector.at(i_tr);
-
-        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
-        theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
-        theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
         std::vector< art::Ptr< anab::T0 > > t0_from_track;
         if (use_t0tagged_tracks) {
@@ -273,9 +271,27 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
 
+        if (use_t0tagged_tracks && t0_from_track.size() != 1) {
+            std::cout << "[DIFFMOD] Skipping non-t0-tagged track" << std::endl;
+            continue;
+        }
+        else if (use_t0tagged_tracks && t0_from_track.size() == 1) {
+            art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
+            t0 = thisT0->Time();
+        }
+        else {
+          // TODO: Check units on this. Nanoseconds? Ticks?
+          t0 = 800.; // Make sure this matches the t0 in the generator fcl file if using single muons 
+        }
+
+        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
+        theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
+        theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
+
         // If a t0 exists (should, if using diffusion-filtered sample), then
         // go grab it and get the tick correction value
         // Otherwise, just use the default in-time value of 800 ticks (for single muon samples)
+        /*
         if (use_t0tagged_tracks) {
           if (t0_from_track.size() == 1 ) {
             art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
@@ -286,6 +302,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         else {
           t0 = 800.; // 800 ticks default value for single muon samples
         }
+        */
+
+        std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
 
         t0_x_shift = t0 * drift_velocity; // mcc9 drift velocity
 
@@ -569,7 +588,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 }
             }
         }
+        numTracks++;
     }
+    std::cout << "[DIFFMOD] No. tracks = " << numTracks << std::endl;
+    numTracks = numTracks*2;
 }
 
 void diffmod::LArDiffusion::beginJob()
@@ -685,6 +707,8 @@ void diffmod::LArDiffusion::beginJob()
         h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma;", 25, 0, 256, 100, 0, 20);
         h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 25, 50, 0, 100);
         */
+
+        //int numTracks = 0;
 
         for (int i = 0; i < number_time_bins; i++){
             TString histo_name = Form("summed_waveform_bin_%i", i);

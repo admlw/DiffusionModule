@@ -98,7 +98,8 @@ void makePlot(TString* inputFileName){
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
   const int minTime = waveformDriftStartTick/2; // 400 microseconds
   const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
-  const double DRIFT_VELOCITY=0.1098;
+  const double DRIFT_VELOCITY=0.1098; // Average drift velocity
+  //const double DRIFT_VELOCITY=0.10762; // Drift velocity near anode
 
   TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
   TString *dir = &dirname;
@@ -194,7 +195,8 @@ void makePlot(TString* inputFileName){
     // Chi2 inflation
     while (chisqNdf > 1) {
       waveformHist->Fit(gausfit, "q", "", lowFit, highFit);
-      chisqNdf = waveformHist->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
+      chisqNdf = gausfit->GetChisquare()/gausfit->GetNDF();
+      //chisqNdf = waveformHist->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
       increaseError(waveformHist);
     }
 
