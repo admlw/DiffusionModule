@@ -26,7 +26,8 @@
     <larsoft>
         <tag>&release;</tag>
         <qual>e17:prof</qual>
-        <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local>
+        <!-- <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_19_Diffusion.tar</local> -->
+        <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local> 
     </larsoft>
 
     <!-- t0 production -->
@@ -70,10 +71,10 @@
         <outdir>&scratch_dir;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;diffusion_sigmamap</logdir>
         <!--<numjobs>2545</numjobs>-->
-        <numjobs>10</numjobs>
+        <numjobs>2550</numjobs>
         <numevents>50</numevents>
-        <maxfilesperjob>1</maxfilesperjob>
-        <memory>2000</memory>
+        <maxfilesperjob>10</maxfilesperjob>
+        <memory>600</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
    </stage>
@@ -83,15 +84,16 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist>
+        <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;diffusion_ana</bookdir>
         <workdir>&resilient_dir;diffusion_ana</workdir>
         <outdir>&scratch_dir;diffusion_ana</outdir>
         <logdir>&scratch_dir;diffusion_ana</logdir>
-        <numjobs>2545</numjobs>
+        <!-- <numjobs>2545</numjobs> -->
+        <numjobs>10</numjobs> 
         <numevents>50</numevents>
-        <maxfilesperjob>1</maxfilesperjob>
+        <maxfilesperjob>100</maxfilesperjob>
         <memory>2000</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>

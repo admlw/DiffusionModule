@@ -32,6 +32,6 @@ physics:
 
 services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: false
-physics.analyzers.DiffusionModule.SigmaMapFilePath: ""
+physics.analyzers.DiffusionModule.SigmaMapFilePath: "/pnfs/uboone/scratch/users/amogan/v08_00_00_19_diffusion/diffusion_sigmamap/sigma_map.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
