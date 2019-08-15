@@ -70,8 +70,8 @@
         <workdir>&resilient_dir;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;diffusion_sigmamap</logdir>
-        <!--<numjobs>2545</numjobs>-->
-        <numjobs>2550</numjobs>
+        <!-- <numjobs>2550</numjobs> -->
+        <numjobs>10</numjobs>
         <numevents>50</numevents>
         <maxfilesperjob>10</maxfilesperjob>
         <memory>600</memory>

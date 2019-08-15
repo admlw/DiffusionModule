@@ -273,7 +273,21 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
 
-        t0_x_shift = t0_from_track.at(0)->Time() * drift_velocity; // mcc9 drift velocity
+        // If a t0 exists (should, if using diffusion-filtered sample), then
+        // go grab it and get the tick correction value
+        // Otherwise, just use the default in-time value of 800 ticks (for single muon samples)
+        if (use_t0tagged_tracks) {
+          if (t0_from_track.size() == 1 ) {
+            art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
+            t0 = thisT0->Time();
+          }
+          else continue;
+        }
+        else {
+          t0 = 800.; // 800 ticks default value for single muon samples
+        }
+
+        t0_x_shift = t0 * drift_velocity; // mcc9 drift velocity
 
         track_length   = thisTrack->Length();
         cos_theta      = thisTrack->Theta();
@@ -290,20 +304,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
 
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
-
-        // if a t0 exists (should, if using diffusion-filtered sample), then
-        // go grab it and get the tick correction value
-
-        if (t0_from_track.size() == 1 && use_t0tagged_tracks) {
-          art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
-          t0 = thisT0->Time();
-          std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
-          //track_x_correction = t0 * drift_velocity;
-        }
-        else {
-          // TODO check units. Is it 800 ticks or microseconds? Want this in ticks
-          t0 = 800.; // 800 microsecond (tick?) default value for single muon samples
-        }
 
         t0_tick = t0 * 2;
 
