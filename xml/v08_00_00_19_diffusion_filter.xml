@@ -26,8 +26,8 @@
     <larsoft>
         <tag>&release;</tag>
         <qual>e17:prof</qual>
-        <!-- <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_19_Diffusion.tar</local> -->
-        <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local> 
+        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_19_Diffusion.tar</local> 
+        <!-- <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local> -->
     </larsoft>
 
     <!-- t0 production -->
