@@ -84,6 +84,13 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         double theta_xz;
         double theta_yz;
         double start_x;
+        double start_x_t0corr;
+        double start_y;
+        double start_z;
+        double end_x;
+        double end_x_t0corr;
+        double end_y;
+        double end_z;
         double hit_peak_time;
         double hit_peak_time_stddev;
         double hit_rms;
@@ -96,6 +103,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         double hit_multiplicity_postSel;
         double t0;
         double t0_tick;
+        double t0_x_shift;
         double track_t_correction;
         double pulse_height;
         double mean;
@@ -105,6 +113,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         int bin_no;
         int num_waveforms;
         TVector3 track_start;
+        TVector3 track_end;
         
         // Truncated mean has to be a float
         float trunc_mean;
@@ -258,16 +267,27 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
         theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
-        track_length = thisTrack->Length();
-        cos_theta    = thisTrack->Theta();
-        track_start  = thisTrack->Start<TVector3>();
-        start_x      = track_start.X();
-
         std::vector< art::Ptr< anab::T0 > > t0_from_track;
         if (use_t0tagged_tracks) {
             //std::vector< art::Ptr< anab::T0 > > t0_from_track = t0_from_tracks.at(thisTrack.key());
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
+
+        t0_x_shift = t0_from_track.at(0)->Time() * 1.098; // mcc9 drift velocity
+
+        track_length   = thisTrack->Length();
+        cos_theta      = thisTrack->Theta();
+        track_start    = thisTrack->Start<TVector3>();
+        track_end      = thisTrack->End<TVector3>();
+        start_x        = track_start.X();
+        start_x_t0corr = track_start.X() + t0_x_shift;
+        start_y        = track_start.Y();
+        start_z        = track_start.Z();
+        end_x          = track_end.X();
+        end_x_t0corr   = track_end.X() + t0_x_shift;
+        end_y          = track_end.Y();
+        end_z          = track_end.Z();
+
 
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
@@ -621,6 +641,13 @@ void diffmod::LArDiffusion::beginJob()
         difftree->Branch("theta_xz"                     , &theta_xz);
         difftree->Branch("theta_yz"                     , &theta_yz);
         difftree->Branch("start_x"                      , &start_x);
+        difftree->Branch("start_x_t0corr"               , &start_x_t0corr);
+        difftree->Branch("start_y"                      , &start_y);
+        difftree->Branch("start_z"                      , &start_z);
+        difftree->Branch("end_x"                        , &end_x);
+        difftree->Branch("end_x_t0corr"                 , &end_x_t0corr);
+        difftree->Branch("end_y"                        , &end_y);
+        difftree->Branch("end_z"                        , &end_z);
         difftree->Branch("hit_peak_time"                , &hit_peak_time);
         difftree->Branch("hit_peak_time_stddev"         , &hit_peak_time_stddev);
         difftree->Branch("hit_rms"                      , &hit_rms);
@@ -633,6 +660,7 @@ void diffmod::LArDiffusion::beginJob()
         difftree->Branch("hit_multiplicity_postSel"     , &hit_multiplicity_postSel);
         difftree->Branch("t0"                           , &t0);
         difftree->Branch("t0_tick"                      , &t0_tick);
+        difftree->Branch("t0_x_shift"                   , &t0_x_shift);
         difftree->Branch("pulse_height"                 , &pulse_height);
         difftree->Branch("mean"                         , &mean);
         difftree->Branch("sigma"                        , &sigma);
