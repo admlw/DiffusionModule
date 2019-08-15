@@ -215,12 +215,12 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
     sigma_map_directory_file = p.get< std::string >("SigmaMapDirectoryFile", "DiffusionModule");
 
+    drift_velocity        = p.get< float        >("DriftVelocity"       , 0.1098);
     use_t0tagged_tracks   = p.get< bool         >("UseT0TaggedTracks"   , true);
     make_sigma_map        = p.get< bool         >("MakeSigmaMap"        , false);
     sigma_cut             = p.get< double       >("SigmaCut"            , 1.0);
     pulse_height_cut      = p.get< double       >("PulseHeightCut"      , 100.0);
     hit_GOF_cut           = p.get< double       >("HitGOFCut"           , 1.1);
-    drift_velocity        = p.get< float        >("DriftVelocity"       , 0.1098);
     peak_finder_threshold = p.get< float        >("PeakFinderThreshold" , 3.0);
     hit_min_channel       = p.get< unsigned int >("HitMinChannel"       , 6150);
     hit_multiplicity_cut  = p.get< int          >("HitMultiplicityCut"  , 1);
@@ -273,7 +273,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
 
-        t0_x_shift = t0_from_track.at(0)->Time() * 1.098; // mcc9 drift velocity
+        t0_x_shift = t0_from_track.at(0)->Time() * drift_velocity; // mcc9 drift velocity
 
         track_length   = thisTrack->Length();
         cos_theta      = thisTrack->Theta();
