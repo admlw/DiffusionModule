@@ -2,8 +2,8 @@
 
 <!-- project details -->
 <!DOCTYPE project [
-<!ENTITY release "08_00_00_19">
-<!ENTITY name "v08_00_00_19_diffusion">
+<!ENTITY release "08_00_00_20">
+<!ENTITY name "v08_00_00_20">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&name;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&name;/">
@@ -26,7 +26,7 @@
     <larsoft>
         <tag>&release;</tag>
         <qual>e17:prof</qual>
-        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_19_Diffusion.tar</local> 
+        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_20_Diffusion.tar</local> 
         <!-- <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local> -->
     </larsoft>
 
@@ -91,8 +91,7 @@
         <workdir>&resilient_dir;diffusion_ana</workdir>
         <outdir>&scratch_dir;diffusion_ana</outdir>
         <logdir>&scratch_dir;diffusion_ana</logdir>
-        <!-- <numjobs>255</numjobs> -->
-        <numjobs>1</numjobs> 
+        <numjobs>255</numjobs> 
         <numevents>50</numevents>
         <maxfilesperjob>100</maxfilesperjob>
         <memory>600</memory>
