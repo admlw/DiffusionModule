@@ -138,6 +138,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         std::string hit_wire_assn;
         std::string sigma_map_file_path;
         std::string sigma_map_directory_file;
+        const char* uboonedata_env;
         bool use_t0tagged_tracks;
         bool make_sigma_map;
         double sigma_cut;
@@ -213,7 +214,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     track_t0_assn         = p.get< std::string >("TrackT0Assn"  , "t0reco");
     hit_wire_assn         = p.get< std::string >("HitWireAssn"  , "gaushit");
 
-    sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
+    sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "blahblahblah");
     sigma_map_directory_file = p.get< std::string >("SigmaMapDirectoryFile", "DiffusionModule");
 
     drift_velocity        = p.get< float        >("DriftVelocity"       , 0.1098);
@@ -267,7 +268,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
         std::vector< art::Ptr< anab::T0 > > t0_from_track;
         if (use_t0tagged_tracks) {
-            //std::vector< art::Ptr< anab::T0 > > t0_from_track = t0_from_tracks.at(thisTrack.key());
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
 
@@ -288,22 +288,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
         theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
-        // If a t0 exists (should, if using diffusion-filtered sample), then
-        // go grab it and get the tick correction value
-        // Otherwise, just use the default in-time value of 800 ticks (for single muon samples)
-        /*
-        if (use_t0tagged_tracks) {
-          if (t0_from_track.size() == 1 ) {
-            art::Ptr< anab::T0 > thisT0 = t0_from_track.at(0);
-            t0 = thisT0->Time();
-          }
-          else continue;
-        }
-        else {
-          t0 = 800.; // 800 ticks default value for single muon samples
-        }
-        */
-
         std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
 
         t0_x_shift = t0 * drift_velocity; // mcc9 drift velocity
@@ -321,22 +305,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         end_y          = track_end.Y();
         end_z          = track_end.Z();
 
-
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
         t0_tick = t0 * 2;
-
-        /*
-         correction time is the t0 of the track 
-         + the number of ticks we drop
-         + the tick at which we begin to be in time
-        std::cout << "t0: " << t0 << std::endl;
-        std::cout << "drift velocity: " << drift_velocity << std::endl;
-        std::cout << "track_x_correction: " << track_x_correction << std::endl;
-        std::cout << "uncorr: track start x: " << thisTrack->Start().X() << " end x: " << thisTrack->End().X() << std::endl;
-        std::cout << "corr+: track start x: " << thisTrack->Start().X()+track_x_correction << " end x: " << thisTrack->End().X()+track_x_correction << std::endl;
-        std::cout << "corr-: track start x: " << thisTrack->Start().X()-track_x_correction << " end x: " << thisTrack->End().X()-track_x_correction << std::endl;
-        */
 
         // loop hits
         for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
@@ -718,12 +689,21 @@ void diffmod::LArDiffusion::beginJob()
         // Import sigmaMap, assuming it already exists
         if(!make_sigma_map) {
 
+            char fullPath[200];
+            uboonedata_env = getenv("UBOONEDATA_DIR");
+            if (uboonedata_env!=NULL) {
+                std::cout << "[DIFFMOD]: Got uboonedata env path " << uboonedata_env << std::endl;
+            }
+            strcpy(fullPath, uboonedata_env);
+            strcat(fullPath, sigma_map_file_path.c_str() );
+            
             std::cout << "[DIFFMOD]: Running without producing sigma map. Checking that it exists..." << std::endl;
-            std::cout << "[DIFFMOD]: Getting sigma map..." << std::endl;
-            TFile sigmaMap(sigma_map_file_path.c_str(), "READ");
+            std::cout << "[DIFFMOD]: Getting sigma map from file path " << fullPath << std::endl;
+            TFile sigmaMap(fullPath, "READ");
+            //TFile sigmaMap(sigma_map_file_path.c_str(), "READ");
 
             if (sigmaMap.IsOpen() == false){
-                std::cout << "[DIFFMOD]: No sigma map! Run module using run_sigma_map.fcl first, " << 
+                std::cout << "[DIFFMOD]: No sigma map! Run module using run_diffusion_module_sigmamap.fcl first, " << 
                              "or check that you're in the right directory.\n" << std::endl;
             }
 

@@ -39,7 +39,7 @@ physics:
       module_type: RandomNumberSaver
     }
 
-    t0reco: @local::T0RecoAnodeCathodePiercing_mc
+#t0reco: @local::T0RecoAnodeCathodePiercing_mc
 
   }
   
@@ -51,7 +51,7 @@ physics:
       module_type:            "DiffusionFilter"
       TrackLabel:             "pandora"
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
-      T0Label:                "t0reco"
+      T0Label:                "acpttagger"
       TrackLengthCut:  50
       TrackAngleCutXZLow:  -10
       TrackAngleCutXZHigh: 10

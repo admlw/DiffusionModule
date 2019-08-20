@@ -3,7 +3,7 @@ BEGIN_PROLOG
 diffusionconfig       : {
   module_type         : "LArDiffusion"
 
-  SigmaMapFilePath     : "DiffusionData/2019_08_15_sigma_map.root"
+  SigmaMapFilePath     : "DiffusionData/2019_08_16_sigma_map.root"
   SigmaMapDirectoryFile: "DiffusionModule"
 
   DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
@@ -22,7 +22,7 @@ diffusionconfig       : {
   NumberDroppedTicks  : 2400
   PeakFinderThreshold : 3.0
  
-  TrackLabel          : "pandora"
+  TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise
   WireLabel           : "butcher"
   HitLabel            : "gaushit"
   TrackHitAssn        : "pandora"

@@ -32,6 +32,7 @@ physics:
 
 #services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: false
-physics.analyzers.DiffusionModule.SigmaMapFilePath: "/uboone/app/users/amogan/mcc9_diffusion/srcs/uboonedata/DiffusionData/sigma_map_test.root"
+physics.analyzers.DiffusionModule.SigmaMapFilePath: "DiffusionModule/2019_8_16_sigma_map.root"
+#physics.analyzers.DiffusionModule.SigmaMapFilePath: "/uboone/app/users/amogan/mcc9_diffusion/srcs/uboonedata/DiffusionData/2019_8_16_sigma_map.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
