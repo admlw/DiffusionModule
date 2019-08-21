@@ -8,9 +8,9 @@ process_name: diffmod
 services:
 {
     TFileService:  {fileName: "sigma_map.root"}
-#TimeTracker:   @local::microboone_time_tracker
-#MemoryTracker: @local::microboone_memory_tracker
-#@table::microboone_simulation_services
+    TimeTracker:   @local::microboone_time_tracker
+    MemoryTracker: @local::microboone_memory_tracker
+    @table::microboone_simulation_services
 } # services
 
 source:
@@ -30,6 +30,6 @@ physics:
     end_paths: [ analysis ]
 } #physics
 
-#services.DetectorClocksService.InheritClockConfig: false
+services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: true
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true

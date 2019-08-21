@@ -214,7 +214,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     track_t0_assn         = p.get< std::string >("TrackT0Assn"  , "t0reco");
     hit_wire_assn         = p.get< std::string >("HitWireAssn"  , "gaushit");
 
-    sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "blahblahblah");
+    sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
     sigma_map_directory_file = p.get< std::string >("SigmaMapDirectoryFile", "DiffusionModule");
 
     drift_velocity        = p.get< float        >("DriftVelocity"       , 0.1098);
@@ -260,17 +260,21 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     art::FindManyP< anab::T0 > t0_from_tracks(track_handle, e, track_t0_assn);
     art::FindManyP< recob::Wire > wire_from_hits(hit_handle, e, hit_wire_assn);
 
+    std::cout << "[DIFFMOD] t0 from tracks size = " << t0_from_tracks.size() << std::endl;
+
     // loop tracks, get associated hits
-    std::cout << "[DIFFMOD] " << track_ptr_vector.size() << " tracks in this event" << std::endl;
+    std::cout << "[DIFFMOD] Track ptr vector size = " << track_ptr_vector.size() << std::endl;
     for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
 
         art::Ptr< recob::Track > thisTrack = track_ptr_vector.at(i_tr);
+        std::cout << "[DIFFMOD] This track length = " << thisTrack->Length() << std::endl;
 
         std::vector< art::Ptr< anab::T0 > > t0_from_track;
         if (use_t0tagged_tracks) {
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
 
+        std::cout << "[DIFFMOD] t0 vec size = " << t0_from_track.size() << std::endl;
         if (use_t0tagged_tracks && t0_from_track.size() != 1) {
             std::cout << "[DIFFMOD] Skipping non-t0-tagged track" << std::endl;
             continue;
@@ -284,13 +288,13 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
           t0 = 800.; // Make sure this matches the t0 in the generator fcl file if using single muons 
         }
 
-        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
-        theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
-        theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
-
         std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
 
         t0_x_shift = t0 * drift_velocity; // mcc9 drift velocity
+
+        ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
+        theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
+        theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
         track_length   = thisTrack->Length();
         cos_theta      = thisTrack->Theta();
