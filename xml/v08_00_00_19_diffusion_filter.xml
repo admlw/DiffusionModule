@@ -76,7 +76,7 @@
         <numjobs>10</numjobs> 
         <numevents>50</numevents>
         <maxfilesperjob>100</maxfilesperjob>
-        <memory>400</memory>
+        <memory>800</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
    </stage>

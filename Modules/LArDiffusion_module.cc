@@ -260,21 +260,16 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     art::FindManyP< anab::T0 > t0_from_tracks(track_handle, e, track_t0_assn);
     art::FindManyP< recob::Wire > wire_from_hits(hit_handle, e, hit_wire_assn);
 
-    std::cout << "[DIFFMOD] t0 from tracks size = " << t0_from_tracks.size() << std::endl;
-
     // loop tracks, get associated hits
-    std::cout << "[DIFFMOD] Track ptr vector size = " << track_ptr_vector.size() << std::endl;
     for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
 
         art::Ptr< recob::Track > thisTrack = track_ptr_vector.at(i_tr);
-        std::cout << "[DIFFMOD] This track length = " << thisTrack->Length() << std::endl;
 
         std::vector< art::Ptr< anab::T0 > > t0_from_track;
         if (use_t0tagged_tracks) {
             t0_from_track = t0_from_tracks.at(thisTrack.key());
         }
 
-        std::cout << "[DIFFMOD] t0 vec size = " << t0_from_track.size() << std::endl;
         if (use_t0tagged_tracks && t0_from_track.size() != 1) {
             std::cout << "[DIFFMOD] Skipping non-t0-tagged track" << std::endl;
             continue;
@@ -563,10 +558,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 }
             }
         }
-        numTracks++;
     }
-    std::cout << "[DIFFMOD] No. tracks = " << numTracks << std::endl;
-    numTracks = numTracks*2;
 }
 
 void diffmod::LArDiffusion::beginJob()

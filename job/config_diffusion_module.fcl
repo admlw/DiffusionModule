@@ -24,9 +24,9 @@ diffusionconfig       : {
  
   TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise
   WireLabel           : "butcher"
-  HitLabel            : "gaushit"
-  TrackHitAssn        : "pandora"
-  TrackT0Assn         : "t0reco"
+  HitLabel            : "gaushit" # diffsel for filtered, gaushit otherwise
+  TrackHitAssn        : "diffsel" # diffsel for filtered, pandora otherwise
+  TrackT0Assn         : "diffsel" # diffsel for filtered, pandora otherwise
   HitWireAssn         : "gaushit"
 }
 
