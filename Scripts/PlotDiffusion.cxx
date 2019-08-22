@@ -101,7 +101,8 @@ void makePlot(TString* inputFileName){
   const double DRIFT_VELOCITY=0.1098; // Average drift velocity
   //const double DRIFT_VELOCITY=0.10762; // Drift velocity near anode
 
-  TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
+  //TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
+  TString dirname = "/uboone/data/users/amogan/v08_00_00_20/output_diffmod_files/";
   TString *dir = &dirname;
   TFile *fInput = new TFile(*dir+*inputFileName, "READ");
   if (!fInput) {

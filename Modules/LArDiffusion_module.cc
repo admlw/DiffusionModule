@@ -103,7 +103,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
         double hit_charge_postSel;
         double hit_multiplicity_postSel;
         double t0;
-        double t0_tick;
+        //double t0_tick;
         double t0_x_shift;
         double track_t_correction;
         double pulse_height;
@@ -285,7 +285,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
         std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
 
-        t0_x_shift = t0 * drift_velocity; // mcc9 drift velocity
+        // Divide t0 by 2 to convert to microseconds (drift velocity is in cm/us)
+        // This gives the x-shift in cm
+        t0_x_shift = t0/2. * drift_velocity; 
 
         ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
         theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
@@ -306,7 +308,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
         std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
-        t0_tick = t0 * 2;
+        //t0_tick = t0 * 2;
 
         // loop hits
         for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
@@ -380,7 +382,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             // get peak bin tick after t0 correction
             if (use_t0tagged_tracks) {
                 maximum_tick = h_wire_in_window->GetMaximumBin()
-                    + tick_window_left - t0_tick;
+                    + tick_window_left - t0;
             }
             else {
                 maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
@@ -610,7 +612,7 @@ void diffmod::LArDiffusion::beginJob()
             "h_theta_yz_v_bin", 
             ";Bin no. ; #theta_{yz} (Deg.);", 
             number_time_bins, 0, number_time_bins, 
-            100, 0, 20);
+            250, 0, 50);
 
         h_sigma_hist_medians = tfs->make<TH1D>(
             "h_sigma_hist_medians", 
@@ -648,7 +650,7 @@ void diffmod::LArDiffusion::beginJob()
         difftree->Branch("hit_charge_postSel"           , &hit_charge_postSel);
         difftree->Branch("hit_multiplicity_postSel"     , &hit_multiplicity_postSel);
         difftree->Branch("t0"                           , &t0);
-        difftree->Branch("t0_tick"                      , &t0_tick);
+        //difftree->Branch("t0_tick"                      , &t0_tick);
         difftree->Branch("t0_x_shift"                   , &t0_x_shift);
         difftree->Branch("pulse_height"                 , &pulse_height);
         difftree->Branch("mean"                         , &mean);

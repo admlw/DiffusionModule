@@ -32,6 +32,6 @@ physics:
 
 services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: false
-physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/2019_08_16_sigma_map.root"
+physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_corsika_xz10_yz40_50k.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true

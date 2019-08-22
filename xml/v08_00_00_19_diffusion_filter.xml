@@ -4,6 +4,7 @@
 <!DOCTYPE project [
 <!ENTITY release "08_00_00_20">
 <!ENTITY name "v08_00_00_20">
+<!ENTITY outname "mcc9.0_corsika/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&name;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&name;/">
@@ -27,10 +28,10 @@
         <tag>&release;</tag>
         <qual>e17:prof</qual>
         <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_20_Diffusion.tar</local> 
-        <!-- <local>/pnfs/uboone/resilient/users/alister1/ubcode_v08_00_00_19.tar</local> -->
     </larsoft>
 
     <!-- t0 production -->
+    <!-- Automatically run as of MCC9.1; only use this stage for pre-MCC9.1 -->
     <stage name="t0prod">
         <!-- <inputdef>prodgenie_bnb_nu_corsika_v08_00_00_13_reco2</inputdef> -->
         <inputdef>data_extbnb_mcc9.1_v08_00_00_16_18_run1_reco2</inputdef> 
@@ -49,17 +50,18 @@
 
    <!-- diffusion filter -->
    <stage name="diffusionfilter">
-        <inputdef>data_extbnb_mcc9.1_v08_00_00_16_18_run1_reco2</inputdef>
+        <inputdef>data_extbnb_mcc9.1_v08_00_00_16_18_run3_G_reco2</inputdef>
         <!-- <inputlist>/pnfs/uboone/scratch/users/alister1/t0.list</inputlist> -->
         <fcl>run_diffusion_filter.fcl</fcl>
         <bookdir>&data_dir;diffusion_filter</bookdir>
         <workdir>&resilient_dir;diffusion_filter</workdir>
         <outdir>&scratch_dir;diffusion_filter</outdir>
         <logdir>&scratch_dir;diffusion_filter</logdir>
-        <numjobs>10</numjobs>
-        <numevents>50</numevents>
-        <maxfilesperjob>100</maxfilesperjob>
-        <memory>800</memory>
+        <numjobs>250</numjobs>
+        <maxfilesperjob>10</maxfilesperjob>
+        <numevents>200</numevents> <!-- ~20 events/file * 10 files/job -->
+        <!-- <memory>800</memory> -->
+        <memory>1200</memory>
         <datatier>diffusionfilter</datatier>
         <schema>root</schema>
    </stage>
@@ -68,14 +70,13 @@
    <stage name="diffusionsigmamap">
         <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist>
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
-        <bookdir>&data_dir;diffusion_sigmamap</bookdir>
-        <workdir>&resilient_dir;diffusion_sigmamap</workdir>
-        <outdir>&scratch_dir;diffusion_sigmamap</outdir>
-        <logdir>&scratch_dir;diffusion_sigmamap</logdir>
-        <!-- <numjobs>255</numjobs> -->
-        <numjobs>10</numjobs> 
-        <numevents>50</numevents>
-        <maxfilesperjob>100</maxfilesperjob>
+        <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
+        <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
+        <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
+        <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
+        <numjobs>255</numjobs> 
+        <maxfilesperjob>10</maxfilesperjob>
+        <numevents>500</numevents>
         <memory>800</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
@@ -93,8 +94,8 @@
         <outdir>&scratch_dir;diffusion_ana</outdir>
         <logdir>&scratch_dir;diffusion_ana</logdir>
         <numjobs>255</numjobs> 
-        <numevents>50</numevents>
-        <maxfilesperjob>100</maxfilesperjob>
+        <maxfilesperjob>10</maxfilesperjob>
+        <numevents>200</numevents>
         <memory>600</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>

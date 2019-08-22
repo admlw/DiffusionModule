@@ -197,7 +197,7 @@ namespace diffmod {
       double maxVal = h_rawDCorrected->GetMaximum();
       double fitLowerLimit = 0;
       double fitHigherLimit = 0;
-      double percentageOfHeight = 2.;
+      double percentageOfHeight = 10.;
       double cutOff = maxVal* percentageOfHeight/100.;
 
       for (int i = 0; i < 200; i++){
