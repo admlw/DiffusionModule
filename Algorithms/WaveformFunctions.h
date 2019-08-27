@@ -34,7 +34,7 @@ namespace diffmod {
 
           TH1D* applyGlobalBaselineCorrection(TH1D *h_rawD, TH1D *h_rawDCorrected);
 
-          double findXCorrection(WaveformFunctions waveFuncs, TH1D *summedWaveform, TH1D *h, int NUMBER_TICKS_PER_BIN, double mean);
+          double findXCorrection(TH1D *summedWaveform, TH1D *h, int NUMBER_TICKS_PER_BIN, double mean);
 
           std::vector<double> getSigma(TH1D *h_rawDCorrected);
 

@@ -523,7 +523,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             else
               waveform_tick_correction = 
                 _waveform_func.findXCorrection(
-                    _waveform_func, 
                     h_summed_wire_info_per_bin.at(bin_it), 
                     h_wire_baseline_corrected, 
                     number_ticks_per_bin, mean);
