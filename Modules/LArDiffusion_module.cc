@@ -278,7 +278,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     else {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
-      t0 = 800.; // units? 
+      t0 = 800.; // ticks
     }
 
     std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
@@ -481,16 +481,16 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             double pulseHeight_higherLimit = 
               pulseHeightMedians.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
 
-            /*
-               double sigma_lowerLimit = 
-               sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
-               double sigma_higherLimit = 
-               sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
-               double pulseHeight_lowerLimit = 
-               pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-               double pulseHeight_higherLimit = 
-               pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-               */
+            // Maximum 
+            // double sigma_lowerLimit = 
+            // sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+            // double sigma_higherLimit = 
+            // sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+            // double pulseHeight_lowerLimit = 
+            // pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+            // double pulseHeight_higherLimit = 
+            // pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+               
 
             if (sigma < sigma_lowerLimit 
                 || sigma > sigma_higherLimit 
@@ -526,7 +526,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                     h_summed_wire_info_per_bin.at(bin_it), 
                     h_wire_baseline_corrected, 
                     number_ticks_per_bin, mean);
-
 
             TH1D* h_waveform_tick_correction = 
               new TH1D("h_waveform_tick_correction", 
