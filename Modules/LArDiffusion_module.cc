@@ -287,9 +287,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
 
-    // Divide t0 by 2 to convert to microseconds (drift velocity is in cm/us)
-    // This gives the x-shift in cm
-    t0_x_shift = t0/2. * drift_velocity; 
+    // multiply t0 by drift velocity to get the x shift value
+    t0_x_shift = t0 * drift_velocity; 
+    t0_tick = t0 * 2; // convert to ticks
 
     ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
     theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
@@ -300,17 +300,15 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     track_start    = thisTrack->Start<TVector3>();
     track_end      = thisTrack->End<TVector3>();
     start_x        = track_start.X();
-    start_x_t0corr = track_start.X() + t0_x_shift;
+    start_x_t0corr = track_start.X() - t0_x_shift;
     start_y        = track_start.Y();
     start_z        = track_start.Z();
     end_x          = track_end.X();
-    end_x_t0corr   = track_end.X() + t0_x_shift;
+    end_x_t0corr   = track_end.X() - t0_x_shift;
     end_y          = track_end.Y();
     end_z          = track_end.Z();
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
-
-    //t0_tick = t0 * 2;
 
     // loop hits
     for (size_t i_hit = 0; i_hit < hits_from_track.size(); i_hit++){
