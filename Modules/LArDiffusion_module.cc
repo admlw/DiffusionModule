@@ -636,7 +636,6 @@ void diffmod::LArDiffusion::beginJob()
     difftree->Branch("hit_charge"                   , &hit_charge);
     difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
     difftree->Branch("t0"                           , &t0);
-    //difftree->Branch("t0_tick"                      , &t0_tick);
     difftree->Branch("t0_x_shift"                   , &t0_x_shift);
     difftree->Branch("pulse_height"                 , &pulse_height);
     difftree->Branch("mean"                         , &mean);
