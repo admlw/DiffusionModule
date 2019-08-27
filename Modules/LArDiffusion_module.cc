@@ -93,15 +93,11 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     double end_y;
     double end_z;
     double hit_peak_time;
+    double hit_peak_time_t0corr;
     double hit_peak_time_stddev;
     double hit_rms;
     double hit_charge;
     double hit_multiplicity;
-    double hit_peak_time_postSel;
-    double hit_peak_time_stddev_postSel;
-    double hit_rms_postSel;
-    double hit_charge_postSel;
-    double hit_multiplicity_postSel;
     double t0;
     double t0_tick_shift;
     double t0_x_shift;
@@ -321,17 +317,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       // get wire information for hit
       art::Ptr< recob::Wire > wire_from_hit = wire_from_hits.at(thisHit.key()).at(0);
       hit_peak_time        = thisHit->PeakTime();
+      hit_peak_time_t0corr = thisHit->PeakTime() - t0_tick_shift;
       hit_peak_time_stddev = thisHit->SigmaPeakTime();
       hit_rms              = thisHit->RMS();
       hit_charge           = thisHit->Integral();
       hit_multiplicity     = thisHit->Multiplicity();
-
-      // Hit information after quality cuts
-      hit_peak_time_postSel        = thisHit->PeakTime();
-      hit_peak_time_stddev_postSel = thisHit->SigmaPeakTime();
-      hit_rms_postSel              = thisHit->RMS();
-      hit_charge_postSel           = thisHit->Integral();
-      hit_multiplicity_postSel     = thisHit->Multiplicity();
 
       tick_window_size  = number_ticks_per_bin;
       tick_window_left  = hit_peak_time - tick_window_size/2;
@@ -640,15 +630,11 @@ void diffmod::LArDiffusion::beginJob()
     difftree->Branch("end_y"                        , &end_y);
     difftree->Branch("end_z"                        , &end_z);
     difftree->Branch("hit_peak_time"                , &hit_peak_time);
+    difftree->Branch("hit_peak_time_t0corr"         , &hit_peak_time_t0corr);
     difftree->Branch("hit_peak_time_stddev"         , &hit_peak_time_stddev);
     difftree->Branch("hit_rms"                      , &hit_rms);
     difftree->Branch("hit_charge"                   , &hit_charge);
     difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
-    difftree->Branch("hit_peak_time_postSel"        , &hit_peak_time_postSel);
-    difftree->Branch("hit_peak_time_stddev_postSel" , &hit_peak_time_stddev_postSel);
-    difftree->Branch("hit_rms_postSel"              , &hit_rms_postSel);
-    difftree->Branch("hit_charge_postSel"           , &hit_charge_postSel);
-    difftree->Branch("hit_multiplicity_postSel"     , &hit_multiplicity_postSel);
     difftree->Branch("t0"                           , &t0);
     //difftree->Branch("t0_tick"                      , &t0_tick);
     difftree->Branch("t0_x_shift"                   , &t0_x_shift);
