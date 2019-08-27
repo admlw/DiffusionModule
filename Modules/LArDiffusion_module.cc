@@ -103,7 +103,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     double hit_charge_postSel;
     double hit_multiplicity_postSel;
     double t0;
-    //double t0_tick;
+    double t0_tick_shift;
     double t0_x_shift;
     double track_t_correction;
     double pulse_height;
@@ -289,7 +289,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     // multiply t0 by drift velocity to get the x shift value
     t0_x_shift = t0 * drift_velocity; 
-    t0_tick = t0 * 2; // convert to ticks
+    t0_tick_shift = t0 * 2; // convert to ticks
 
     ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag > trkDir = thisTrack->StartDirection();
     theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
@@ -382,7 +382,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       // get peak bin tick after t0 correction
       if (use_t0tagged_tracks) {
         maximum_tick = h_wire_in_window->GetMaximumBin()
-          + tick_window_left - t0;
+          + tick_window_left - t0_tick_shift;
       }
       else {
         maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
