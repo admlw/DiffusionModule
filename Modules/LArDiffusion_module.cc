@@ -382,8 +382,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
         float value = wire_from_hit->Signal().at(i_tick);
 
-        std::cout << "filling " << i_tick - tick_window_left << " with " << value << std::endl;
-
         h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
 
         if (value > peak_finder_threshold) {

@@ -152,7 +152,6 @@ namespace diffmod {
       int testXCorr;
       double rms2 = 1000;
       for (int i = -5; i <= 5; i++){
-        std::cout << "i: " << i << std::endl;
         TH1D* h_summedClone = (TH1D*)summedWaveform->Clone("h_summedClone");
         TH1D* h_clone = (TH1D*)h->Clone("h_clone");
 
