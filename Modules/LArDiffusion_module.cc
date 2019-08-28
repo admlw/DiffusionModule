@@ -78,43 +78,41 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int event;
     int is_real_data;
 
-    int numTracks;
-    double maximum_tick;
-    double track_length;
-    double cos_theta;
-    double theta_xz;
-    double theta_yz;
-    double start_x;
-    double start_x_t0corr;
-    double start_y;
-    double start_z;
-    double end_x;
-    double end_x_t0corr;
-    double end_y;
-    double end_z;
-    double hit_peak_time;
-    double hit_peak_time_t0corr;
-    double hit_peak_time_stddev;
-    double hit_rms;
-    double hit_charge;
-    double hit_multiplicity;
-    double t0;
-    double t0_tick_shift;
-    double t0_x_shift;
-    double track_t_correction;
-    double pulse_height;
-    double mean;
-    double sigma;       
-    double fit_chisq;   
-    double waveform_tick_correction;
-    int bin_no;
-    int num_waveforms;
+    double maximum_tick             = -9999;
+    double track_length             = -9999;
+    double cos_theta                = -9999;
+    double theta_xz                 = -9999;
+    double theta_yz                 = -9999;
+    double start_x                  = -9999;
+    double start_x_t0corr           = -9999;
+    double start_y                  = -9999;
+    double start_z                  = -9999;
+    double end_x                    = -9999;
+    double end_x_t0corr             = -9999;
+    double end_y                    = -9999;
+    double end_z                    = -9999;
+    double hit_peak_time            = -9999;
+    double hit_peak_time_t0corr     = -9999;
+    double hit_peak_time_stddev     = -9999;
+    double hit_rms                  = -9999;
+    double hit_charge               = -9999;
+    double hit_multiplicity         = -9999;
+    double t0                       = -9999;
+    double t0_tick_shift            = -9999;
+    double t0_x_shift               = -9999;
+    double track_t_correction       = -9999;
+    double pulse_height             = -9999;
+    double fit_mean                 = -9999;
+    double fit_sigma                = -9999;
+    double fit_chisq                = -9999;
+    double waveform_tick_correction = -9999;
+    int bin_no                      = -9999;
+    int num_waveforms               = -9999;
     TVector3 track_start;
     TVector3 track_end;
 
     // Truncated mean has to be a float
     float trunc_mean;
-
 
     // For calculations 
     int number_ticks_per_bin;
@@ -123,7 +121,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int tick_window_right;
     int waveform_drift_size;
     int track_startX;
-
 
     // fhicl
     std::string track_label;
@@ -264,7 +261,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     std::vector< art::Ptr< anab::T0 > > t0_from_track;
     if (use_t0tagged_tracks) {
       t0_from_track = t0_from_tracks.at(thisTrack.key());
-      
+
       if (t0_from_track.size() != 1) {
         std::cout << "[DIFFMOD] Skipping non-t0-tagged track" << std::endl;
         continue;
@@ -445,16 +442,18 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
           // calculate sigma
           pulse_height = h_wire_baseline_corrected->GetMaximum();
-          mean         = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
-          sigma        = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
+          fit_mean     = _waveform_func.getSigma(h_wire_baseline_corrected).at(0);
+          fit_sigma    = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
           fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
 
+          difftree->Fill();
+
           if (make_sigma_map) {
-            h_sigma_hists.at(bin_no)->Fill(sigma);
-            h_sigma_v_bin_precut->Fill(bin_no, sigma);
+            h_sigma_hists.at(bin_no)->Fill(fit_sigma);
+            h_sigma_v_bin_precut->Fill(bin_no, fit_sigma);
             h_pulse_height_hists.at(bin_no)->Fill(pulse_height);
             h_pulse_height_v_bin_precut->Fill(bin_no, pulse_height);
-            h_sigma_v_pulse_height_precut->Fill(sigma, pulse_height);
+            h_sigma_v_pulse_height_precut->Fill(fit_sigma, pulse_height);
             if (theta_xz < 90)
               h_theta_xz_v_bin->Fill(bin_no, theta_xz);
             if (theta_xz > 90)
@@ -467,9 +466,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
           else {
             // For comparison
-            h_sigma_v_bin_precut->Fill(bin_no, sigma);
+            h_sigma_v_bin_precut->Fill(bin_no, fit_sigma);
             h_pulse_height_v_bin_precut->Fill(bin_no, pulse_height);
-            h_sigma_v_pulse_height_precut->Fill(sigma, pulse_height);
+            h_sigma_v_pulse_height_precut->Fill(fit_sigma, pulse_height);
 
             h_sigma_hist_medians->Fill(sigmaMedians.at(bin_it) );
             h_sigma_hist_maxs->Fill(sigmaMaxs.at(bin_it) );
@@ -494,21 +493,21 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             // pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
             // double pulseHeight_higherLimit = 
             // pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-               
 
-            if (sigma < sigma_lowerLimit 
-                || sigma > sigma_higherLimit 
+
+            if (fit_sigma < sigma_lowerLimit 
+                || fit_sigma > sigma_higherLimit 
                 || pulse_height < pulseHeight_lowerLimit 
                 || pulse_height > pulseHeight_higherLimit) {
               //std::cout << "Bad sigma value" << std::endl;
               continue;
             }
 
-            h_sigma_hists.at(bin_no)->Fill(sigma);
-            h_sigma_v_bin_postcut->Fill(bin_no, sigma);
+            h_sigma_hists.at(bin_no)->Fill(fit_sigma);
+            h_sigma_v_bin_postcut->Fill(bin_no, fit_sigma);
             h_pulse_height_hists.at(bin_no)->Fill(pulse_height);
             h_pulse_height_v_bin_postcut->Fill(bin_no, pulse_height);
-            h_sigma_v_pulse_height_postcut->Fill(pulse_height, sigma);
+            h_sigma_v_pulse_height_postcut->Fill(pulse_height, fit_sigma);
             if (theta_xz < 90)
               h_theta_xz_v_bin->Fill(bin_no, theta_xz);
             if (theta_xz > 90)
@@ -529,7 +528,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 _waveform_func.findXCorrection(
                     h_summed_wire_info_per_bin.at(bin_it), 
                     h_wire_baseline_corrected, 
-                    number_ticks_per_bin, mean);
+                    number_ticks_per_bin, fit_mean);
 
             TH1D* h_waveform_tick_correction = 
               new TH1D("h_waveform_tick_correction", 
@@ -543,12 +542,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                   ntick, 
                   h_wire_baseline_corrected->GetBinContent(ntick+waveform_tick_correction));
 
-            difftree->Fill();
 
             // finally add to output histograms
             h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_tick_correction);
             //std::cout << "[DIFFMOD]: Summed sigma: " << _waveform_func.getSigma(h_summed_wire_info_per_bin.at(bin_it)).at(1) << std::endl;
-          
+
           } // !make_sigma_map
         } // if maximum tick in bin
       } // loop bins
@@ -617,129 +615,116 @@ void diffmod::LArDiffusion::beginJob()
       ";Max #sigma per bin;", 
       number_time_bins, 0, number_time_bins);
 
-  if (!make_sigma_map) {
-    difftree = tfs->make<TTree>("difftree"          , "diffusion tree");
-    difftree->Branch("maximum_tick"                 , &maximum_tick);
-    difftree->Branch("track_length"                 , &track_length);
-    difftree->Branch("cos_theta"                    , &cos_theta);
-    difftree->Branch("theta_xz"                     , &theta_xz);
-    difftree->Branch("theta_yz"                     , &theta_yz);
-    difftree->Branch("start_x"                      , &start_x);
-    difftree->Branch("start_x_t0corr"               , &start_x_t0corr);
-    difftree->Branch("start_y"                      , &start_y);
-    difftree->Branch("start_z"                      , &start_z);
-    difftree->Branch("end_x"                        , &end_x);
-    difftree->Branch("end_x_t0corr"                 , &end_x_t0corr);
-    difftree->Branch("end_y"                        , &end_y);
-    difftree->Branch("end_z"                        , &end_z);
-    difftree->Branch("hit_peak_time"                , &hit_peak_time);
-    difftree->Branch("hit_peak_time_t0corr"         , &hit_peak_time_t0corr);
-    difftree->Branch("hit_peak_time_stddev"         , &hit_peak_time_stddev);
-    difftree->Branch("hit_rms"                      , &hit_rms);
-    difftree->Branch("hit_charge"                   , &hit_charge);
-    difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
-    difftree->Branch("t0"                           , &t0);
-    difftree->Branch("t0_x_shift"                   , &t0_x_shift);
-    difftree->Branch("pulse_height"                 , &pulse_height);
-    difftree->Branch("mean"                         , &mean);
-    difftree->Branch("sigma"                        , &sigma);
-    difftree->Branch("fit_chisq"                    , &fit_chisq);
-    difftree->Branch("waveform_tick_correction"     , &waveform_tick_correction);
-    difftree->Branch("bin_no"                       , &bin_no);
-    difftree->Branch("num_waveforms"                , &num_waveforms);
+  difftree = tfs->make<TTree>("difftree"          , "diffusion tree");
+  difftree->Branch("maximum_tick"                 , &maximum_tick);
+  difftree->Branch("track_length"                 , &track_length);
+  difftree->Branch("cos_theta"                    , &cos_theta);
+  difftree->Branch("theta_xz"                     , &theta_xz);
+  difftree->Branch("theta_yz"                     , &theta_yz);
+  difftree->Branch("start_x"                      , &start_x);
+  difftree->Branch("start_x_t0corr"               , &start_x_t0corr);
+  difftree->Branch("start_y"                      , &start_y);
+  difftree->Branch("start_z"                      , &start_z);
+  difftree->Branch("end_x"                        , &end_x);
+  difftree->Branch("end_x_t0corr"                 , &end_x_t0corr);
+  difftree->Branch("end_y"                        , &end_y);
+  difftree->Branch("end_z"                        , &end_z);
+  difftree->Branch("hit_peak_time"                , &hit_peak_time);
+  difftree->Branch("hit_peak_time_t0corr"         , &hit_peak_time_t0corr);
+  difftree->Branch("hit_peak_time_stddev"         , &hit_peak_time_stddev);
+  difftree->Branch("hit_rms"                      , &hit_rms);
+  difftree->Branch("hit_charge"                   , &hit_charge);
+  difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
+  difftree->Branch("t0"                           , &t0);
+  difftree->Branch("t0_x_shift"                   , &t0_x_shift);
+  difftree->Branch("pulse_height"                 , &pulse_height);
+  difftree->Branch("fit_mean"                     , &fit_mean);
+  difftree->Branch("fit_sigma"                    , &fit_sigma);
+  difftree->Branch("fit_chisq"                    , &fit_chisq);
+  difftree->Branch("waveform_tick_correction"     , &waveform_tick_correction);
+  difftree->Branch("bin_no"                       , &bin_no);
+  difftree->Branch("num_waveforms"                , &num_waveforms);
 
+  if (!make_sigma_map) {
     //h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
-    h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
     //h_correctedTicks = tfs->make<TH1D>("h_correctedTicks", ";Corrected tick value;", 1150, 0, 4600);
 
-    // Troubleshooting histograms
-    /*
-    //TH1I *h_nTrack = tfs->make<TH1I>("h_nTracks", ";No. Tracks/Event;", 100, 0, 100);
-    h_trackLength = tfs->make<TH1D>("h_trackLength", ";Track Length (cm);", 25, 0, 256);
-    h_cosTheta = tfs->make<TH1D>("h_cosTheta", ";Track cos(#theta);", 50, -1, 1); 
-    h_startX = tfs->make<TH1D>("h_startX", ";Starting x-Position (cm);", 36, -50, 310);
-    h_sigma = tfs->make<TH1D>("h_sigma", ";#sigma^{2};", 100, 0, 10);
-    h_pulseHeight = tfs->make<TH1D>("h_pulseHeight", ";Pulse Height;", 50, 0, 100);
+    h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
+   
+    // Import sigmaMap, assuming it already exists
+    char fullPath[200];
+    uboonedata_env = getenv("UBOONEDATA_DIR");
+    if (uboonedata_env!=NULL) {
+      std::cout << "[DIFFMOD]: Got uboonedata env path " << uboonedata_env << std::endl;
+    }
+    strcpy(fullPath, uboonedata_env);
+    strcat(fullPath, sigma_map_file_path.c_str() );
 
-    h_driftVsigma = tfs->make<TH2D>("h_driftVsigma", ";Drift Bin; #sigma;", 25, 0, 256, 100, 0, 20);
-    h_driftVPulseHeight = tfs->make<TH2D>("h_driftVPulseHeight", ";Drift Distance (cm); Pulse Height;", 25, 0, 25, 50, 0, 100);
-    */
+    std::cout << "[DIFFMOD]: Running without producing sigma map. Checking that it exists..." << std::endl;
+    std::cout << "[DIFFMOD]: Getting sigma map from file path " << fullPath << std::endl;
+    TFile sigmaMap(fullPath, "READ");
+    //TFile sigmaMap(sigma_map_file_path.c_str(), "READ");
 
-    //int numTracks = 0;
+    if (sigmaMap.IsOpen() == false){
+      std::cout << "[DIFFMOD]: No sigma map! Run module using run_diffusion_module_sigmamap.fcl first, " << 
+        "or check that you're in the right directory.\n" << std::endl;
+    }
+
+    std::cout << "[DIFFMOD]: Got sigma map" << std::endl;
+    std::cout << "[DIFFMOD]: Getting sigma and pulse heights hists..." << std::endl;
 
     for (int i = 0; i < number_time_bins; i++){
+
+      // declare summed waveforms
       TString histo_name = Form("summed_waveform_bin_%i", i);
       h_summed_wire_info_per_bin.push_back(tfs->make<TH1D>(histo_name, "", number_ticks_per_bin, waveform_intime_start + (i * number_ticks_per_bin), waveform_intime_start + ((i+1) * number_ticks_per_bin)));
 
-    }
-    // Import sigmaMap, assuming it already exists
-    if(!make_sigma_map) {
+      sigmaDistsPerBin.resize(0);
 
-      char fullPath[200];
-      uboonedata_env = getenv("UBOONEDATA_DIR");
-      if (uboonedata_env!=NULL) {
-        std::cout << "[DIFFMOD]: Got uboonedata env path " << uboonedata_env << std::endl;
-      }
-      strcpy(fullPath, uboonedata_env);
-      strcat(fullPath, sigma_map_file_path.c_str() );
+      TString sigmaMapFilePath(sigma_map_directory_file);
+      TString sigmaMapHistoName = Form("/h_sigma_%i", i); 
+      TString t = sigmaMapFilePath+sigmaMapHistoName;
+      h_sigma_hists.push_back((TH1D*)sigmaMap.Get(t.Data()));
 
-      std::cout << "[DIFFMOD]: Running without producing sigma map. Checking that it exists..." << std::endl;
-      std::cout << "[DIFFMOD]: Getting sigma map from file path " << fullPath << std::endl;
-      TFile sigmaMap(fullPath, "READ");
-      //TFile sigmaMap(sigma_map_file_path.c_str(), "READ");
+      TString pulseHeightHistoName = Form("/h_pulse_height_%i", i); 
+      TString t2 = sigmaMapFilePath+pulseHeightHistoName;
+      h_pulse_height_hists.push_back((TH1D*)sigmaMap.Get(t2.Data()));
 
-      if (sigmaMap.IsOpen() == false){
-        std::cout << "[DIFFMOD]: No sigma map! Run module using run_diffusion_module_sigmamap.fcl first, " << 
-          "or check that you're in the right directory.\n" << std::endl;
-      }
+      // Three options for picking out waveforms, either
+      // 1) get waveforms around the median
+      // 2) get the peak bin value
+      // 3) calculate the truncated mean
 
-      std::cout << "[DIFFMOD]: Got sigma map" << std::endl;
-      std::cout << "[DIFFMOD]: Getting sigma and pulse heights hists..." << std::endl;
+      // OPTION 1) Calculate medians in each bin
+      sigmaMedians.push_back(_waveform_func.getMedian(h_sigma_hists.at(i) ) );
+      pulseHeightMedians.push_back(_waveform_func.getMedian(h_pulse_height_hists.at(i) ) );
 
-      for (int i = 0; i < number_time_bins; i++){
+      // OPTION 2) Calculate maximum in each bin
+      int sigmaMaxBin = h_sigma_hists.at(i)->GetMaximumBin();
+      int pulseHeightMaxBin = h_pulse_height_hists.at(i)->GetMaximumBin();
+      sigmaMaxs.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(sigmaMaxBin) );
+      pulseHeightMaxs.push_back(h_pulse_height_hists.at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin) );
 
-        sigmaDistsPerBin.resize(0);
-
-        TString sigmaMapFilePath(sigma_map_directory_file);
-        TString sigmaMapHistoName = Form("/h_sigma_%i", i); 
-        TString t = sigmaMapFilePath+sigmaMapHistoName;
-        h_sigma_hists.push_back((TH1D*)sigmaMap.Get(t.Data()));
-
-        TString pulseHeightHistoName = Form("/h_pulse_height_%i", i); 
-        TString t2 = sigmaMapFilePath+pulseHeightHistoName;
-        h_pulse_height_hists.push_back((TH1D*)sigmaMap.Get(t2.Data()));
-
-        // Calculate medians in each bin
-        sigmaMedians.push_back(_waveform_func.getMedian(h_sigma_hists.at(i) ) );
-        pulseHeightMedians.push_back(_waveform_func.getMedian(h_pulse_height_hists.at(i) ) );
-
-        // Calculate maximum in each bin
-        int sigmaMaxBin = h_sigma_hists.at(i)->GetMaximumBin();
-        int pulseHeightMaxBin = h_pulse_height_hists.at(i)->GetMaximumBin();
-        sigmaMaxs.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(sigmaMaxBin) );
-        pulseHeightMaxs.push_back(h_pulse_height_hists.at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin) );
-
-        // Take sigma hist and calculate truncated mean 
-        for (int j = 1; j < h_sigma_hists.at(i)->GetNbinsX()+1; j++) {
-          if (h_sigma_hists.at(i)->GetBinContent(j) > 0) {
-            for (int k = 0; k < h_sigma_hists.at(i)->GetBinContent(j); k++ ) {
-              sigmaDistsPerBin.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) );
-            }
+      // OPTION 3) Take sigma hist and calculate truncated mean 
+      for (int j = 1; j < h_sigma_hists.at(i)->GetNbinsX()+1; j++) {
+        if (h_sigma_hists.at(i)->GetBinContent(j) > 0) {
+          for (int k = 0; k < h_sigma_hists.at(i)->GetBinContent(j); k++ ) {
+            sigmaDistsPerBin.push_back(h_sigma_hists.at(i)->GetXaxis()->GetBinCenter(j) );
           }
         }
-        std::sort(sigmaDistsPerBin.begin(), sigmaDistsPerBin.end() );
-        if (sigmaDistsPerBin.size() > 0){
-          trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(
-              sigmaDistsPerBin,    // v
-              0,                   // nmin
-              1000,                // nmax
-              0,                   // currentiteration
-              0,                   // lmin
-              0.02,                // convergence limit
-              1);                  // nsigma
-        }
-        std::cout << sigmaMedians.at(i) << "\t" << sigmaMaxs.at(i) << "\t" << trunc_mean << std::endl;
       }
+      std::sort(sigmaDistsPerBin.begin(), sigmaDistsPerBin.end() );
+      if (sigmaDistsPerBin.size() > 0){
+        trunc_mean = _trunc_mean_func.CalcIterativeTruncMean(
+            sigmaDistsPerBin,    // v
+            0,                   // nmin
+            1000,                // nmax
+            0,                   // currentiteration
+            0,                   // lmin
+            0.02,                // convergence limit
+            1);                  // nsigma
+      }
+      std::cout << sigmaMedians.at(i) << "\t" << sigmaMaxs.at(i) << "\t" << trunc_mean << std::endl;
     }
   }
   else {
