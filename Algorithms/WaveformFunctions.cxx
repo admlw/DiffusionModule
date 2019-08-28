@@ -137,26 +137,27 @@ namespace diffmod {
     }
     */
 
-    double WaveformFunctions::findXCorrection(TH1D* summedWaveform, TH1D* h, int NUMBER_TICKS_PER_BIN, double mean){
+    double WaveformFunctions::findXCorrection(TH1D* summedWaveform, TH1D* h, int NUMBER_TICKS_PER_BIN, double fit_mean){
 
       int centerBin = -1;
       if (summedWaveform->GetMaximum() == 0){
         centerBin = NUMBER_TICKS_PER_BIN/2;
       }
       else {
-        // First element of vector returned by getSigma gives the mean
+        // First element of vector returned by getSigma gives the fit_mean
         centerBin = summedWaveform->FindBin(this->getSigma(summedWaveform).at(0));
       }
-
 
       int distanceToBinCenter = 0;
       int testXCorr;
       double rms2 = 1000;
       for (int i = -5; i <= 5; i++){
+        std::cout << "i: " << i << std::endl;
         TH1D* h_summedClone = (TH1D*)summedWaveform->Clone("h_summedClone");
         TH1D* h_clone = (TH1D*)h->Clone("h_clone");
 
-        testXCorr = centerBin - h->FindBin(mean) + i;
+        testXCorr = centerBin - h->FindBin(fit_mean) + i;
+
         for (int ntick = 1; ntick <= h->GetNbinsX(); ntick++){
 
           h_clone->SetBinContent(ntick, h->GetBinContent(ntick + testXCorr));
@@ -167,7 +168,6 @@ namespace diffmod {
 
 
         double rms2Test = getRms2(h_summedClone);
-
         if (rms2Test < rms2){
 
           rms2 = rms2Test;

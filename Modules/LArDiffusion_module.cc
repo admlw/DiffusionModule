@@ -284,7 +284,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       t0_from_track = t0_from_tracks.at(thisTrack.key());
 
       if (t0_from_track.size() != 1) {
-        std::cout << "[DIFFMOD] Skipping non-t0-tagged track" << std::endl;
         continue;
       }
       else if (t0_from_track.size() == 1) {
@@ -298,8 +297,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
       t0 = 800.; // ticks
     }
-
-    std::cout << "[DIFFMOD] t0 = " << t0 << std::endl;
 
     // multiply t0 by drift velocity to get the x shift value
     t0_x_shift = t0 * drift_velocity; 
@@ -396,6 +393,16 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
       }
 
+      MF_LOG_VERBATIM("LArDiffusion")
+        << "PRINTING INFORMATION FOR HIT " << i_hit
+        << "\n-- hit_peak_time        : "       << hit_peak_time
+        << "\n-- t0_tick_shift        : "       << t0_tick_shift
+        << "\n-- hit_peak_time_t0corr : "       << hit_peak_time_t0corr
+        << "\n-- tick_window_size     : "       << tick_window_size
+        << "\n-- tick_window_left     : "       << tick_window_left
+        << "\n-- tick_window_right    : "       << tick_window_right
+        << "\n-- maximum_tick         : "       << maximum_tick; 
+
       //h_correctedTicks->Fill(maximum_tick);
 
       // now the magic: 
@@ -403,13 +410,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       // t0-corrected pulse center is in each bin
       // if it is then sum the pulses
 
-      for (int bin_it = 0; bin_it < number_time_bins; bin_it++){
+      difftree->Fill();
 
-        MF_LOG_VERBATIM("LArDiffusion")  
-          <<  "Bin no. " << bin_it 
-          <<  "\n Maximum tick: " << maximum_tick 
-          <<  "\n Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin 
-          <<  "\n Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin;
+      for (int bin_it = 0; bin_it < number_time_bins; bin_it++){
 
         // get bin edges
         double binEdgeLeft  = waveform_intime_start + ((bin_it)   * number_ticks_per_bin);
@@ -425,6 +428,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         if (maximum_tick >= binEdgeLeft && maximum_tick < binEdgeRight) {
 
           bin_no = bin_it;
+
+          MF_LOG_VERBATIM("LArDiffusion")
+            << "-- Falls into bin "    << bin_no
+            << "\n-- histogram set to"
+            << "\n---- binEdgeLeft: "  << binEdgeLeft
+            << "\n---- binEdgeRight: " << binEdgeRight;
 
           //h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
@@ -465,7 +474,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
           fit_sigma    = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
           fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
 
-          difftree->Fill();
+          //difftree->Fill();
 
           if (make_sigma_map) {
             h_sigma_hists.at(bin_no)->Fill(fit_sigma);
@@ -540,14 +549,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
             // Now find the shift (in ticks) needed to minimise the rms 
             // of the sum of the histograms
-            if (h_summed_wire_info_per_bin.at(bin_it)->Integral() == 0) 
+            if (h_summed_wire_info_per_bin.at(bin_it)->Integral() == 0){
               waveform_tick_correction = 0;
-            else
+            }
+            else {
               waveform_tick_correction = 
                 _waveform_func.findXCorrection(
                     h_summed_wire_info_per_bin.at(bin_it), 
                     h_wire_baseline_corrected, 
-                    number_ticks_per_bin, fit_mean);
+                    number_ticks_per_bin, 
+                    fit_mean);
+            }
 
             TH1D* h_waveform_tick_correction = 
               new TH1D("h_waveform_tick_correction", 
