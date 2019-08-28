@@ -394,18 +394,22 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
            std::cout << "[DIFFMOD]: Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
            */
 
+        // get bin edges
+        double binEdgeLeft  = waveform_intime_start + ((bin_it)   * number_ticks_per_bin);
+        double binEdgeRight = waveform_intime_start + ((bin_it+1) * number_ticks_per_bin);
+
         // Set binning for histograms
         h_wire_baseline_corrected->SetBins(
             h_wire_in_window->GetNbinsX(),
-            waveform_intime_start + (bin_it) * number_ticks_per_bin, // 800 + bin_it*184
-            waveform_intime_start + (bin_it + 1) * number_ticks_per_bin);
+            binEdgeLeft, 
+            binEdgeRight);
 
-        if (maximum_tick >= (waveform_intime_start + bin_it * number_ticks_per_bin)
-            && maximum_tick < (waveform_intime_start + (bin_it + 1) * number_ticks_per_bin)) {
+        // if maximum tick of the histogram is in this deift bin, grab it! 
+        if (maximum_tick >= binEdgeLeft && maximum_tick < binEdgeRight) {
 
           bin_no = bin_it;
 
-          h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
+          //h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
           // apply baseline correction
           h_wire_baseline_corrected = 
