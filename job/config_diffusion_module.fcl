@@ -23,11 +23,12 @@ diffusionconfig       : {
   PeakFinderThreshold : 3.0
  
   TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise
+  HitLabel            : "diffsel" # diffsel for filtered, gaushit otherwise
   WireLabel           : "butcher"
-  HitLabel            : "gaushit" # diffsel for filtered, gaushit otherwise
+  
   TrackHitAssn        : "diffsel" # diffsel for filtered, pandora otherwise
   TrackT0Assn         : "diffsel" # diffsel for filtered, pandora otherwise
-  HitWireAssn         : "gaushit"
+
 }
 
 END_PROLOG
