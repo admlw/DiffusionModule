@@ -55,8 +55,8 @@ physics:
       TrackLengthCut:  50
       TrackAngleCutXZLow:  -10
       TrackAngleCutXZHigh: 10
-      TrackAngleCutYZLow:  -40
-      TrackAngleCutYZHigh: 40
+      TrackAngleCutYZLow:  -20
+      TrackAngleCutYZHigh: 20
 
     }
   }
