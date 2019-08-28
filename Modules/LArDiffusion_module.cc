@@ -130,7 +130,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::string hit_label;
     std::string track_hit_assn;
     std::string track_t0_assn;
-    std::string hit_wire_assn;
     std::string sigma_map_file_path;
     std::string sigma_map_directory_file;
     const char* uboonedata_env;
@@ -207,7 +206,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   hit_label             = p.get< std::string >("HitLabel"     , "gaushit");
   track_hit_assn        = p.get< std::string >("TrackHitAssn" , "pandora");
   track_t0_assn         = p.get< std::string >("TrackT0Assn"  , "t0reco");
-  hit_wire_assn         = p.get< std::string >("HitWireAssn"  , "gaushit");
 
   sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
   sigma_map_directory_file = p.get< std::string >("SigmaMapDirectoryFile", "DiffusionModule");
@@ -232,23 +230,28 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
 
   MF_LOG_VERBATIM("LArDiffusion") 
     << "PRINTING FHICL CONFIGURATION"
-    << "\n-- drift_velocity       : " <<  drift_velocity        
-    << "\n-- use_t0tagged_tracks  : " <<  use_t0tagged_tracks   
-    << "\n-- make_sigma_map       : " <<  make_sigma_map        
-    << "\n-- sigma_cut            : " <<  sigma_cut             
-    << "\n-- pulse_height_cut     : " <<  pulse_height_cut      
-    << "\n-- hit_GOF_cut          : " <<  hit_GOF_cut           
-    << "\n-- peak_finder_threshold: " <<  peak_finder_threshold 
-    << "\n-- hit_min_channel      : " <<  hit_min_channel       
-    << "\n-- hit_multiplicity_cut : " <<  hit_multiplicity_cut  
-    << "\n-- hit_view             : " <<  hit_view              
-    << "\n-- waveform_size        : " <<  waveform_size         
-    << "\n-- waveform_intime_start: " <<  waveform_intime_start 
-    << "\n-- waveform_intime_end  : " <<  waveform_intime_end   
-    << "\n-- number_time_bins     : " <<  number_time_bins      
-    << "\n-- number_dropped_ticks : " <<  number_dropped_ticks  
-    << "\n-- waveform_drift_size  : " <<  waveform_drift_size   
-    << "\n-- number_ticks_per_bin : " <<  number_ticks_per_bin;
+    << "\n-- track_label           : " << track_label
+    << "\n-- wire_label            : " << wire_label
+    << "\n-- hit_label             : " << hit_label
+    << "\n-- track_hit_assn        : " << track_hit_assn
+    << "\n-- track_t0_assn         : " << track_t0_assn
+    << "\n-- drift_velocity        : " << drift_velocity
+    << "\n-- use_t0tagged_tracks   : " << use_t0tagged_tracks
+    << "\n-- make_sigma_map        : " << make_sigma_map
+    << "\n-- sigma_cut             : " << sigma_cut
+    << "\n-- pulse_height_cut      : " << pulse_height_cut
+    << "\n-- hit_GOF_cut           : " << hit_GOF_cut
+    << "\n-- peak_finder_threshold : " << peak_finder_threshold
+    << "\n-- hit_min_channel       : " << hit_min_channel
+    << "\n-- hit_multiplicity_cut  : " << hit_multiplicity_cut
+    << "\n-- hit_view              : " << hit_view
+    << "\n-- waveform_size         : " << waveform_size
+    << "\n-- waveform_intime_start : " << waveform_intime_start
+    << "\n-- waveform_intime_end   : " << waveform_intime_end
+    << "\n-- number_time_bins      : " << number_time_bins
+    << "\n-- number_dropped_ticks  : " << number_dropped_ticks
+    << "\n-- waveform_drift_size   : " << waveform_drift_size
+    << "\n-- number_ticks_per_bin  : " << number_ticks_per_bin;
 
 }
 
@@ -267,6 +270,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
   std::vector< art::Ptr<recob::Track> > track_ptr_vector;
   art::fill_ptr_vector(track_ptr_vector, track_handle);
 
+  // Wires
+  art::Handle< std::vector<recob::Wire> > wire_handle;
+  e.getByLabel(wire_label, wire_handle);
+  std::vector< art::Ptr<recob::Wire> > wire_ptr_vector;
+  art::fill_ptr_vector(wire_ptr_vector, wire_handle);
+
   // Hits 
   art::Handle< std::vector<recob::Hit> > hit_handle;
   e.getByLabel(hit_label, hit_handle);
@@ -274,7 +283,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
   // Associations
   art::FindManyP< recob::Hit > hits_from_tracks(track_handle, e, track_hit_assn);
   art::FindManyP< anab::T0 > t0_from_tracks(track_handle, e, track_t0_assn);
-  art::FindManyP< recob::Wire > wire_from_hits(hit_handle, e, hit_wire_assn);
 
   // loop tracks, get associated hits
   for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
@@ -332,7 +340,15 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut, hit_multiplicity_cut, hit_view, hit_min_channel)) continue;
 
       // get wire information for hit
-      art::Ptr< recob::Wire > wire_from_hit = wire_from_hits.at(thisHit.key()).at(0);
+      art::Ptr< recob::Wire > wire_from_hit;
+     
+      for (size_t i_w = 0; i_w < wire_ptr_vector.size(); i_w++){
+
+        if ( wire_ptr_vector.at(i_w)->Channel() == thisHit->Channel())
+          wire_from_hit = wire_ptr_vector.at(i_w);
+
+      }
+
       hit_peak_time        = thisHit->PeakTime();
       hit_peak_time_t0corr = thisHit->PeakTime() - t0_tick_shift;
       hit_peak_time_stddev = thisHit->SigmaPeakTime();
@@ -385,9 +401,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         }
 
       }
-
-      std::cout << "h_wire_in_window" << std::endl;
-      this->printHistogram(h_wire_in_window);
 
       if (peak_counter != 1) continue;
 
@@ -447,9 +460,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             _waveform_func.applyGlobalBaselineCorrection(
                 h_wire_in_window, 
                 h_wire_baseline_corrected); 
-
-          std::cout << "h_wire_baseline_corrected" << std::endl;
-          this->printHistogram(h_wire_baseline_corrected);
 
           // Save individual waveform for plotting
           //  TODO: Why is this segfaulting?
@@ -580,9 +590,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               h_waveform_tick_correction->SetBinContent(
                   ntick, 
                   h_wire_baseline_corrected->GetBinContent(ntick+waveform_tick_correction));
-
-            std::cout << "h_waveform_tick_correction" << std::endl;
-            this->printHistogram(h_waveform_tick_correction);
 
             // finally add to output histograms
             h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_tick_correction);
