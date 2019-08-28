@@ -227,6 +227,27 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   number_dropped_ticks  = p.get< int          >("NumberDroppedTicks"  , 2400);
   waveform_drift_size   = waveform_intime_end - waveform_intime_start; // 4600
   number_ticks_per_bin  = waveform_drift_size/number_time_bins; // 184
+
+  MF_LOG_VERBATIM("LArDiffusion") 
+    << "PRINTING FHICL CONFIGURATION"
+    << "\n-- drift_velocity       : " <<  drift_velocity        
+    << "\n-- use_t0tagged_tracks  : " <<  use_t0tagged_tracks   
+    << "\n-- make_sigma_map       : " <<  make_sigma_map        
+    << "\n-- sigma_cut            : " <<  sigma_cut             
+    << "\n-- pulse_height_cut     : " <<  pulse_height_cut      
+    << "\n-- hit_GOF_cut          : " <<  hit_GOF_cut           
+    << "\n-- peak_finder_threshold: " <<  peak_finder_threshold 
+    << "\n-- hit_min_channel      : " <<  hit_min_channel       
+    << "\n-- hit_multiplicity_cut : " <<  hit_multiplicity_cut  
+    << "\n-- hit_view             : " <<  hit_view              
+    << "\n-- waveform_size        : " <<  waveform_size         
+    << "\n-- waveform_intime_start: " <<  waveform_intime_start 
+    << "\n-- waveform_intime_end  : " <<  waveform_intime_end   
+    << "\n-- number_time_bins     : " <<  number_time_bins      
+    << "\n-- number_dropped_ticks : " <<  number_dropped_ticks  
+    << "\n-- waveform_drift_size  : " <<  waveform_drift_size   
+    << "\n-- number_ticks_per_bin : " <<  number_ticks_per_bin;
+
 }
 
 void diffmod::LArDiffusion::analyze(art::Event const & e) {
@@ -384,12 +405,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
       for (int bin_it = 0; bin_it < number_time_bins; bin_it++){
 
-        /*
-           std::cout << "[DIFFMOD]: Bin no. " << bin_it << std::endl;
-           std::cout << "[DIFFMOD]: Maximum tick: " << maximum_tick << std::endl;
-           std::cout << "[DIFFMOD]: Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin << std::endl;
-           std::cout << "[DIFFMOD]: Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin << std::endl;
-           */
+        MF_LOG_VERBATIM("LArDiffusion")  
+          <<  "Bin no. " << bin_it 
+          <<  "\n Maximum tick: " << maximum_tick 
+          <<  "\n Tick low: " << waveform_intime_start + bin_it*number_ticks_per_bin 
+          <<  "\n Tick high: " << waveform_intime_start + (bin_it+1)*number_ticks_per_bin;
 
         // get bin edges
         double binEdgeLeft  = waveform_intime_start + ((bin_it)   * number_ticks_per_bin);
@@ -415,30 +435,29 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 h_wire_baseline_corrected); 
 
           // Save individual waveform for plotting
-          /*
-           * TODO: Why is this segfaulting?
-           if (run == 1 && sub_run == 785 && event == 35281) {
-           double lowVal = 0., highVal = 0.;
-           lowVal = h_wire_in_window->GetBinLowEdge(1);
-           std::cout << "Got low val " << lowVal << std::endl;
-           highVal = h_wire_in_window->GetBinLowEdge(h_wire_in_window->GetNbinsX() );
-           std::cout << "Got high val " << highVal << std::endl;
-           if (!h_single_waveform) {
-           std::cout << "Bad single waveform hist" << std::endl;
-           continue;
-           }
-           h_single_waveform->GetXaxis()->SetLimits(lowVal, highVal);
-           std::cout << "Set limits" << std::endl;
-          //h_single_waveform->GetXaxis()->SetLimits(4300, 4500);
-          h_single_waveform->GetYaxis()->SetRangeUser(-1, 8);
-          std::cout << "Set range" << std::endl;
-          for (int i_wv = 1; i_wv < 101; i_wv++) {
-          h_single_waveform->SetBinContent(i_wv, h_wire_in_window->GetBinContent(i_wv+50) );
-          //std::cout << "wvfm bin " << i_wv << " has " << h_single_waveform->GetBinContent(i_wv) << std::endl;
-          //std::cout << "Should be " << h_wire_in_window->GetBinContent(i_wv) << std::endl;
-          }
-          }   
-          */
+          //  TODO: Why is this segfaulting?
+          // if (run == 1 && sub_run == 785 && event == 35281) {
+          // double lowVal = 0., highVal = 0.;
+          // lowVal = h_wire_in_window->GetBinLowEdge(1);
+          // std::cout << "Got low val " << lowVal << std::endl;
+          // highVal = h_wire_in_window->GetBinLowEdge(h_wire_in_window->GetNbinsX() );
+          // std::cout << "Got high val " << highVal << std::endl;
+          // if (!h_single_waveform) {
+          // std::cout << "Bad single waveform hist" << std::endl;
+          // continue;
+          // }
+          // h_single_waveform->GetXaxis()->SetLimits(lowVal, highVal);
+          // std::cout << "Set limits" << std::endl;
+          ////h_single_waveform->GetXaxis()->SetLimits(4300, 4500);
+          // h_single_waveform->GetYaxis()->SetRangeUser(-1, 8);
+          // std::cout << "Set range" << std::endl;
+          // for (int i_wv = 1; i_wv < 101; i_wv++) {
+          // h_single_waveform->SetBinContent(i_wv, h_wire_in_window->GetBinContent(i_wv+50) );
+          ////std::cout << "wvfm bin " << i_wv << " has " << h_single_waveform->GetBinContent(i_wv) << std::endl;
+          ////std::cout << "Should be " << h_wire_in_window->GetBinContent(i_wv) << std::endl;
+          //}
+          //}   
+
 
           // calculate sigma
           pulse_height = h_wire_baseline_corrected->GetMaximum();
@@ -650,7 +669,7 @@ void diffmod::LArDiffusion::beginJob()
     //h_correctedTicks = tfs->make<TH1D>("h_correctedTicks", ";Corrected tick value;", 1150, 0, 4600);
 
     h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
-   
+
     // Import sigmaMap, assuming it already exists
     char fullPath[200];
     uboonedata_env = getenv("UBOONEDATA_DIR");
