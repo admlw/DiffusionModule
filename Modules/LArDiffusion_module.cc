@@ -504,7 +504,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               continue;
             }
 
-            //h_sigma_hists.at(bin_no)->Fill(sigma);
+            h_sigma_hists.at(bin_no)->Fill(sigma);
             h_sigma_v_bin_postcut->Fill(bin_no, sigma);
             h_pulse_height_hists.at(bin_no)->Fill(pulse_height);
             h_pulse_height_v_bin_postcut->Fill(bin_no, pulse_height);
@@ -548,12 +548,13 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             // finally add to output histograms
             h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_tick_correction);
             //std::cout << "[DIFFMOD]: Summed sigma: " << _waveform_func.getSigma(h_summed_wire_info_per_bin.at(bin_it)).at(1) << std::endl;
-          }
-        }
-      }
-    }
-  }
-}
+          
+          } // !make_sigma_map
+        } // if maximum tick in bin
+      } // loop bins
+    } // loop hits
+  } // loop tracks
+} // LArDiffusion::analyze
 
 void diffmod::LArDiffusion::beginJob()
 {
