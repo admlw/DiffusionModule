@@ -66,6 +66,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // Selected optional functions.
     void beginJob() override;
 
+    // prints a histogram for troublshooting
     void printHistogram(TH1D* h);
 
   private:
@@ -79,7 +80,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int sub_run;
     int event;
     int is_real_data;
-
     double maximum_tick             = -9999;
     double track_length             = -9999;
     double cos_theta                = -9999;
@@ -110,9 +110,9 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     double waveform_tick_correction = -9999;
     int bin_no                      = -9999;
     int num_waveforms               = -9999;
+
     TVector3 track_start;
     TVector3 track_end;
-
     // Truncated mean has to be a float
     float trunc_mean;
 
@@ -122,7 +122,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int tick_window_left;
     int tick_window_right;
     int waveform_drift_size;
-    int track_startX;
 
     // fhicl
     std::string track_label;
@@ -159,9 +158,9 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // after baseline correcting
     TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
-    //TH1D *h_single_waveform;
     TH1D *h_nWvfmsInBin;
-    //TH1D *h_correctedTicks;
+
+    //TH1D *h_single_waveform;
 
     // For dynamic sigma cut
     std::vector<double> sigmaMedians;
@@ -420,8 +419,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         << "\n-- tick_window_left     : "       << tick_window_left
         << "\n-- tick_window_right    : "       << tick_window_right
         << "\n-- maximum_tick         : "       << maximum_tick; 
-
-      //h_correctedTicks->Fill(maximum_tick);
 
       // now the magic: 
       // loop over the drift bins and check to see if the 
@@ -693,7 +690,6 @@ void diffmod::LArDiffusion::beginJob()
 
   if (!make_sigma_map) {
     //h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
-    //h_correctedTicks = tfs->make<TH1D>("h_correctedTicks", ";Corrected tick value;", 1150, 0, 4600);
 
     h_nWvfmsInBin = tfs->make<TH1D>("h_nWvfmsInBin", ";Drift bin; No. Waveforms;", 25, 0, 25);
 
