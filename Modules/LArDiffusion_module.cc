@@ -66,6 +66,8 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // Selected optional functions.
     void beginJob() override;
 
+    void printHistogram(TH1D* h);
+
   private:
 
     art::ServiceHandle< art::TFileService > tfs;
@@ -364,6 +366,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
         float value = wire_from_hit->Signal().at(i_tick);
 
+        std::cout << "filling " << i_tick - tick_window_left << " with " << value << std::endl;
+
         h_wire_in_window->SetBinContent(i_tick - tick_window_left, value);
 
         if (value > peak_finder_threshold) {
@@ -381,6 +385,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         }
 
       }
+
+      std::cout << "h_wire_in_window" << std::endl;
+      this->printHistogram(h_wire_in_window);
 
       if (peak_counter != 1) continue;
 
@@ -409,8 +416,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       // loop over the drift bins and check to see if the 
       // t0-corrected pulse center is in each bin
       // if it is then sum the pulses
-
-      difftree->Fill();
 
       for (int bin_it = 0; bin_it < number_time_bins; bin_it++){
 
@@ -443,28 +448,31 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 h_wire_in_window, 
                 h_wire_baseline_corrected); 
 
+          std::cout << "h_wire_baseline_corrected" << std::endl;
+          this->printHistogram(h_wire_baseline_corrected);
+
           // Save individual waveform for plotting
           //  TODO: Why is this segfaulting?
-          // if (run == 1 && sub_run == 785 && event == 35281) {
-          // double lowVal = 0., highVal = 0.;
-          // lowVal = h_wire_in_window->GetBinLowEdge(1);
-          // std::cout << "Got low val " << lowVal << std::endl;
-          // highVal = h_wire_in_window->GetBinLowEdge(h_wire_in_window->GetNbinsX() );
-          // std::cout << "Got high val " << highVal << std::endl;
-          // if (!h_single_waveform) {
-          // std::cout << "Bad single waveform hist" << std::endl;
-          // continue;
-          // }
-          // h_single_waveform->GetXaxis()->SetLimits(lowVal, highVal);
-          // std::cout << "Set limits" << std::endl;
-          ////h_single_waveform->GetXaxis()->SetLimits(4300, 4500);
-          // h_single_waveform->GetYaxis()->SetRangeUser(-1, 8);
-          // std::cout << "Set range" << std::endl;
-          // for (int i_wv = 1; i_wv < 101; i_wv++) {
-          // h_single_waveform->SetBinContent(i_wv, h_wire_in_window->GetBinContent(i_wv+50) );
-          ////std::cout << "wvfm bin " << i_wv << " has " << h_single_waveform->GetBinContent(i_wv) << std::endl;
-          ////std::cout << "Should be " << h_wire_in_window->GetBinContent(i_wv) << std::endl;
-          //}
+          //if (run == 1 && sub_run == 785 && event == 35281) {
+          //  double lowVal = 0., highVal = 0.;
+          //  lowVal = h_wire_in_window->GetBinLowEdge(1);
+          //  std::cout << "Got low val " << lowVal << std::endl;
+          //  highVal = h_wire_in_window->GetBinLowEdge(h_wire_in_window->GetNbinsX() );
+          //  std::cout << "Got high val " << highVal << std::endl;
+          //  if (!h_single_waveform) {
+          //    std::cout << "Bad single waveform hist" << std::endl;
+          //    continue;
+          //  }
+          //  h_single_waveform->GetXaxis()->SetLimits(lowVal, highVal);
+          //  std::cout << "Set limits" << std::endl;
+          //  //h_single_waveform->GetXaxis()->SetLimits(4300, 4500);
+          //  h_single_waveform->GetYaxis()->SetRangeUser(-1, 8);
+          //  std::cout << "Set range" << std::endl;
+          //  for (int i_wv = 1; i_wv < 101; i_wv++) {
+          //    h_single_waveform->SetBinContent(i_wv, h_wire_in_window->GetBinContent(i_wv+50) );
+          //    //std::cout << "wvfm bin " << i_wv << " has " << h_single_waveform->GetBinContent(i_wv) << std::endl;
+          //    //std::cout << "Should be " << h_wire_in_window->GetBinContent(i_wv) << std::endl;
+          //  }
           //}   
 
 
@@ -474,7 +482,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
           fit_sigma    = _waveform_func.getSigma(h_wire_baseline_corrected).at(1);
           fit_chisq    = _waveform_func.getSigma(h_wire_baseline_corrected).at(2);
 
-          //difftree->Fill();
+          difftree->Fill();
 
           if (make_sigma_map) {
             h_sigma_hists.at(bin_no)->Fill(fit_sigma);
@@ -573,6 +581,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                   ntick, 
                   h_wire_baseline_corrected->GetBinContent(ntick+waveform_tick_correction));
 
+            std::cout << "h_waveform_tick_correction" << std::endl;
+            this->printHistogram(h_waveform_tick_correction);
 
             // finally add to output histograms
             h_summed_wire_info_per_bin.at(bin_it)->Add(h_waveform_tick_correction);
@@ -768,6 +778,12 @@ void diffmod::LArDiffusion::beginJob()
 
   }
 
+}
+
+void diffmod::LArDiffusion::printHistogram(TH1D* h){
+  for (int i = 0; i < h->GetNbinsX(); i++){
+    std::cout << i << " " << h->GetBinLowEdge(i) << " " << h->GetBinContent(i) << std::endl;
+  }
 }
 
 DEFINE_ART_MODULE(diffmod::LArDiffusion)
