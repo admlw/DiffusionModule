@@ -102,15 +102,17 @@ void makePlot(TString* inputFileName){
   //const double DRIFT_VELOCITY=0.10762; // Drift velocity near anode
 
   //TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
-  TString dirname = "/uboone/data/users/amogan/v08_00_00_20/output_diffmod_files/";
-  TString *dir = &dirname;
-  TFile *fInput = new TFile(*dir+*inputFileName, "READ");
+  //TString dirname = "/uboone/data/users/amogan/v08_00_00_20/output_diffmod_files/";
+  //TString *dir = &dirname;
+  //TFile *fInput = new TFile(*dir+*inputFileName, "READ");
+  TFile *fInput = new TFile(*inputFileName, "READ");
   if (!fInput) {
     std::cout << "Bad file" << std::endl;
     return;
   }
     
-  TFile *fOutput = new TFile(*dir+"fits_"+*inputFileName, "RECREATE");
+  //TFile *fOutput = new TFile(*dir+"fits_"+*inputFileName, "RECREATE");
+  TFile *fOutput = new TFile("fits_"+*inputFileName, "RECREATE");
   if (!fOutput) {
     std::cout << "Bad output file" << std::endl;
     return;
@@ -235,8 +237,7 @@ void makePlot(TString* inputFileName){
   }
 
   // For checking fit range
-  /*
-  for (int k = 12; k < NUMBER_DRIFT_BINS; k++) {
+  for (int k = 0; k < 20; k++) {
       if (sigmaVals[k]!=0) {
         sigmaVals[k] = 0;
         sigmaValsErrs[k] = 0;
@@ -246,7 +247,6 @@ void makePlot(TString* inputFileName){
         driftTimesErrs[k] = -1;
       }
   }
-  */
 
   TCanvas *c1 = new TCanvas("c1", "c1", 1000, 1000);
   gStyle->SetTextFont(22);

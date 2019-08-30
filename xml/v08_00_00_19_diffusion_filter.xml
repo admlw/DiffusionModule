@@ -4,7 +4,7 @@
 <!DOCTYPE project [
 <!ENTITY release "08_00_00_20">
 <!ENTITY name "v08_00_00_20">
-<!ENTITY outname "mcc9.0_corsika/">
+<!ENTITY outname "mcc9.0_corsika_mcc9.1reco2/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&name;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&name;/">
@@ -68,16 +68,16 @@
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist>
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/corsika_filter_mcc9.1reco2.list</inputlist>
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>255</numjobs> 
-        <maxfilesperjob>10</maxfilesperjob>
+        <numjobs>10</numjobs> 
+        <maxfilesperjob>1</maxfilesperjob>
         <numevents>500</numevents>
-        <memory>800</memory>
+        <memory>600</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
    </stage>
@@ -87,7 +87,7 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/pnfs/uboone/scratch/users/alister1/filtered.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/corsika_filter_mcc9.1reco2.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;diffusion_ana</bookdir>
         <workdir>&resilient_dir;diffusion_ana</workdir>
