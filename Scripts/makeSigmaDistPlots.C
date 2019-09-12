@@ -23,8 +23,12 @@ void makeSigmaDistPlots() {
     */
   }
 
-  TString dir = "/uboone/app/users/amogan/mcc9_diffusion/workdir/";
-  TFile *fin = new TFile(dir+"sigma_map.root", "READ");
+  TString dir = "/uboone/app/users/amogan/diffusion_mcc9/srcs/uboonedata/DiffusionData/";
+  TFile *fin = new TFile(dir+"sigma_map_corsika_mcc9.1reco2.root", "READ");
+  if (!fin) {
+    std::cout << "ERROR: Bad input file" << std::endl;
+    return;
+  }
   //std::vector<TH1D*> h_sigma_hists(nlines);
   TH1D *h_sigma;
   TCanvas *c = new TCanvas("c", "c", 750, 550);

@@ -17,7 +17,7 @@ void diffusionDemo()
   TH1D* h[24];
   TF1* lin[24];
 
-  TFile *fin = new TFile("diffmod_CV.root", "READ");
+  TFile *fin = new TFile("diffmod_mcc9.1_ext_run1_diffusionDemo.root", "READ");
 
   for (int i = 0; i < 25; i++) {
 
@@ -49,14 +49,18 @@ void diffusionDemo()
     }
 
     int nEntries = h[i]->GetEntries()/2.;
+    int minTick = 400;
     double nStackedHistos = (double)nEntries/(((double)4600/(double)25)+2);
     double scaleFactor = 1.0 / (2.0*nStackedHistos);
     // Arbitrarily messed with this until the plot looked good
     h[i]->Scale(scaleFactor*20.);
 
-    int maxTick = (h[i]->GetBinLowEdge(h[i]->GetMaximumBin())/2.); // Divide by two to convert to microseconds
+    // Divide by two to convert to microseconds
+    // Subtract minimum tick value to set minimum drift time to 0
+    int maxTick = (h[i]->GetBinLowEdge(h[i]->GetMaximumBin())/2.) - minTick; 
     h[i]->GetXaxis()->SetLimits(-92, 92);
     h[i]->GetXaxis()->SetRangeUser(-20,20);
+    h[i]->GetYaxis()->SetRangeUser(0, 2800);
 
     TString lins = Form("lin%i", i);
     lin[i] = new TF1(lins, "[0]", -92, 92);
@@ -70,8 +74,9 @@ void diffusionDemo()
     }
 
     h[i]->SetLineColor(kBlue);
-    h[i]->SetMinimum(400);
-    h[i]->SetMaximum(3200);
+    h[i]->SetLineWidth(2);
+    //h[i]->SetMinimum(400);
+    //h[i]->SetMaximum(3200);
 
     TAxis* xaxis = h[i]->GetXaxis();
     xaxis->SetTitle("Arb. time (ticks)");
@@ -81,22 +86,25 @@ void diffusionDemo()
     yaxis->SetTitle("Drift time (#mus)");
     yaxis->SetTitleSize(0.05);
     yaxis->SetTitleOffset(1.75);
+    yaxis->SetLimits(0, 2800);
 
     h[i]->Draw("hist same");
 
     lin[i]->Draw("same");
-    h[i]->Draw("same");
+    //h[i]->Draw("same");
 
     //TPaveText* pt1 = new TPaveText(0.16, 0.86, 0.88, 0.92, "NDC");
-    TPaveText* pt1 = new TPaveText(0.21, 0.86, 0.93, 0.91, "NDC");
-    pt1->AddText("MicroBooNE Simulation");
+    bool isData = 1;
+    TPaveText* pt1 = new TPaveText(0.23, 0.84, 0.53, 0.88, "NDC");
+    if (!isData) pt1->AddText("MicroBooNE Simulation");
+    else         pt1->AddText("MCC9 Data");
     pt1->SetFillStyle(0);
     pt1->SetBorderSize(0);
     pt1->SetTextAlign(12);
     pt1->Draw("same");    
 
     //TPaveText* pt2 = new TPaveText(0.16, 0.82, 0.88, 0.86, "NDC");
-    TPaveText* pt2 = new TPaveText(0.21, 0.82, 0.93, 0.87, "NDC");
+    TPaveText* pt2 = new TPaveText(0.23, 0.80, 0.53, 0.84, "NDC");
     pt2->AddText("E = 273 V/cm");
     pt2->SetFillStyle(0);
     pt2->SetBorderSize(0);

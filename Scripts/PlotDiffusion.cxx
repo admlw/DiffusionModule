@@ -94,12 +94,14 @@ void makePlot(TString* inputFileName){
   const int waveformDriftStartTick=800;
   const int waveformDriftEndTick=5400;
   const int WAVEFORM_DRIFT_SIZE=waveformDriftEndTick-waveformDriftStartTick; // End tick (5400 - 800)
+  const int num_waveform_cut = 500; // Cut bins with fewer than this number of waveforms
   const int NUMBER_DRIFT_BINS=25;
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
   const int minTime = waveformDriftStartTick/2; // 400 microseconds
   const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
-  const double DRIFT_VELOCITY=0.1098; // Average drift velocity
-  //const double DRIFT_VELOCITY=0.10762; // Drift velocity near anode
+  //const double DRIFT_VELOCITY=0.1098; // Average drift velocity
+  const double DRIFT_VELOCITY=0.10762; // Drift velocity near anode
+  const bool isData = false;
 
   //TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
   //TString dirname = "/uboone/data/users/amogan/v08_00_00_20/output_diffmod_files/";
@@ -122,7 +124,7 @@ void makePlot(TString* inputFileName){
   TH1D *h_correctedTicks = new TH1D("h_correctedTicks", "", 1150, 800, 5400); // Range is 800 to 5400
   TTree *t = (TTree*)fInput->Get("DiffusionModule/difftree");
   if (!t) {
-      cout << "Bad tree" << endl;
+    std::cout << "Bad tree" << endl;
       return;
   }
   c->cd();
@@ -151,11 +153,12 @@ void makePlot(TString* inputFileName){
   // Loop over bins, do the things
   for (int i = 0; i < NUMBER_DRIFT_BINS; i++){
 
-    std::cout << "-------------------------------" << std::endl;
-    std::cout << "BIN " << i << std::endl;
+    std::cout << "--------------BIN " << i << "-----------------" << std::endl;
 
-    if (histoNWvfms->GetBinContent(i+1) < 500) {
-        std::cout << "Skipping bin " << i << " due to low stats" << std::endl;
+    std::cout << histoNWvfms->GetBinContent(i+1) << " waveforms in this bin" << std::endl;
+
+    if (histoNWvfms->GetBinContent(i+1) < num_waveform_cut) {
+        std::cout << "Skipping bin " << i << "; fewer than " << num_waveform_cut << " waveforms" << std::endl;
         continue;
     }
 
@@ -168,6 +171,7 @@ void makePlot(TString* inputFileName){
       sigmaVals[i] = 0;
       continue;
     }
+
 
     // Convert tick histogram to microseconds, find fit range 
     double lowConv = waveformHist->GetBinLowEdge(1)*0.5;
@@ -227,7 +231,7 @@ void makePlot(TString* inputFileName){
     
     // Get drift time from truncated mean of sigma distribution in each bin
     // Error is (1/sqrt(N)) * 0.5/2 (half a tick width, if not using hit information)
-    driftTimes[i] = binMean;
+    driftTimes[i] = binMean - minTime;
     driftTimesErrs[i] = (1/sqrt(N) ) * (0.5/2.);
 
     // Get sigma^2 (pulse width squared)
@@ -237,7 +241,7 @@ void makePlot(TString* inputFileName){
   }
 
   // For checking fit range
-  for (int k = 0; k < 20; k++) {
+  for (int k = 6; k < 21; k++) {
       if (sigmaVals[k]!=0) {
         sigmaVals[k] = 0;
         sigmaValsErrs[k] = 0;
@@ -279,7 +283,7 @@ void makePlot(TString* inputFileName){
   gr1->GetXaxis()->SetTitleSize(titleSize);
   gr1->GetXaxis()->SetLabelSize(labelSize);
   gr1->GetYaxis()->SetTitle("#sigma_{t}^{2} (#mus)");
-  gr1->GetYaxis()->SetTitleSize(titleSize);
+  gr1->GetYaxis()->SetTitleSize(titleSize*0.8);
   gr1->GetYaxis()->SetTitleOffset(0.5);
   gr1->GetYaxis()->SetLabelSize(labelSize);
   gr1->Draw("ap");
@@ -287,12 +291,12 @@ void makePlot(TString* inputFileName){
   gr1->SetMarkerSize(0.8);
   //gr1->GetYaxis()->SetRangeUser(0.001, 10.);
   gr1->GetYaxis()->SetRangeUser(0.001, 10.);
-  gr1->GetXaxis()->SetRangeUser(minTime, maxTime);
+  gr1->GetXaxis()->SetRangeUser(0, maxTime-minTime);
 
   // Linear fit to diffusion plot
   TF1* polFit = new TF1("polfit", "pol1");
   //gr1->Fit("polfit", "", "", minTime, 1450);
-  gr1->Fit("polfit", "", "", minTime, maxTime);
+  gr1->Fit("polfit", "", "", 0, maxTime-minTime);
   gr1->GetFunction("polfit")->SetLineColor(kRed);
   gr1->GetFunction("polfit")->Draw("same");
 
@@ -302,6 +306,7 @@ void makePlot(TString* inputFileName){
   //std::cout << "Slope * v^2 = " << polFit->GetParameter(1)*std::pow(DRIFT_VELOCITY, 2) << std::endl; 
   double diffusionValueErr = polFit->GetParError(1)*std::pow(DRIFT_VELOCITY, 2) * 1000000/2;
   cout << "Diffusion value: " << diffusionValue << " +/- " << diffusionValueErr << endl; 
+  std::cout << "Fit chi^2/NDF: " <<  polFit->GetChisquare()/polFit->GetNDF() << std::endl;;
 
   TPaveText *pt = new TPaveText(0.16, 0.55, 0.6, 0.87, "NDC");
   pt->SetTextAlign(12);
@@ -310,10 +315,12 @@ void makePlot(TString* inputFileName){
   pt->SetBorderSize(0);
   TString diffTextMeas = Form("Measured D_{L}: %0.2f +/- %0.2f cm^{2}/s", diffusionValue, diffusionValueErr);
   TString diffTextInp = Form("Input D_{L}: 6.40 cm^{2}/s");
+  TString dataString = Form("MCC9 Data");
   TString chi2 = Form("#chi^{2}/NDF: %0.2f/%i = %0.2f", polFit->GetChisquare(), polFit->GetNDF(), polFit->GetChisquare()/polFit->GetNDF() );
-  TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(400), polFit->GetParError(0) );
+  TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
   pt->AddText(diffTextMeas);
-  pt->AddText(diffTextInp);
+  if (!isData) pt->AddText(diffTextInp);
+  else pt->AddText(dataString);
   pt->AddText(chi2);
   pt->AddText(sigma0);
   pt->Draw("same");
@@ -335,12 +342,12 @@ void makePlot(TString* inputFileName){
   TGraphErrors* gr2 = new TGraphErrors(NUMBER_DRIFT_BINS, 
                                        driftTimes, sigmaValsBottom, 
                                        driftTimesErrs, sigmaValsErrsBottom);
-  gr2->GetYaxis()->SetRangeUser(-0.05, 0.05);
+  gr2->GetYaxis()->SetRangeUser(-0.1, 0.1);
   gr2->SetMarkerStyle(8);
   gr2->SetMarkerSize(0.8);
   gr2->SetTitle("");
   gr2->GetYaxis()->SetTitle("(#sigma_{t}^{2} - Fit)/Fit");
-  gr2->GetXaxis()->SetLimits(minTime, maxTime);
+  gr2->GetXaxis()->SetLimits(0, maxTime-minTime);
   gr2->GetXaxis()->SetTitleSize(0);
   gr2->GetXaxis()->SetLabelSize(0);
   gr2->GetYaxis()->SetNdivisions(505);
@@ -350,7 +357,7 @@ void makePlot(TString* inputFileName){
 
   gr2->Draw("ap");
 
-  TF1* f3 = new TF1("f3", "0.", minTime, maxTime);
+  TF1* f3 = new TF1("f3", "0.", 0, maxTime-minTime);
   f3->Draw("same");
 
   botPad->cd();
@@ -368,7 +375,7 @@ void makePlot(TString* inputFileName){
   histoNWvfms->SetMinimum(0);
   histoNWvfms->GetYaxis()->SetTitleSize(titleSize);
   histoNWvfms->GetYaxis()->SetLabelSize(labelSize);
-  histoNWvfms->GetXaxis()->SetLimits(minTime, maxTime);
+  histoNWvfms->GetXaxis()->SetLimits(0, maxTime-minTime);
 
   histoNWvfms->Draw();
 

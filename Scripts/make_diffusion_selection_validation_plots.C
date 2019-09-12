@@ -1,6 +1,7 @@
 void make_diffusion_selection_validation_plots(){
 
   TTree* t = (TTree*)_file0->Get("diffsel/difffiltertree");
+  gStyle->SetOptStat(0);
 
   // define histograms
   TH2D* allTracks_thxz_thyz = new TH2D("allTracks_thxz_thyz", 

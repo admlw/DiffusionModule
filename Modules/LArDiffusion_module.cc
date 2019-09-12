@@ -410,6 +410,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         maximum_tick = h_wire_in_window->GetMaximumBin() + tick_window_left;
       }
 
+      /*
       MF_LOG_VERBATIM("LArDiffusion")
         << "PRINTING INFORMATION FOR HIT " << i_hit
         << "\n-- hit_peak_time        : "       << hit_peak_time
@@ -419,6 +420,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
         << "\n-- tick_window_left     : "       << tick_window_left
         << "\n-- tick_window_right    : "       << tick_window_right
         << "\n-- maximum_tick         : "       << maximum_tick; 
+        */
 
       // now the magic: 
       // loop over the drift bins and check to see if the 
@@ -442,11 +444,13 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
           bin_no = bin_it;
 
+          /*
           MF_LOG_VERBATIM("LArDiffusion")
             << "-- Falls into bin "    << bin_no
             << "\n-- histogram set to"
             << "\n---- binEdgeLeft: "  << binEdgeLeft
             << "\n---- binEdgeRight: " << binEdgeRight;
+            */
 
           //h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
@@ -516,6 +520,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
             // Dynamic sigma cut: check if pulseHeight, sigma, 
             // fall within some region around the median
+            /*
             double sigma_lowerLimit = 
               sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
             double sigma_higherLimit = 
@@ -524,16 +529,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               pulseHeightMedians.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
             double pulseHeight_higherLimit = 
               pulseHeightMedians.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+            */
 
             // Maximum 
-            // double sigma_lowerLimit = 
-            // sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
-            // double sigma_higherLimit = 
-            // sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
-            // double pulseHeight_lowerLimit = 
-            // pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-            // double pulseHeight_higherLimit = 
-            // pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+            double sigma_lowerLimit = 
+            sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+            double sigma_higherLimit = 
+            sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+            double pulseHeight_lowerLimit = 
+            pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+            double pulseHeight_higherLimit = 
+            pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
 
 
             if (fit_sigma < sigma_lowerLimit 
