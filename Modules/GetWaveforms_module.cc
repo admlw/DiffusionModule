@@ -48,6 +48,10 @@ class GetWaveforms : public art::EDAnalyzer {
     void beginJob() override;
 
     // Get Cantor pairing number
+    // -- Cantor pairing number takes in two
+    //    integers and calculates a bijectvie NxN->N mapping
+    //    Using this to get a unique identified for the 
+    //    map of TH1s
     int getCantorPairingNumber(int a, int b);
 
   private:
@@ -128,6 +132,7 @@ void GetWaveforms::analyze(art::Event const& e)
           << "-- Found match at channel " << wireChannel
           << ", finding histogram using cantor number: " << cantorNumber;
 
+        // retrieve correct histogram using cantor number
         TH1D* hTmp = (TH1D*)waveformHistograms.find(cantorNumber)->second;
 
         MF_LOG_VERBATIM("GetWaveforms::analyze")
@@ -155,12 +160,17 @@ void GetWaveforms::beginJob()
         "_channel_" + 
         std::to_string(fChannelVector.at(j));
 
+      // get cantor number (unique identifier) to act as the key in the map
+
       int cantorNumber = this->getCantorPairingNumber(fEventVector.at(i), 
                                                       fChannelVector.at(j));
 
       MF_LOG_VERBATIM("GetWaveforms::beginJob")
         << "creating histogram with cantorNumber: " << cantorNumber
         << ", with name: " << histoName;
+
+      // assume that there's 9600 ticks in the histograms
+      // can't quite remember if that's right but close enough
 
       waveformHistograms.insert( std::pair< int, TH1D* >(
           cantorNumber, 
