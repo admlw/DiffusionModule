@@ -23,9 +23,10 @@ physics:
     analyzers:
     {
         getwaveform:{
-          module_type: GetWaveforms
-          EventVector: [0,1,2]
-          ChannelVector[0,1,2]
+          module_type:   GetWaveforms
+          WireLabel:     "butcher"
+          EventVector:   [0,1,2] # list the events you're interested. multiple can be selected.
+          ChannelVector: [0,1,2] # list channel numbers you're interested in. multiple can be selected.
         }
     }
 
