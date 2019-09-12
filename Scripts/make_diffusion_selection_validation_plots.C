@@ -97,4 +97,10 @@ void make_diffusion_selection_validation_plots(){
   c1->SaveAs("selTracks_thxz_thyz_ratio.png");
   c1->SaveAs("selTracks_thxz_thyz_ratio.pdf");
 
+  std::cout << " n total tracks:        " <<  allTracks_thxz_thyz->Integral() << std::endl;
+  std::cout << " n t0-tagged tracks:    " <<  t0Tracks_thxz_thyz->Integral()  << std::endl;
+  std::cout << " % t0-tagged tracks:    " <<  100 * t0Tracks_thxz_thyz->Integral()/allTracks_thxz_thyz->Integral() << std::endl;
+  std::cout << " n selected tracks:     " <<  selTracks_thxz_thyz->Integral() << std::endl;
+  std::cout << " \% selected tracks:     " <<  100 * selTracks_thxz_thyz->Integral()/allTracks_thxz_thyz->Integral() << std::endl;
+
 }

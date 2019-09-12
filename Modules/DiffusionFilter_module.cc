@@ -80,6 +80,14 @@ class DiffusionFilter : public art::EDFilter {
     double fTrackAngleCutYZHigh;
 
     double thisTrackLength;
+    double thisTrackStartX;
+    double thisTrackStartX_t0Corr;
+    double thisTrackStartY;
+    double thisTrackStartZ;
+    double thisTrackEndX;
+    double thisTrackEndX_t0Corr;
+    double thisTrackEndY;
+    double thisTrackEndZ;
     double thisTrackThetaXZ;
     double thisTrackThetaYZ;
     double thisTrackTheta;
@@ -88,17 +96,29 @@ class DiffusionFilter : public art::EDFilter {
     bool thisTrackIsPassAngularCut;
     bool thisTrackIsHasT0;
     bool thisTrackIsSelected;
+    bool thisTrackIsAnodeCrosser;
+    bool thisTrackIsCathodeCrosser;
 
     TTree* tree;
-    std::vector<double>* trackLength = nullptr;
-    std::vector<double>* trackThetaXZ = nullptr;
-    std::vector<double>* trackThetaYZ = nullptr;
-    std::vector<double>* trackTheta = nullptr;
-    std::vector<double>* trackPhi = nullptr;
-    std::vector<bool>* trackIsPassLengthCut = nullptr;
+    std::vector<double>* trackLength         = nullptr;
+    std::vector<double>* trackStartX         = nullptr;
+    std::vector<double>* trackStartX_t0Corr  = nullptr;
+    std::vector<double>* trackStartY         = nullptr;
+    std::vector<double>* trackStartZ         = nullptr;
+    std::vector<double>* trackEndX           = nullptr;
+    std::vector<double>* trackEndX_t0Corr    = nullptr;
+    std::vector<double>* trackEndY           = nullptr;
+    std::vector<double>* trackEndZ           = nullptr;
+    std::vector<double>* trackThetaXZ        = nullptr;
+    std::vector<double>* trackThetaYZ        = nullptr;
+    std::vector<double>* trackTheta          = nullptr;
+    std::vector<double>* trackPhi            = nullptr;
+    std::vector<bool>* trackIsPassLengthCut  = nullptr;
     std::vector<bool>* trackIsPassAngularCut = nullptr;
-    std::vector<bool>* trackIsHasT0 = nullptr;
-    std::vector<bool>* trackIsSelected = nullptr;
+    std::vector<bool>* trackIsHasT0          = nullptr;
+    std::vector<bool>* trackIsSelected       = nullptr;
+    std::vector<bool>* trackIsCathodeCrosser = nullptr;
+    std::vector<bool>* trackIsAnodeCrosser   = nullptr;
 
 };
 
@@ -108,9 +128,9 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
   // More initializers here.
 {
 
-  fTrackLabel = p.get<std::string> ("TrackLabel");
-  fT0Label = p.get<std::string> ("T0Label");
-  fTrackLengthCut = p.get<double> ("TrackLengthCut");
+  fTrackLabel          = p.get<std::string> ("TrackLabel");
+  fT0Label             = p.get<std::string> ("T0Label");
+  fTrackLengthCut      = p.get<double> ("TrackLengthCut");
   fTrackAngleCutXZLow  = p.get<double> ("TrackAngleCutXZLow");
   fTrackAngleCutXZHigh = p.get<double> ("TrackAngleCutXZHigh");
   fTrackAngleCutYZLow  = p.get<double> ("TrackAngleCutYZLow");
@@ -137,17 +157,32 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
 void DiffusionFilter::beginJob()
 {
 
+
+  std::cout << "DiffusionFilter::beginJob() begin" << std::endl;
+
   tree = tfs->make< TTree >("difffiltertree", "diffusion filter tree");
 
-  tree->Branch("trackLength", &trackLength);
-  tree->Branch("trackTheta", &trackTheta);
-  tree->Branch("trackPhi", &trackPhi);
-  tree->Branch("trackThetaXZ", &trackThetaXZ);
-  tree->Branch("trackThetaYZ", &trackThetaYZ);
-  tree->Branch("trackIsPassLengthCut", &trackIsPassLengthCut);
-  tree->Branch("trackIsPassAngularCut", &trackIsPassAngularCut);
-  tree->Branch("trackIsHasT0", &trackIsHasT0);
-  tree->Branch("trackIsSelected", &trackIsSelected);
+  tree->Branch("trackLength"           , &trackLength);
+  tree->Branch("trackStartX"           , &trackStartX);
+  tree->Branch("trackStartX_t0Corr"    , &trackStartX_t0Corr);
+  tree->Branch("trackStartY"           , &trackStartY);
+  tree->Branch("trackStartZ"           , &trackStartZ);
+  tree->Branch("trackEndX"             , &trackEndX);
+  tree->Branch("trackEndX_t0Corr"      , &trackEndX_t0Corr);
+  tree->Branch("trackEndY"             , &trackEndY);
+  tree->Branch("trackEndZ"             , &trackEndZ);
+  tree->Branch("trackTheta"            , &trackTheta);
+  tree->Branch("trackPhi"              , &trackPhi);
+  tree->Branch("trackThetaXZ"          , &trackThetaXZ);
+  tree->Branch("trackThetaYZ"          , &trackThetaYZ);
+  tree->Branch("trackIsPassLengthCut"  , &trackIsPassLengthCut);
+  tree->Branch("trackIsPassAngularCut" , &trackIsPassAngularCut);
+  tree->Branch("trackIsHasT0"          , &trackIsHasT0);
+  tree->Branch("trackIsSelected"       , &trackIsSelected);
+  tree->Branch("trackIsAnodeCrosser"   , &trackIsAnodeCrosser);
+  tree->Branch("trackIsCathodeCrosser" , &trackIsCathodeCrosser);
+
+  std::cout << "DiffusionFilter::beginJob() end" << std::endl;
 
 }
 
@@ -181,35 +216,7 @@ bool DiffusionFilter::filter(art::Event & e)
 
   for (size_t iTrack = 0; iTrack < trackPtrVector.size(); iTrack++){
     art::Ptr< recob::Track > thisTrack = trackPtrVector.at(iTrack);
-
-    thisTrackLength = thisTrack->Length();
-    thisTrackTheta = thisTrack->Theta();
-    thisTrackPhi = thisTrack->Phi();
-    thisTrackThetaXZ 
-      = std::atan2(
-          thisTrack->StartDirection().X(), 
-          thisTrack->StartDirection().Z()) 
-      * 180/TMath::Pi();
-    thisTrackThetaYZ 
-      = std::atan2(
-          thisTrack->StartDirection().Y(), 
-          thisTrack->StartDirection().Z()) 
-      * 180/TMath::Pi();
-
     std::vector< art::Ptr<anab::T0> > t0s = t0FromTracks.at(thisTrack.key());
-
-    thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
-
-    thisTrackIsPassAngularCut = 
-      (( thisTrackThetaXZ <= fTrackAngleCutXZHigh 
-         && thisTrackThetaXZ >= fTrackAngleCutXZLow
-         && thisTrackThetaYZ <= fTrackAngleCutYZHigh 
-         && thisTrackThetaYZ >= fTrackAngleCutYZLow)) 
-      ||
-      (( thisTrackThetaXZ >= (180 - fTrackAngleCutXZHigh) 
-         && thisTrackThetaXZ <= (180 - fTrackAngleCutXZLow)) 
-       && thisTrackThetaYZ >= (180 - fTrackAngleCutYZHigh) 
-       && thisTrackThetaYZ <= (180 - fTrackAngleCutYZLow));
 
     // make sure that the track has at least one associated t0
     if (t0s.size() == 1){
@@ -230,7 +237,73 @@ bool DiffusionFilter::filter(art::Event & e)
       throw std::logic_error(errMsg);
     }
 
+    thisTrackLength        = thisTrack->Length();
+    thisTrackStartX        = thisTrack->Start().X();
+    thisTrackStartY        = thisTrack->Start().Y();
+    thisTrackStartZ        = thisTrack->Start().Z();
+    thisTrackEndX          = thisTrack->End().X();
+    thisTrackEndY          = thisTrack->End().Y();
+    thisTrackEndZ          = thisTrack->End().Z();
+    thisTrackTheta         = thisTrack->Theta();
+    thisTrackPhi           = thisTrack->Phi();
+    thisTrackThetaXZ 
+      = std::atan2(
+          thisTrack->StartDirection().X(), 
+          thisTrack->StartDirection().Z()) 
+      * 180/TMath::Pi();
+    thisTrackThetaYZ 
+      = std::atan2(
+          thisTrack->StartDirection().Y(), 
+          thisTrack->StartDirection().Z()) 
+      * 180/TMath::Pi();
+
+    if (thisTrackIsHasT0){
+      thisTrackStartX_t0Corr = thisTrackStartX - t0s.at(0)->Time()*1.098;
+      thisTrackEndX_t0Corr   = thisTrackEndX - t0s.at(0)->Time()*1.098;
+    }
+    else{
+      thisTrackStartX_t0Corr = thisTrackStartX;
+      thisTrackEndX_t0Corr = thisTrackEndX;
+    }
+    
+    thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
+
+    thisTrackIsPassAngularCut = 
+      (( thisTrackThetaXZ <= fTrackAngleCutXZHigh 
+         && thisTrackThetaXZ >= fTrackAngleCutXZLow
+         && thisTrackThetaYZ <= fTrackAngleCutYZHigh 
+         && thisTrackThetaYZ >= fTrackAngleCutYZLow)) 
+      ||
+      (( thisTrackThetaXZ >= (180 - fTrackAngleCutXZHigh) 
+         && thisTrackThetaXZ <= (180 - fTrackAngleCutXZLow)) 
+         && thisTrackThetaYZ >= (180 - fTrackAngleCutYZHigh) 
+         && thisTrackThetaYZ <= (180 - fTrackAngleCutYZLow));
+
+    // if the track starts or ends near the anode, and neither end is located near to the cathode
+    if ((thisTrackStartX_t0Corr < 5 || thisTrackEndX_t0Corr < 5) && (thisTrackStartX_t0Corr < 250.0 && thisTrackEndX_t0Corr < 250.0)){
+      thisTrackIsAnodeCrosser   = 1;
+      thisTrackIsCathodeCrosser = 0;
+    }
+    // if the track starts or ends near the cathode, and neither end is located near to the anode
+    else if ((thisTrackStartX_t0Corr > 250 || thisTrackEndX_t0Corr > 250) && (thisTrackStartX_t0Corr > 5.0 && thisTrackEndX_t0Corr > 5.0)){
+      thisTrackIsAnodeCrosser   = 0;
+      thisTrackIsCathodeCrosser = 1;
+    }
+    // catch the case where the t0_tagged track travels nearly the full width of the detector --- we don't care about these things
+    else{
+      thisTrackIsAnodeCrosser   = 0;
+      thisTrackIsCathodeCrosser = 0;
+    }
+
     trackLength          ->push_back(thisTrackLength);
+    trackStartX          ->push_back(thisTrackStartX);
+    trackStartX_t0Corr   ->push_back(thisTrackStartX_t0Corr);
+    trackStartY          ->push_back(thisTrackStartY);
+    trackStartZ          ->push_back(thisTrackStartZ);
+    trackEndX            ->push_back(thisTrackEndX);
+    trackEndX_t0Corr     ->push_back(thisTrackEndX_t0Corr);
+    trackEndY            ->push_back(thisTrackEndY);
+    trackEndZ            ->push_back(thisTrackEndZ);
     trackTheta           ->push_back(thisTrackTheta);
     trackPhi             ->push_back(thisTrackPhi);
     trackThetaXZ         ->push_back(thisTrackThetaXZ);
@@ -239,6 +312,8 @@ bool DiffusionFilter::filter(art::Event & e)
     trackIsPassAngularCut->push_back(thisTrackIsPassAngularCut);
     trackIsHasT0         ->push_back(thisTrackIsHasT0);
     trackIsSelected      ->push_back((thisTrackIsPassLengthCut && thisTrackIsPassAngularCut && thisTrackIsHasT0));
+    trackIsCathodeCrosser->push_back(thisTrackIsCathodeCrosser);
+    trackIsAnodeCrosser  ->push_back(thisTrackIsAnodeCrosser);
 
     if (trackIsSelected->at(iTrack)){
 
@@ -292,7 +367,10 @@ bool DiffusionFilter::filter(art::Event & e)
     }
   }
 
+
+  std::cout << "DiffusionFilter::filter() --- filling tree..." << std::endl;
   tree->Fill();
+  std::cout << "DiffusionFilter::filter() --- filled." << std::endl;
 
   e.put(std::move(trackCollection));
   e.put(std::move(t0Collection));
@@ -300,12 +378,22 @@ bool DiffusionFilter::filter(art::Event & e)
   e.put(std::move(trackT0Assn));
   e.put(std::move(trackHitAssn));
 
+  std::cout << "DiffusionFilter::filter() --- moved dataProducts to the event " << std::endl;
+
   return isPass;
 
 }
 
 void DiffusionFilter::emptyVectors(){
   trackLength->resize(0);
+  trackStartX->resize(0);
+  trackStartX_t0Corr->resize(0);
+  trackStartY->resize(0);
+  trackStartZ->resize(0);
+  trackEndX->resize(0);
+  trackEndX_t0Corr->resize(0);
+  trackEndY->resize(0);
+  trackEndZ->resize(0);
   trackThetaXZ->resize(0);
   trackThetaYZ->resize(0);
   trackTheta->resize(0);
@@ -314,6 +402,8 @@ void DiffusionFilter::emptyVectors(){
   trackIsPassAngularCut->resize(0);
   trackIsHasT0->resize(0);
   trackIsSelected->resize(0);
+  trackIsCathodeCrosser->resize(0);
+  trackIsAnodeCrosser->resize(0);
 }
 
 
