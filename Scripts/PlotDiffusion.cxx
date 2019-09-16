@@ -99,9 +99,14 @@ void makePlot(TString* inputFileName){
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
   const int minTime = waveformDriftStartTick/2; // 400 microseconds
   const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
-  //const double DRIFT_VELOCITY=0.1098; // Average drift velocity
-  const double DRIFT_VELOCITY=0.10762; // Drift velocity near anode
   const bool isData = false;
+  double DRIFT_VELOCITY;
+  // For data measurement, use drift velocity at anode. For MC, use
+  // drift velocity at nominal E-field of 273 V/cm. Why? Basically 
+  // because that's what the simulation does, even though we think
+  // the anode drift velocity is the better thing to use
+  if (isData) DRIFT_VELOCITY=0.10762;  // Anode drift velocity
+  else        DRIFT_VELOCITY=0.1098;   // Average drift velocity
 
   //TString dirname = "/uboone/data/users/amogan/v08_00_00_19/output_diffmod_files/";
   //TString dirname = "/uboone/data/users/amogan/v08_00_00_20/output_diffmod_files/";

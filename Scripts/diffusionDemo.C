@@ -95,9 +95,9 @@ void diffusionDemo()
 
     //TPaveText* pt1 = new TPaveText(0.16, 0.86, 0.88, 0.92, "NDC");
     bool isData = 1;
-    TPaveText* pt1 = new TPaveText(0.23, 0.84, 0.53, 0.88, "NDC");
+    TPaveText* pt1 = new TPaveText(0.225, 0.82, 0.62, 0.88, "NDC");
     if (!isData) pt1->AddText("MicroBooNE Simulation");
-    else         pt1->AddText("MCC9 Data");
+    else         pt1->AddText("MicroBooNE Run 1 Data");
     pt1->SetFillStyle(0);
     pt1->SetBorderSize(0);
     pt1->SetTextAlign(12);
