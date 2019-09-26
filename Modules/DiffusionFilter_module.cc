@@ -230,7 +230,7 @@ bool DiffusionFilter::filter(art::Event & e)
     else {
       std::string errMsg(
           "Track "
-          + std::to_string(thisTrack->ID())
+          + std::to_string(thisTrack.key())
           + " has "
           + std::to_string(t0s.size())
           + " associated t0s. That can't be right");
@@ -330,8 +330,8 @@ bool DiffusionFilter::filter(art::Event & e)
 
       std::vector< art::Ptr<recob::Hit> > hits;
       std::vector< art::Ptr< recob::Hit > > hitPtrCollection;
-      if ((int)hitsFromTracks.at(thisTrack->ID()).size() > 0){
-        hits  = hitsFromTracks.at(thisTrack->ID());
+      if ((int)hitsFromTracks.at(thisTrack.key()).size() > 0){
+        hits  = hitsFromTracks.at(thisTrack.key());
 
         for (art::Ptr<recob::Hit>& thisHit : hits){
 
