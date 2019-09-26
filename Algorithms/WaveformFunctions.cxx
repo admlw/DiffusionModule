@@ -26,7 +26,7 @@ namespace diffmod {
             std::cout << "Hit view " << hit->View() << std::endl;
         }
         if (hit->Channel() < HIT_MIN_CHANNEL) {
-            std::cout << "Hit in U-shorted region" << std::endl;
+            std::cout << "Hit channel less than 6150" << std::endl;
         }
         */
         return false;

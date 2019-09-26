@@ -288,6 +288,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     art::Ptr< recob::Track > thisTrack = track_ptr_vector.at(i_tr);
 
+    bool printHitMsg = true;
     std::vector< art::Ptr< anab::T0 > > t0_from_track;
     if (use_t0tagged_tracks) {
       t0_from_track = t0_from_tracks.at(thisTrack.key());
@@ -341,7 +342,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       // get wire information for hit
       art::Ptr< recob::Wire > wire_from_hit;
      
-      for (size_t i_w = 0; i_w < wire_ptr_vector.size(); i_w++){
+      for (size_t i_w = 0; i_w < wire_ptr_vector.size(); i_w++) {
 
         if ( wire_ptr_vector.at(i_w)->Channel() == thisHit->Channel())
           wire_from_hit = wire_ptr_vector.at(i_w);
@@ -350,6 +351,14 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
       hit_peak_time        = thisHit->PeakTime();
       hit_peak_time_t0corr = thisHit->PeakTime() - t0_tick_shift;
+
+      if (hit_peak_time_t0corr>3000 && hit_peak_time_t0corr<4500 && printHitMsg) {
+        std::cout << "[BADEVENT] Weird hit_rms value in run " << run << " subrun " << 
+            sub_run << " event " << event << std::endl;
+        std::cout << "[BADEVENT] Channel " << thisHit->Channel() << std::endl;
+        printHitMsg = false;
+      }
+
       hit_peak_time_stddev = thisHit->SigmaPeakTime();
       hit_rms              = thisHit->RMS();
       hit_charge           = thisHit->Integral();
