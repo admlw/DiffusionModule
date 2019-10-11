@@ -53,10 +53,10 @@ physics:
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
       T0Label:                "acpttagger"
       TrackLengthCut:  50
-      TrackAngleCutXZLow:  -4 # -10
-      TrackAngleCutXZHigh: 4 # 10
-      TrackAngleCutYZLow:  -16 # -40
-      TrackAngleCutYZHigh: 16 # 40
+      TrackAngleCutXZLow:  -10 # -10
+      TrackAngleCutXZHigh: 10 # 10
+      TrackAngleCutYZLow:  -40 # -40
+      TrackAngleCutYZHigh: 40 # 40
 
     }
   }

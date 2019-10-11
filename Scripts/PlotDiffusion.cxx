@@ -164,6 +164,10 @@ void makePlot(TString* inputFileName){
 
     if (histoNWvfms->GetBinContent(i+1) < num_waveform_cut) {
         std::cout << "Skipping bin " << i << "; fewer than " << num_waveform_cut << " waveforms" << std::endl;
+        sigmaVals[i] = 0;
+        sigmaValsErrs[i] = 0;
+        driftTimes[i] = -1;
+        driftTimesErrs[i] = -1;
         continue;
     }
 
@@ -208,9 +212,21 @@ void makePlot(TString* inputFileName){
     while (chisqNdf > 1) {
       waveformHist->Fit(gausfit, "q", "", lowFit, highFit);
       chisqNdf = gausfit->GetChisquare()/gausfit->GetNDF();
-      //chisqNdf = waveformHist->GetFunction("gausfit")->GetChisquare()/gausfit->GetNDF();
       increaseError(waveformHist);
     }
+
+    // Uncomment to plot waveformHists with fits
+    /*
+    std::cout << "Making canvas" << std::endl;
+    TCanvas *c_test = new TCanvas("c_test", "", 750, 550);
+    c_test->cd();
+    waveformHist->Draw("e1");
+    c_test->cd();
+    TString waveformHistName = Form("waveformHist_%i", i);
+    TString testDir = "waveformHistPlots/";
+    c_test->cd();
+    c_test->SaveAs(testDir+waveformHistName+".pdf", "PDF");
+    */
 
     double chisq = waveformHist->GetFunction("gausfit")->GetChisquare();
     double Ndf = gausfit->GetNDF();
@@ -246,7 +262,8 @@ void makePlot(TString* inputFileName){
   }
 
   // For checking fit range
-  for (int k = 5; k < 21; k++) {
+  /*
+  for (int k = 15; k < 16; k++) {
       if (sigmaVals[k]!=0) {
         sigmaVals[k] = 0;
         sigmaValsErrs[k] = 0;
@@ -256,6 +273,7 @@ void makePlot(TString* inputFileName){
         driftTimesErrs[k] = -1;
       }
   }
+  */
 
   TCanvas *c1 = new TCanvas("c1", "c1", 1000, 1000);
   gStyle->SetTextFont(22);
@@ -301,9 +319,10 @@ void makePlot(TString* inputFileName){
   // Linear fit to diffusion plot
   TF1* polFit = new TF1("polfit", "pol1");
   //gr1->Fit("polfit", "", "", minTime, 1450);
-  gr1->Fit("polfit", "", "", 0, maxTime-minTime);
+  gr1->Fit("polfit", "", "", 0, maxTime-minTime); // 0 to 2300 microseconds
   gr1->GetFunction("polfit")->SetLineColor(kRed);
   gr1->GetFunction("polfit")->Draw("same");
+  std::cout << "Number fit points: " << gr1->GetFunction("polfit")->GetNumberFitPoints() << std::endl;
 
   // Get diffusion value from slope of linear fit
   double diffusionValue = polFit->GetParameter(1)*DRIFT_VELOCITY*DRIFT_VELOCITY* 1000000/2;

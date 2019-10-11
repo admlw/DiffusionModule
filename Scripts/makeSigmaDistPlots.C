@@ -29,7 +29,6 @@ void makeSigmaDistPlots() {
     std::cout << "ERROR: Bad input file" << std::endl;
     return;
   }
-  //std::vector<TH1D*> h_sigma_hists(nlines);
   TH1D *h_sigma;
   TCanvas *c = new TCanvas("c", "c", 750, 550);
   gStyle->SetOptStat(0);
@@ -73,30 +72,6 @@ void makeSigmaDistPlots() {
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
