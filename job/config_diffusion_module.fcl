@@ -32,6 +32,7 @@ diffusionconfig       : {
   
   TrackHitAssn        : "diffsel" # diffsel for filtered, pandora otherwise
   TrackT0Assn         : "diffsel" # diffsel for filtered, pandora otherwise
+  TrackSpacePointAssn : "diffsel" # diffsel for filtered, pandora otherwise
 
 }
 
