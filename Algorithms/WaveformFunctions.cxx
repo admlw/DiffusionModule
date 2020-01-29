@@ -1,34 +1,16 @@
 #include "WaveformFunctions.h"
 
 namespace diffmod {
-    bool WaveformFunctions::passesHitSelection(art::Ptr< recob::Hit > hit, 
+
+  bool WaveformFunctions::passesHitSelection(art::Ptr< recob::Hit > hit, 
         double HIT_GOODNESSOFFIT_CUT, 
-        int HIT_MULTIPLICITY, 
-        int HIT_VIEW, 
-        unsigned int HIT_MIN_CHANNEL){
+        int HIT_MULTIPLICITY){
 
       if (hit->Multiplicity() == HIT_MULTIPLICITY && 
-          hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT && 
-          hit->View() == HIT_VIEW && 
-          hit->Channel() > HIT_MIN_CHANNEL) {
-        //std::cout << "Hit passed" << std::endl;
+          hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT) {
         return true;
       }
       else {
-        /*
-        if (hit->Multiplicity() != HIT_MULTIPLICITY) {
-            std::cout << "Hit multiplicity is " << hit->Multiplicity() << std::endl;
-        }
-        if (hit->GoodnessOfFit() < HIT_GOODNESSOFFIT_CUT) {
-            std::cout << "Hit goodness-of-fit " << hit->GoodnessOfFit() << std::endl;
-        }
-        if (hit->View() != HIT_VIEW) {
-            std::cout << "Hit view " << hit->View() << std::endl;
-        }
-        if (hit->Channel() < HIT_MIN_CHANNEL) {
-            std::cout << "Hit channel less than 6150" << std::endl;
-        }
-        */
         return false;
       }
     }
