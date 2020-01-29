@@ -99,6 +99,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     double hit_rms                  = -9999;
     double hit_charge               = -9999;
     double hit_multiplicity         = -9999;
+    double hit_view                 = -9999;
     double t0                       = -9999;
     double t0_tick_shift            = -9999;
     double t0_x_shift               = -9999;
@@ -218,7 +219,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   peak_finder_threshold = p.get< float        >("PeakFinderThreshold" , 3.0);
   hit_min_channel       = p.get< unsigned int >("HitMinChannel"       , 6150);
   hit_multiplicity_cut  = p.get< int          >("HitMultiplicityCut"  , 1);
-  hit_view              = p.get< int          >("HitView"             , 1);
   waveform_size         = p.get< int          >("WaveformSize"        , 6400);
   waveform_intime_start = p.get< int          >("WaveformIntimeStart" , 800);
   waveform_intime_end   = p.get< int          >("WaveformIntimeEnd"   , 5400);
@@ -243,7 +243,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- peak_finder_threshold : " << peak_finder_threshold
     << "\n-- hit_min_channel       : " << hit_min_channel
     << "\n-- hit_multiplicity_cut  : " << hit_multiplicity_cut
-    << "\n-- hit_view              : " << hit_view
     << "\n-- waveform_size         : " << waveform_size
     << "\n-- waveform_intime_start : " << waveform_intime_start
     << "\n-- waveform_intime_end   : " << waveform_intime_end
@@ -337,7 +336,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       art::Ptr< recob::Hit > thisHit = hits_from_track.at(i_hit);
 
       // if hit selection is not passed then ignore the hit
-      if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut, hit_multiplicity_cut, hit_view, hit_min_channel)) continue;
+      if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut, hit_multiplicity_cut, hit_min_channel)) continue;
 
       // get wire information for hit
       art::Ptr< recob::Wire > wire_from_hit;
@@ -362,6 +361,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       hit_peak_time_stddev = thisHit->SigmaPeakTime();
       hit_rms              = thisHit->RMS();
       hit_charge           = thisHit->Integral();
+      hit_view             = thisHit->View();
       hit_multiplicity     = thisHit->Multiplicity();
 
       tick_window_size  = number_ticks_per_bin;
@@ -693,6 +693,7 @@ void diffmod::LArDiffusion::beginJob()
   difftree->Branch("hit_rms"                      , &hit_rms);
   difftree->Branch("hit_charge"                   , &hit_charge);
   difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
+  difftree->Branch("hit_view"                     , &hit_view);
   difftree->Branch("t0"                           , &t0);
   difftree->Branch("t0_x_shift"                   , &t0_x_shift);
   difftree->Branch("pulse_height"                 , &pulse_height);
