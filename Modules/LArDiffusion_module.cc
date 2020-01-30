@@ -24,9 +24,11 @@
 // LArSoft 
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larana/TruncatedMean/Algorithm/TruncMean.h"
+#include "larcore/Geometry/Geometry.h"
 
 // art
 #include "canvas/Persistency/Common/FindManyP.h"
@@ -39,9 +41,12 @@
 #include "TStyle.h"
 #include "TFile.h"
 #include "TString.h"
+#include "TVector3.h"
 
 // local
 #include "ubana/DiffusionModule/Algorithms/WaveformFunctions.h"
+#include "ubana/UBXSec/Algorithms/FiducialVolume.h"        
+
 
 namespace diffmod {
   class LArDiffusion;
@@ -72,16 +77,18 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
   private:
 
     art::ServiceHandle< art::TFileService > tfs;
+    art::ServiceHandle< geo::Geometry > geo;
 
     TTree* difftree;
 
     // Variables for tree/histograms
-    int run;
-    int sub_run;
-    int event;
+    int run = -9999;
+    int sub_run = -9999;
+    int event = -9999;
     int is_real_data;
     double maximum_tick             = -9999;
     double track_length             = -9999;
+    double track_direction_rms      = -9999;
     double cos_theta                = -9999;
     double theta_xz                 = -9999;
     double theta_yz                 = -9999;
@@ -98,7 +105,12 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     double hit_peak_time_stddev     = -9999;
     double hit_rms                  = -9999;
     double hit_charge               = -9999;
-    double hit_multiplicity         = -9999;
+    int hit_multiplicity            = -9999;
+    int hit_view                    = -9999;
+    double sp_x                     = -9999;
+    double sp_y                     = -9999;
+    double sp_z                     = -9999;
+    double sp_x_t0                  = -9999;
     double t0                       = -9999;
     double t0_tick_shift            = -9999;
     double t0_x_shift               = -9999;
@@ -128,6 +140,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::string wire_label;
     std::string hit_label;
     std::string track_hit_assn;
+    std::string hit_sp_assn;
     std::string track_t0_assn;
     std::string sigma_map_file_path;
     std::string sigma_map_directory_file;
@@ -139,7 +152,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     float drift_velocity;
     double hit_GOF_cut;
     int hit_multiplicity_cut;
-    int hit_view;
     int hit_min_channel;
     int waveform_size;
     int waveform_intime_start;
@@ -189,6 +201,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // other classes
     diffmod::WaveformFunctions _waveform_func;
     TruncMean _trunc_mean_func;
+    ubana::FiducialVolume _fiducialVolume;
 
 };
 
@@ -199,12 +212,15 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     // More initializers here.
 {
 
+
+
   // defaults set to be MCC9 defaults
-  track_label           = p.get< std::string >("TrackLabel"   , "pandora");
-  wire_label            = p.get< std::string >("WireLabel"    , "butcher");
-  hit_label             = p.get< std::string >("HitLabel"     , "gaushit");
-  track_hit_assn        = p.get< std::string >("TrackHitAssn" , "pandora");
-  track_t0_assn         = p.get< std::string >("TrackT0Assn"  , "t0reco");
+  track_label           = p.get< std::string >("TrackLabel"          , "pandora");
+  wire_label            = p.get< std::string >("WireLabel"           , "butcher");
+  hit_label             = p.get< std::string >("HitLabel"            , "gaushit");
+  track_hit_assn        = p.get< std::string >("TrackHitAssn"        , "pandora");
+  hit_sp_assn           = p.get< std::string >("HitSpacePointAssn"   , "pandora");
+  track_t0_assn         = p.get< std::string >("TrackT0Assn"         , "t0reco");
 
   sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
   sigma_map_directory_file = p.get< std::string >("SigmaMapDirectoryFile", "DiffusionModule");
@@ -218,7 +234,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   peak_finder_threshold = p.get< float        >("PeakFinderThreshold" , 3.0);
   hit_min_channel       = p.get< unsigned int >("HitMinChannel"       , 6150);
   hit_multiplicity_cut  = p.get< int          >("HitMultiplicityCut"  , 1);
-  hit_view              = p.get< int          >("HitView"             , 1);
   waveform_size         = p.get< int          >("WaveformSize"        , 6400);
   waveform_intime_start = p.get< int          >("WaveformIntimeStart" , 800);
   waveform_intime_end   = p.get< int          >("WaveformIntimeEnd"   , 5400);
@@ -233,6 +248,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- wire_label            : " << wire_label
     << "\n-- hit_label             : " << hit_label
     << "\n-- track_hit_assn        : " << track_hit_assn
+    << "\n-- hit_sp_assn           : " << hit_sp_assn
     << "\n-- track_t0_assn         : " << track_t0_assn
     << "\n-- drift_velocity        : " << drift_velocity
     << "\n-- use_t0tagged_tracks   : " << use_t0tagged_tracks
@@ -243,7 +259,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- peak_finder_threshold : " << peak_finder_threshold
     << "\n-- hit_min_channel       : " << hit_min_channel
     << "\n-- hit_multiplicity_cut  : " << hit_multiplicity_cut
-    << "\n-- hit_view              : " << hit_view
     << "\n-- waveform_size         : " << waveform_size
     << "\n-- waveform_intime_start : " << waveform_intime_start
     << "\n-- waveform_intime_end   : " << waveform_intime_end
@@ -251,6 +266,15 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- number_dropped_ticks  : " << number_dropped_ticks
     << "\n-- waveform_drift_size   : " << waveform_drift_size
     << "\n-- number_ticks_per_bin  : " << number_ticks_per_bin;
+
+  // define fiducial volume for analysis
+  fhicl::ParameterSet const p_fv     = p.get<fhicl::ParameterSet>("FiducialVolume");
+  _fiducialVolume.Configure(p_fv,
+      geo->DetHalfHeight(),
+      2.*geo->DetHalfWidth(),
+      geo->DetLength());
+
+  _fiducialVolume.PrintConfig();
 
 }
 
@@ -280,8 +304,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
   e.getByLabel(hit_label, hit_handle);
 
   // Associations
-  art::FindManyP< recob::Hit > hits_from_tracks(track_handle, e, track_hit_assn);
-  art::FindManyP< anab::T0 > t0_from_tracks(track_handle, e, track_t0_assn);
+  art::FindManyP< recob::Hit >        hits_from_tracks(track_handle, e, track_hit_assn);
+  art::FindManyP< recob::SpacePoint > sp_from_hits    (hit_handle  , e, hit_sp_assn);
+  art::FindManyP< anab::T0 >          t0_from_tracks  (track_handle, e, track_t0_assn);
 
   // loop tracks, get associated hits
   for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
@@ -316,18 +341,31 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
     theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
-    track_length   = thisTrack->Length();
-    cos_theta      = thisTrack->Theta();
-    track_start    = thisTrack->Start<TVector3>();
-    track_end      = thisTrack->End<TVector3>();
-    start_x        = track_start.X();
-    start_x_t0corr = track_start.X() - t0_x_shift;
-    start_y        = track_start.Y();
-    start_z        = track_start.Z();
-    end_x          = track_end.X();
-    end_x_t0corr   = track_end.X() - t0_x_shift;
-    end_y          = track_end.Y();
-    end_z          = track_end.Z();
+    track_length        = thisTrack->Length();
+    cos_theta           = thisTrack->Theta();
+    track_start         = thisTrack->Start<TVector3>();
+    track_end           = thisTrack->End<TVector3>();
+    start_x             = track_start.X();
+    start_x_t0corr      = track_start.X() - t0_x_shift;
+    start_y             = track_start.Y();
+    start_z             = track_start.Z();
+    end_x               = track_end.X();
+    end_x_t0corr        = track_end.X() - t0_x_shift;
+    end_y               = track_end.Y();
+    end_z               = track_end.Z();
+
+    std::vector<double> dotProds;
+    dotProds.resize(0);
+    for (size_t i_pt = 1; i_pt < thisTrack->NumberTrajectoryPoints(); i_pt++){
+      recob::Track::Vector_t firstDir = thisTrack->DirectionAtPoint(0);
+      recob::Track::Vector_t thisDir = thisTrack->DirectionAtPoint(i_pt);
+
+      double dotProd = firstDir.Dot(thisDir);
+      std::cout << "dot product is... " << dotProd << std::endl;
+      dotProds.push_back(dotProd);
+    }
+    track_direction_rms = TMath::RMS(dotProds.size(), &dotProds[0]);
+    std::cout << "rms is ... " << track_direction_rms << std::endl;
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
@@ -336,12 +374,40 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
       art::Ptr< recob::Hit > thisHit = hits_from_track.at(i_hit);
 
+      std::vector< art::Ptr< recob::SpacePoint > > sps_from_hit = sp_from_hits.at(thisHit.key());
+      if (sps_from_hit.size() != 1){
+        MF_LOG_VERBATIM("LArDiffusion")
+          << sps_from_hit.size() 
+          << " spacepoints from the hit, just taking first one";
+      }
+      if (sps_from_hit.size() == 0){
+        MF_LOG_VERBATIM("LArDiffusion")
+          << "zero spacepoints associated with hit, skip this hit";
+          continue;
+      }
+
+      art::Ptr< recob::SpacePoint > thisSpacePoint = sps_from_hit.at(0);
+
+      const double* spXYZ = thisSpacePoint->XYZ();
+
+      sp_x = spXYZ[0];
+      sp_x_t0 = sp_x - t0_x_shift;
+      sp_y = spXYZ[1];
+      sp_z = spXYZ[2];
+
+      bool  isInFV = _fiducialVolume.InFV(sp_x_t0,
+                                          sp_y,
+                                          sp_z);
+
       // if hit selection is not passed then ignore the hit
-      if (!_waveform_func.passesHitSelection(thisHit, hit_GOF_cut, hit_multiplicity_cut, hit_view, hit_min_channel)) continue;
+      if (!isInFV) continue;
+      if (!_waveform_func.passesHitSelection(thisHit, 
+                                             hit_GOF_cut, 
+                                             hit_multiplicity_cut)) continue;
 
       // get wire information for hit
       art::Ptr< recob::Wire > wire_from_hit;
-     
+
       for (size_t i_w = 0; i_w < wire_ptr_vector.size(); i_w++) {
 
         if ( wire_ptr_vector.at(i_w)->Channel() == thisHit->Channel())
@@ -354,7 +420,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
       if (hit_peak_time_t0corr>3000 && hit_peak_time_t0corr<4500 && printHitMsg) {
         std::cout << "[BADEVENT] Weird hit_rms value in run " << run << " subrun " << 
-            sub_run << " event " << event << std::endl;
+          sub_run << " event " << event << std::endl;
         std::cout << "[BADEVENT] Channel " << thisHit->Channel() << std::endl;
         printHitMsg = false;
       }
@@ -362,6 +428,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       hit_peak_time_stddev = thisHit->SigmaPeakTime();
       hit_rms              = thisHit->RMS();
       hit_charge           = thisHit->Integral();
+      hit_view             = thisHit->View();
       hit_multiplicity     = thisHit->Multiplicity();
 
       tick_window_size  = number_ticks_per_bin;
@@ -420,16 +487,16 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       }
 
       /*
-      MF_LOG_VERBATIM("LArDiffusion")
-        << "PRINTING INFORMATION FOR HIT " << i_hit
-        << "\n-- hit_peak_time        : "       << hit_peak_time
-        << "\n-- t0_tick_shift        : "       << t0_tick_shift
-        << "\n-- hit_peak_time_t0corr : "       << hit_peak_time_t0corr
-        << "\n-- tick_window_size     : "       << tick_window_size
-        << "\n-- tick_window_left     : "       << tick_window_left
-        << "\n-- tick_window_right    : "       << tick_window_right
-        << "\n-- maximum_tick         : "       << maximum_tick; 
-        */
+         MF_LOG_VERBATIM("LArDiffusion")
+         << "PRINTING INFORMATION FOR HIT " << i_hit
+         << "\n-- hit_peak_time        : "       << hit_peak_time
+         << "\n-- t0_tick_shift        : "       << t0_tick_shift
+         << "\n-- hit_peak_time_t0corr : "       << hit_peak_time_t0corr
+         << "\n-- tick_window_size     : "       << tick_window_size
+         << "\n-- tick_window_left     : "       << tick_window_left
+         << "\n-- tick_window_right    : "       << tick_window_right
+         << "\n-- maximum_tick         : "       << maximum_tick; 
+         */
 
       // now the magic: 
       // loop over the drift bins and check to see if the 
@@ -454,12 +521,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
           bin_no = bin_it;
 
           /*
-          MF_LOG_VERBATIM("LArDiffusion")
-            << "-- Falls into bin "    << bin_no
-            << "\n-- histogram set to"
-            << "\n---- binEdgeLeft: "  << binEdgeLeft
-            << "\n---- binEdgeRight: " << binEdgeRight;
-            */
+             MF_LOG_VERBATIM("LArDiffusion")
+             << "-- Falls into bin "    << bin_no
+             << "\n-- histogram set to"
+             << "\n---- binEdgeLeft: "  << binEdgeLeft
+             << "\n---- binEdgeRight: " << binEdgeRight;
+             */
 
           //h_wire_in_window->GetXaxis()->SetLimits(bin_it * number_ticks_per_bin, (bin_it +1) * number_ticks_per_bin);
 
@@ -530,25 +597,25 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             // Dynamic sigma cut: check if pulseHeight, sigma, 
             // fall within some region around the median
             /*
-            double sigma_lowerLimit = 
-              sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
-            double sigma_higherLimit = 
-              sigmaMedians.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
-            double pulseHeight_lowerLimit = 
-              pulseHeightMedians.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-            double pulseHeight_higherLimit = 
-              pulseHeightMedians.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
-            */
+               double sigma_lowerLimit = 
+               sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+               double sigma_higherLimit = 
+               sigmaMedians.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+               double pulseHeight_lowerLimit = 
+               pulseHeightMedians.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+               double pulseHeight_higherLimit = 
+               pulseHeightMedians.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+               */
 
             // Maximum 
             double sigma_lowerLimit = 
-            sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+              sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
             double sigma_higherLimit = 
-            sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
+              sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(bin_no)->GetStdDev();
             double pulseHeight_lowerLimit = 
-            pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+              pulseHeightMaxs.at(bin_it) - pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
             double pulseHeight_higherLimit = 
-            pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
+              pulseHeightMaxs.at(bin_it) + pulse_height_cut * h_pulse_height_hists.at(bin_no)->GetStdDev();
 
 
             if (fit_sigma < sigma_lowerLimit 
@@ -674,8 +741,12 @@ void diffmod::LArDiffusion::beginJob()
       number_time_bins, 0, number_time_bins);
 
   difftree = tfs->make<TTree>("difftree"          , "diffusion tree");
+  difftree->Branch("run"                          , &run);
+  difftree->Branch("sub_run"                      , &sub_run);
+  difftree->Branch("event"                        , &event);
   difftree->Branch("maximum_tick"                 , &maximum_tick);
   difftree->Branch("track_length"                 , &track_length);
+  difftree->Branch("track_direction_rms"          , &track_direction_rms);
   difftree->Branch("cos_theta"                    , &cos_theta);
   difftree->Branch("theta_xz"                     , &theta_xz);
   difftree->Branch("theta_yz"                     , &theta_yz);
@@ -693,6 +764,11 @@ void diffmod::LArDiffusion::beginJob()
   difftree->Branch("hit_rms"                      , &hit_rms);
   difftree->Branch("hit_charge"                   , &hit_charge);
   difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
+  difftree->Branch("hit_view"                     , &hit_view);
+  difftree->Branch("sp_x"                         , &sp_x);
+  difftree->Branch("sp_x_t0"                      , &sp_x_t0);
+  difftree->Branch("sp_y"                         , &sp_y);
+  difftree->Branch("sp_z"                         , &sp_z);
   difftree->Branch("t0"                           , &t0);
   difftree->Branch("t0_x_shift"                   , &t0_x_shift);
   difftree->Branch("pulse_height"                 , &pulse_height);

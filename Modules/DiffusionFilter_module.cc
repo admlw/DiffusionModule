@@ -30,6 +30,7 @@
 #include "larsim/MCCheater/BackTracker.h"
 #include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "art/Persistency/Common/PtrMaker.h"
@@ -73,6 +74,8 @@ class DiffusionFilter : public art::EDFilter {
     // fhicl
     std::string fTrackLabel;
     std::string fT0Label;
+    std::string fHitLabel;
+    std::string fHitSPAssnLabel;
     double fTrackLengthCut;
     double fTrackAngleCutXZLow;
     double fTrackAngleCutXZHigh;
@@ -130,6 +133,8 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
 
   fTrackLabel          = p.get<std::string> ("TrackLabel");
   fT0Label             = p.get<std::string> ("T0Label");
+  fHitLabel            = p.get<std::string> ("HitLabel");
+  fHitSPAssnLabel      = p.get<std::string> ("HitSPAssnLabel");
   fTrackLengthCut      = p.get<double> ("TrackLengthCut");
   fTrackAngleCutXZLow  = p.get<double> ("TrackAngleCutXZLow");
   fTrackAngleCutXZHigh = p.get<double> ("TrackAngleCutXZHigh");
@@ -151,6 +156,8 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
   produces< art::Assns< recob::Track, anab::T0 > >();
   produces< std::vector< recob::Hit > >();
   produces< art::Assns< recob::Track, recob::Hit > >();
+  produces< std::vector< recob::SpacePoint > >();
+  produces< art::Assns< recob::Hit, recob::SpacePoint > >();
 
 }
 
@@ -198,21 +205,30 @@ bool DiffusionFilter::filter(art::Event & e)
   std::vector< art::Ptr< recob::Track > > trackPtrVector;
   art::fill_ptr_vector(trackPtrVector, trackHandle);
 
-  art::FindManyP<recob::Hit> hitsFromTracks(trackHandle, e, fTrackLabel);
-  art::FindManyP<anab::T0>   t0FromTracks(trackHandle, e, fT0Label);
+  art::Handle< std::vector<recob::Hit> > hitHandle;
+  e.getByLabel(fHitLabel, hitHandle);
+  std::vector< art::Ptr< recob::Hit > > hitPtrVector;
+  art::fill_ptr_vector(hitPtrVector, hitHandle);
+
+  art::FindManyP< recob::Hit >        hitsFromTracks(trackHandle, e, fTrackLabel);
+  art::FindManyP< anab::T0 >          t0FromTracks  (trackHandle, e, fT0Label);
+  art::FindManyP< recob::SpacePoint > spFromHits    (hitHandle  , e, fHitSPAssnLabel); 
 
   // produces a new trackCollection for passing tracks result is that we have
   // only events in which at least one track passes the selection, and only 
   // those tracks are reconstructed
-  std::unique_ptr< std::vector<recob::Track> >            trackCollection( new std::vector<recob::Track>);
-  std::unique_ptr< std::vector<anab::T0> >                t0Collection( new std::vector<anab::T0>);
-  std::unique_ptr< art::Assns<recob::Track, anab::T0> >   trackT0Assn( new art::Assns<recob::Track, anab::T0>);
-  std::unique_ptr< std::vector<recob::Hit> >              hitCollection( new std::vector<recob::Hit> );
-  std::unique_ptr< art::Assns<recob::Track, recob::Hit> > trackHitAssn( new art::Assns<recob::Track, recob::Hit>);
+  std::unique_ptr< std::vector<recob::Track> >                 trackCollection     ( new std::vector<recob::Track>);
+  std::unique_ptr< std::vector<anab::T0> >                     t0Collection        ( new std::vector<anab::T0>);
+  std::unique_ptr< art::Assns<recob::Track, anab::T0> >        trackT0Assn         ( new art::Assns<recob::Track, anab::T0>);
+  std::unique_ptr< std::vector<recob::Hit> >                   hitCollection       ( new std::vector<recob::Hit> );
+  std::unique_ptr< art::Assns<recob::Track, recob::Hit> >      trackHitAssn        ( new art::Assns<recob::Track, recob::Hit>);
+  std::unique_ptr< std::vector<recob::SpacePoint> >            spacePointCollection( new std::vector<recob::SpacePoint>);
+  std::unique_ptr< art::Assns<recob::Hit, recob::SpacePoint> > hitSpacePointAssn   ( new art::Assns<recob::Hit, recob::SpacePoint>); 
 
-  art::PtrMaker< recob::Track > makeTrackPtr(e);
-  art::PtrMaker< recob::Hit >   makeHitPtr(e);
-  art::PtrMaker< anab::T0 >     makeT0Ptr(e);
+  art::PtrMaker< recob::Track >      makeTrackPtr(e);
+  art::PtrMaker< recob::Hit >        makeHitPtr(e);
+  art::PtrMaker< anab::T0 >          makeT0Ptr(e);
+  art::PtrMaker< recob::SpacePoint > makeSpacePointPtr(e); 
 
   for (size_t iTrack = 0; iTrack < trackPtrVector.size(); iTrack++){
     art::Ptr< recob::Track > thisTrack = trackPtrVector.at(iTrack);
@@ -342,6 +358,33 @@ bool DiffusionFilter::filter(art::Event & e)
             = makeHitPtr(hitCollection->size()-1);
 
           hitPtrCollection.push_back(hitForCollectionPtr);
+
+          // get spacepoints
+          std::vector< art::Ptr< recob::SpacePoint > > spacePoints;
+          std::vector< art::Ptr< recob::SpacePoint > > spacePointPtrCollection;
+          if ((int)spFromHits.at(thisHit.key()).size() > 0){
+            spacePoints = spFromHits.at(thisHit.key());
+
+            for (art::Ptr< recob::SpacePoint >& thisSpacePoint : spacePoints){
+               recob::SpacePoint spacePointForCollection = *(thisSpacePoint.get());
+               spacePointCollection->push_back(spacePointForCollection);
+
+               art::Ptr< recob::SpacePoint > spacePointForCollectionPtr
+                 = makeSpacePointPtr(spacePointCollection->size()-1);
+
+               spacePointPtrCollection.push_back(spacePointForCollectionPtr);
+            }
+
+            util::CreateAssn(
+                *this,
+                e,
+                hitForCollectionPtr,
+                spacePointPtrCollection,
+                *hitSpacePointAssn);
+
+          }
+
+
         }
       }
 
@@ -375,8 +418,10 @@ bool DiffusionFilter::filter(art::Event & e)
   e.put(std::move(trackCollection));
   e.put(std::move(t0Collection));
   e.put(std::move(hitCollection));
+  e.put(std::move(spacePointCollection));
   e.put(std::move(trackT0Assn));
   e.put(std::move(trackHitAssn));
+  e.put(std::move(hitSpacePointAssn));
 
   std::cout << "DiffusionFilter::filter() --- moved dataProducts to the event " << std::endl;
 

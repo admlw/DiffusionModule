@@ -51,7 +51,9 @@ physics:
       module_type:            "DiffusionFilter"
       TrackLabel:             "pandora"
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
-      T0Label:                "acpttrigtagger"
+      T0Label:                "acpttagger"
+      HitLabel:               "gaushit"
+      HitSPAssnLabel:         "pandora"
       TrackLengthCut:  50
       TrackAngleCutXZLow:  -180 # -10
       TrackAngleCutXZHigh: 180 # 10

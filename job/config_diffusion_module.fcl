@@ -1,3 +1,5 @@
+#include "config_diffusion_module_fiducialvolume.fcl"
+
 BEGIN_PROLOG
 
 diffusionconfig       : {
@@ -21,13 +23,16 @@ diffusionconfig       : {
   NumberDriftBins     : 25
   NumberDroppedTicks  : 2400
   PeakFinderThreshold : 3.0
- 
-  TrackLabel          : "pandora" # diffsel for filtered, pandora otherwise
-  HitLabel            : "gaushit" # diffsel for filtered, gaushit otherwise
+
+  FiducialVolume      : @local::DiffusionFiducialVolume
+
+  TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise
+  HitLabel            : "diffsel" # diffsel for filtered, gaushit otherwise
   WireLabel           : "butcher"
   
-  TrackHitAssn        : "pandora" # diffsel for filtered, pandora otherwise
-  TrackT0Assn         : "pandora" # diffsel for filtered, pandora otherwise
+  TrackHitAssn        : "diffsel" # diffsel for filtered, pandora otherwise
+  TrackT0Assn         : "diffsel" # diffsel for filtered, pandora otherwise
+  HitSpacePointAssn   : "diffsel" # diffsel for filtered, pandora otherwise
 
 }
 
