@@ -94,12 +94,12 @@ void makePlot(TString* inputFileName){
   const int waveformDriftStartTick=800;
   const int waveformDriftEndTick=5400;
   const int WAVEFORM_DRIFT_SIZE=waveformDriftEndTick-waveformDriftStartTick; // End tick (5400 - 800)
-  const int num_waveform_cut = 500; // Cut bins with fewer than this number of waveforms
+  const int num_waveform_cut = 1000; // Cut bins with fewer than this number of waveforms
   const int NUMBER_DRIFT_BINS=25;
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
   const int minTime = waveformDriftStartTick/2; // 400 microseconds
   const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
-  const bool isData = true;
+  const bool isData = false;
   double DRIFT_VELOCITY;
   // For data measurement, use drift velocity at anode. For MC, use
   // drift velocity at nominal E-field of 273 V/cm. Why? Basically 
@@ -263,7 +263,30 @@ void makePlot(TString* inputFileName){
 
   // For checking fit range
   /*
-  for (int k = 15; k < 16; k++) {
+  for (int k = 5; k < 21; k++) {
+      if (sigmaVals[k]!=0) {
+        sigmaVals[k] = 0;
+        sigmaValsErrs[k] = 0;
+      }
+      if (driftTimes[k]!=-1) {
+        driftTimes[k] = -1;
+        driftTimesErrs[k] = -1;
+      }
+  }
+  */
+  // Using only central bins
+  /*
+  for (int k = 0; k < 4; k++) {
+      if (sigmaVals[k]!=0) {
+        sigmaVals[k] = 0;
+        sigmaValsErrs[k] = 0;
+      }
+      if (driftTimes[k]!=-1) {
+        driftTimes[k] = -1;
+        driftTimesErrs[k] = -1;
+      }
+  }
+  for (int k = 19; k < NUMBER_DRIFT_BINS; k++) {
       if (sigmaVals[k]!=0) {
         sigmaVals[k] = 0;
         sigmaValsErrs[k] = 0;

@@ -28,6 +28,8 @@ void make_rms_v_bin_plot() {
   g->SetTitle("");
   g->GetXaxis()->SetTitle("Bin No.");
   g->GetYaxis()->SetTitle("RMS of #sigma_{t}^{2} Dist.");
+  g->SetLineColor(kAzure+1);
+  g->SetLineWidth(2);
   g->Draw();
   c->SaveAs("rms_v_bin_plot.png", "PNG");
 
