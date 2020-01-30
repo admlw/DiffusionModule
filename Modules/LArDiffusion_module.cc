@@ -41,6 +41,7 @@
 #include "TStyle.h"
 #include "TFile.h"
 #include "TString.h"
+#include "TVector3.h"
 
 // local
 #include "ubana/DiffusionModule/Algorithms/WaveformFunctions.h"
@@ -81,12 +82,13 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     TTree* difftree;
 
     // Variables for tree/histograms
-    int run;
-    int sub_run;
-    int event;
+    int run = -9999;
+    int sub_run = -9999;
+    int event = -9999;
     int is_real_data;
     double maximum_tick             = -9999;
     double track_length             = -9999;
+    double track_direction_rms      = -9999;
     double cos_theta                = -9999;
     double theta_xz                 = -9999;
     double theta_yz                 = -9999;
@@ -105,6 +107,10 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     double hit_charge               = -9999;
     int hit_multiplicity            = -9999;
     int hit_view                    = -9999;
+    double sp_x                     = -9999;
+    double sp_y                     = -9999;
+    double sp_z                     = -9999;
+    double sp_x_t0                  = -9999;
     double t0                       = -9999;
     double t0_tick_shift            = -9999;
     double t0_x_shift               = -9999;
@@ -134,7 +140,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::string wire_label;
     std::string hit_label;
     std::string track_hit_assn;
-    std::string track_sp_assn;
+    std::string hit_sp_assn;
     std::string track_t0_assn;
     std::string sigma_map_file_path;
     std::string sigma_map_directory_file;
@@ -213,7 +219,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   wire_label            = p.get< std::string >("WireLabel"           , "butcher");
   hit_label             = p.get< std::string >("HitLabel"            , "gaushit");
   track_hit_assn        = p.get< std::string >("TrackHitAssn"        , "pandora");
-  track_sp_assn         = p.get< std::string >("TrackSpacepointAssn" , "pandora");
+  hit_sp_assn           = p.get< std::string >("HitSpacePointAssn"   , "pandora");
   track_t0_assn         = p.get< std::string >("TrackT0Assn"         , "t0reco");
 
   sigma_map_file_path      = p.get< std::string >("SigmaMapFilePath"     , "");
@@ -242,7 +248,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- wire_label            : " << wire_label
     << "\n-- hit_label             : " << hit_label
     << "\n-- track_hit_assn        : " << track_hit_assn
-    << "\n-- track_sp_assn         : " << track_sp_assn
+    << "\n-- hit_sp_assn           : " << hit_sp_assn
     << "\n-- track_t0_assn         : " << track_t0_assn
     << "\n-- drift_velocity        : " << drift_velocity
     << "\n-- use_t0tagged_tracks   : " << use_t0tagged_tracks
@@ -262,7 +268,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- number_ticks_per_bin  : " << number_ticks_per_bin;
 
   // define fiducial volume for analysis
-  fhicl::ParameterSet const p_fv     = p.get<fhicl::ParameterSet>("FiducialVolumeSettings");
+  fhicl::ParameterSet const p_fv     = p.get<fhicl::ParameterSet>("FiducialVolume");
   _fiducialVolume.Configure(p_fv,
       geo->DetHalfHeight(),
       2.*geo->DetHalfWidth(),
@@ -299,7 +305,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
   // Associations
   art::FindManyP< recob::Hit >        hits_from_tracks(track_handle, e, track_hit_assn);
-  art::FindManyP< recob::SpacePoint > sp_from_hits    (track_handle, e, track_sp_assn);
+  art::FindManyP< recob::SpacePoint > sp_from_hits    (hit_handle  , e, hit_sp_assn);
   art::FindManyP< anab::T0 >          t0_from_tracks  (track_handle, e, track_t0_assn);
 
   // loop tracks, get associated hits
@@ -335,18 +341,31 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     theta_xz = std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159;
     theta_yz = std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159;
 
-    track_length   = thisTrack->Length();
-    cos_theta      = thisTrack->Theta();
-    track_start    = thisTrack->Start<TVector3>();
-    track_end      = thisTrack->End<TVector3>();
-    start_x        = track_start.X();
-    start_x_t0corr = track_start.X() - t0_x_shift;
-    start_y        = track_start.Y();
-    start_z        = track_start.Z();
-    end_x          = track_end.X();
-    end_x_t0corr   = track_end.X() - t0_x_shift;
-    end_y          = track_end.Y();
-    end_z          = track_end.Z();
+    track_length        = thisTrack->Length();
+    cos_theta           = thisTrack->Theta();
+    track_start         = thisTrack->Start<TVector3>();
+    track_end           = thisTrack->End<TVector3>();
+    start_x             = track_start.X();
+    start_x_t0corr      = track_start.X() - t0_x_shift;
+    start_y             = track_start.Y();
+    start_z             = track_start.Z();
+    end_x               = track_end.X();
+    end_x_t0corr        = track_end.X() - t0_x_shift;
+    end_y               = track_end.Y();
+    end_z               = track_end.Z();
+
+    std::vector<double> dotProds;
+    dotProds.resize(0);
+    for (size_t i_pt = 1; i_pt < thisTrack->NumberTrajectoryPoints(); i_pt++){
+      recob::Track::Vector_t firstDir = thisTrack->DirectionAtPoint(0);
+      recob::Track::Vector_t thisDir = thisTrack->DirectionAtPoint(i_pt);
+
+      double dotProd = firstDir.Dot(thisDir);
+      std::cout << "dot product is... " << dotProd << std::endl;
+      dotProds.push_back(dotProd);
+    }
+    track_direction_rms = TMath::RMS(dotProds.size(), &dotProds[0]);
+    std::cout << "rms is ... " << track_direction_rms << std::endl;
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
@@ -361,12 +380,24 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
           << sps_from_hit.size() 
           << " spacepoints from the hit, just taking first one";
       }
+      if (sps_from_hit.size() == 0){
+        MF_LOG_VERBATIM("LArDiffusion")
+          << "zero spacepoints associated with hit, skip this hit";
+          continue;
+      }
 
       art::Ptr< recob::SpacePoint > thisSpacePoint = sps_from_hit.at(0);
-      
-      bool  isInFV = _fiducialVolume.InFV(thisSpacePoint->XYZ()[0],
-                                          thisSpacePoint->XYZ()[1],
-                                          thisSpacePoint->XYZ()[2]);
+
+      const double* spXYZ = thisSpacePoint->XYZ();
+
+      sp_x = spXYZ[0];
+      sp_x_t0 = sp_x - t0_x_shift;
+      sp_y = spXYZ[1];
+      sp_z = spXYZ[2];
+
+      bool  isInFV = _fiducialVolume.InFV(sp_x_t0,
+                                          sp_y,
+                                          sp_z);
 
       // if hit selection is not passed then ignore the hit
       if (!isInFV) continue;
@@ -710,8 +741,12 @@ void diffmod::LArDiffusion::beginJob()
       number_time_bins, 0, number_time_bins);
 
   difftree = tfs->make<TTree>("difftree"          , "diffusion tree");
+  difftree->Branch("run"                          , &run);
+  difftree->Branch("sub_run"                      , &sub_run);
+  difftree->Branch("event"                        , &event);
   difftree->Branch("maximum_tick"                 , &maximum_tick);
   difftree->Branch("track_length"                 , &track_length);
+  difftree->Branch("track_direction_rms"          , &track_direction_rms);
   difftree->Branch("cos_theta"                    , &cos_theta);
   difftree->Branch("theta_xz"                     , &theta_xz);
   difftree->Branch("theta_yz"                     , &theta_yz);
@@ -730,6 +765,10 @@ void diffmod::LArDiffusion::beginJob()
   difftree->Branch("hit_charge"                   , &hit_charge);
   difftree->Branch("hit_multiplicity"             , &hit_multiplicity);
   difftree->Branch("hit_view"                     , &hit_view);
+  difftree->Branch("sp_x"                         , &sp_x);
+  difftree->Branch("sp_x_t0"                      , &sp_x_t0);
+  difftree->Branch("sp_y"                         , &sp_y);
+  difftree->Branch("sp_z"                         , &sp_z);
   difftree->Branch("t0"                           , &t0);
   difftree->Branch("t0_x_shift"                   , &t0_x_shift);
   difftree->Branch("pulse_height"                 , &pulse_height);
