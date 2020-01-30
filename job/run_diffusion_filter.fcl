@@ -52,6 +52,8 @@ physics:
       TrackLabel:             "pandora"
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
       T0Label:                "acpttagger"
+      HitLabel:               "gaushit"
+      HitSPAssnLabel:         "pandora"
       TrackLengthCut:  50
       TrackAngleCutXZLow:  -10 # -10
       TrackAngleCutXZHigh: 10 # 10
