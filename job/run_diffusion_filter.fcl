@@ -51,14 +51,14 @@ physics:
       module_type:            "DiffusionFilter"
       TrackLabel:             "pandora"
       TrackTruthMatcherLabel: "pandoraCosmicTruthMatch"
-      T0Label:                "acpttagger"
+      T0Label:                "acpttagger" # Use acpttrigtagger for MC ACPT+Overlay
       HitLabel:               "gaushit"
       HitSPAssnLabel:         "pandora"
       TrackLengthCut:  50
-      TrackAngleCutXZLow:  -180 # -10
-      TrackAngleCutXZHigh: 180 # 10
-      TrackAngleCutYZLow:  -180 # -40
-      TrackAngleCutYZHigh: 180 # 40
+      TrackAngleCutXZLow:  -10 # -10
+      TrackAngleCutXZHigh: 10 # 10
+      TrackAngleCutYZLow:  -40 # -40
+      TrackAngleCutYZHigh: 40 # 40
 
     }
   }

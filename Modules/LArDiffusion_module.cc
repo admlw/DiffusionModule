@@ -147,6 +147,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     const char* uboonedata_env;
     bool use_t0tagged_tracks;
     bool make_sigma_map;
+    double track_dir_rms_cut;
     double sigma_cut;
     double pulse_height_cut;
     float drift_velocity;
@@ -228,6 +229,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   drift_velocity        = p.get< float        >("DriftVelocity"       , 0.1098);
   use_t0tagged_tracks   = p.get< bool         >("UseT0TaggedTracks"   , true);
   make_sigma_map        = p.get< bool         >("MakeSigmaMap"        , false);
+  track_dir_rms_cut     = p.get< double       >("TrackDirRMSCut"      , 1e10);
   sigma_cut             = p.get< double       >("SigmaCut"            , 1.0);
   pulse_height_cut      = p.get< double       >("PulseHeightCut"      , 100.0);
   hit_GOF_cut           = p.get< double       >("HitGOFCut"           , 1.1);
@@ -253,6 +255,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- drift_velocity        : " << drift_velocity
     << "\n-- use_t0tagged_tracks   : " << use_t0tagged_tracks
     << "\n-- make_sigma_map        : " << make_sigma_map
+    << "\n-- track_dir_rms_cut     : " << track_dir_rms_cut
     << "\n-- sigma_cut             : " << sigma_cut
     << "\n-- pulse_height_cut      : " << pulse_height_cut
     << "\n-- hit_GOF_cut           : " << hit_GOF_cut
@@ -366,6 +369,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     }
     track_direction_rms = TMath::RMS(dotProds.size(), &dotProds[0]);
     std::cout << "rms is ... " << track_direction_rms << std::endl;
+    if (track_direction_rms > track_dir_rms_cut) {
+      std::cout << "[DIFFMOD]: Track RMS of " << track_direction_rms << 
+        " falls above cut value of " << track_dir_rms_cut << 
+        ". Skipping it" << std::endl;
+    }
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 

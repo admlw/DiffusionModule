@@ -34,5 +34,4 @@ services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: false
 physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_singleMuons_xz15.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
-#physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
-physics.analyzers.DiffusionModule.UseT0TaggedTracks: false
+physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
