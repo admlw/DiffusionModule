@@ -419,14 +419,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
       const double* spXYZ = thisSpacePoint->XYZ();
 
-      tsp_x   .push_back(spXYZ[0]);
-      tsp_x_t0.push_back(tsp_x.back() - track_t0_x_shift->back());
-      tsp_y   .push_back(spXYZ[1]);
-      tsp_z   .push_back(spXYZ[2]);
-
-      bool  isInFV = _fiducial_vol.InFV(tsp_x_t0.back(),
-                                        tsp_y.back(),
-                                        tsp_z.back());
+      bool  isInFV = _fiducial_vol.InFV(spXYZ[0] - track_t0_x_shift->back(),
+                                        spXYZ[1],
+                                        spXYZ[2]);
 
       // if hit selection is not passed then ignore the hit
       if (!isInFV) continue;
@@ -434,6 +429,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
             hit_GOF_cut, 
             hit_multiplicity_cut)) continue;
 
+      tsp_x   .push_back(spXYZ[0]);
+      tsp_x_t0.push_back(tsp_x.back() - track_t0_x_shift->back());
+      tsp_y   .push_back(spXYZ[1]);
+      tsp_z   .push_back(spXYZ[2]);
 
       // looping over planes 
       for (int i_v = 0; i_v < 3; i_v++){
