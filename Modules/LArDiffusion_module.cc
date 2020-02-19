@@ -757,67 +757,67 @@ void diffmod::LArDiffusion::beginJob()
     std::cout << "made TFileDirectory " << folderNames.at(ifN) << std::endl;
 
     h_sigma_v_bin_precut.push_back(theseTDs.back().make<TH2D>(
-        ("h_sigma_v_bin_precut"+folderNames.at(ifN)).c_str(), 
-        ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", 
-        number_time_bins, 0, number_time_bins, 
-        100, 0, 10));
+          ("h_sigma_v_bin_precut"+folderNames.at(ifN)).c_str(), 
+          ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", 
+          number_time_bins, 0, number_time_bins, 
+          100, 0, 10));
 
     std::cout << "made histogram" << std::endl;
 
     h_sigma_v_bin_postcut.push_back(theseTDs.back().make<TH2D>(
-        ("h_sigma_v_bin_postcut"+folderNames.at(ifN)).c_str(), 
-        ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", 
-        number_time_bins, 0, number_time_bins, 
-        100, 0, 10));
+          ("h_sigma_v_bin_postcut"+folderNames.at(ifN)).c_str(), 
+          ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", 
+          number_time_bins, 0, number_time_bins, 
+          100, 0, 10));
 
     h_pulse_height_v_bin_precut.push_back(theseTDs.back().make<TH2D>(
-        ("h_pulse_height_v_bin_precut"+folderNames.at(ifN)).c_str(), 
-        ";Bin no. ; Pulse Height (Arb. Units);", 
-        number_time_bins, 0, number_time_bins, 
-        100, 0, 20));
+          ("h_pulse_height_v_bin_precut"+folderNames.at(ifN)).c_str(), 
+          ";Bin no. ; Pulse Height (Arb. Units);", 
+          number_time_bins, 0, number_time_bins, 
+          100, 0, 20));
 
     h_pulse_height_v_bin_postcut.push_back(theseTDs.back().make<TH2D>(
-        ("h_pulse_height_v_bin_postcut"+folderNames.at(ifN)).c_str(), 
-        ";Bin no. ; Pulse Height (Arb. Units);", 
-        number_time_bins, 0, number_time_bins, 
-        100, 0, 20));
+          ("h_pulse_height_v_bin_postcut"+folderNames.at(ifN)).c_str(), 
+          ";Bin no. ; Pulse Height (Arb. Units);", 
+          number_time_bins, 0, number_time_bins, 
+          100, 0, 20));
 
     h_sigma_v_pulse_height_precut.push_back(theseTDs.back().make<TH2D>(
-        ("h_sigma_v_pulse_height_precut"+folderNames.at(ifN)).c_str(), 
-        ";#sigma_{t}^{2} (#mus^{2}); Pulse Height (Arb. Units);", 
-        100, 0, 10, 
-        100, 0, 20));
+          ("h_sigma_v_pulse_height_precut"+folderNames.at(ifN)).c_str(), 
+          ";#sigma_{t}^{2} (#mus^{2}); Pulse Height (Arb. Units);", 
+          100, 0, 10, 
+          100, 0, 20));
 
     h_sigma_v_pulse_height_postcut.push_back(theseTDs.back().make<TH2D>(
-        ("h_sigma_v_pulse_height_postcut"+folderNames.at(ifN)).c_str(), 
-        ";#sigma_{t}^{2} (#mus^{2}); Pulse Height (Arb. Units);", 
-        100, 0, 10, 
-        100, 0, 20));
+          ("h_sigma_v_pulse_height_postcut"+folderNames.at(ifN)).c_str(), 
+          ";#sigma_{t}^{2} (#mus^{2}); Pulse Height (Arb. Units);", 
+          100, 0, 10, 
+          100, 0, 20));
 
     h_theta_xz_v_bin.push_back(theseTDs.back().make<TH2D>(
-        ("h_theta_xz_v_bin"+folderNames.at(ifN)).c_str(), 
-        ";Bin no. ; #theta_{xz} (Deg.);", 
-        number_time_bins, 0, number_time_bins, 
-        100, 0, 20));
+          ("h_theta_xz_v_bin"+folderNames.at(ifN)).c_str(), 
+          ";Bin no. ; #theta_{xz} (Deg.);", 
+          number_time_bins, 0, number_time_bins, 
+          100, 0, 20));
 
     h_theta_yz_v_bin.push_back(theseTDs.back().make<TH2D>(
-        ("h_theta_yz_v_bin"+folderNames.at(ifN)).c_str(), 
-        ";Bin no. ; #theta_{yz} (Deg.);", 
-        number_time_bins, 0, number_time_bins, 
-        250, 0, 50));
+          ("h_theta_yz_v_bin"+folderNames.at(ifN)).c_str(), 
+          ";Bin no. ; #theta_{yz} (Deg.);", 
+          number_time_bins, 0, number_time_bins, 
+          250, 0, 50));
 
     h_sigma_hist_medians.push_back(theseTDs.back().make<TH1D>(
-        ("h_sigma_hist_medians"+folderNames.at(ifN)).c_str(), 
-        ";Median #sigma per bin;", 
-        number_time_bins, 0, number_time_bins));
+          ("h_sigma_hist_medians"+folderNames.at(ifN)).c_str(), 
+          ";Median #sigma per bin;", 
+          number_time_bins, 0, number_time_bins));
 
     h_sigma_hist_maxs.push_back(theseTDs.back().make<TH1D>(
-        ("h_sigma_hist_maxs"+folderNames.at(ifN)).c_str(), 
-        ";Max #sigma per bin;", 
-        number_time_bins, 0, number_time_bins));
- 
+          ("h_sigma_hist_maxs"+folderNames.at(ifN)).c_str(), 
+          ";Max #sigma per bin;", 
+          number_time_bins, 0, number_time_bins));
+
     std::cout << "made histograms" << std::endl;
-   
+
     // analysis junk
     if (!make_sigma_map) {
       //h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
@@ -825,21 +825,30 @@ void diffmod::LArDiffusion::beginJob()
       h_nWvfmsInBin = theseTDs.back().make<TH1D>(("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), ";Drift bin; No. Waveforms;", 25, 0, 25);
 
       // Import sigmaMap, assuming it already exists
-      // TODO: Make this smarter, it's dumb
-      char fullPath[200];
-      uboonedata_env = getenv("UBOONEDATA_DIR");
-      if (uboonedata_env!=NULL) {
-        MF_LOG_VERBATIM("LArDiffusion::beginJob") 
-          << "Got uboonedata env path " << uboonedata_env;
-      }
-      strcpy(fullPath, uboonedata_env);
-      strcat(fullPath, sigma_map_file_path.c_str() );
+      std::string filePath;
+
+      cet::search_path sp("FW_SEARCH_PATH");
+      if( !sp.find_file(sigma_map_file_path, filePath) )
+        throw cet::exception("LArDiffusion")
+          << "Cannot find FHC numu quantile file "
+          << sigma_map_file_path;
+
+      TFile fhcTF(filePath.c_str(), "READ");
+
+      //char fullPath[200];
+      //uboonedata_env = getenv("UBOONEDATA_DIR");
+      //if (uboonedata_env!=NULL) {
+      //  MF_LOG_VERBATIM("LArDiffusion::beginJob") 
+      //    << "Got uboonedata env path " << uboonedata_env;
+      //}
+      //strcpy(fullPath, uboonedata_env);
+      //strcat(fullPath, sigma_map_file_path.c_str() );
 
       MF_LOG_VERBATIM("LArDiffusion::beginJob") 
         << "Running without producing sigma map. Checking that it exists..."
-        << "\nGetting sigma map from file path " << fullPath;
+        << "\nGetting sigma map from file path " << filePath;
       //TFile sigmaMap(fullPath, "READ");
-      TFile sigmaMap(sigma_map_file_path.c_str(), "READ");
+      TFile sigmaMap(filePath.c_str(), "READ");
 
       if (sigmaMap.IsOpen() == false){
         MF_LOG_VERBATIM("LArDiffusion::beginJob")
@@ -855,41 +864,31 @@ void diffmod::LArDiffusion::beginJob()
           std::to_string(i)       +
           "_"                     +
           folderNames.at(ifN);
-        
+
         h_summed_wire_info_per_bin.at(ifN).push_back(
             theseTDs.back().make<TH1D>(histo_name.c_str(), 
-                            "", 
-                            number_ticks_per_bin, 
-                            waveform_intime_start + (i * number_ticks_per_bin), 
-                            waveform_intime_start + ((i+1) * number_ticks_per_bin)));
+              "", 
+              number_ticks_per_bin, 
+              waveform_intime_start + (i * number_ticks_per_bin), 
+              waveform_intime_start + ((i+1) * number_ticks_per_bin)));
 
         sigmaDistsPerBin.resize(0);
-
-        std::cout << "test1" << std::endl;
 
         std::string sigmaMapHistoName = "DiffusionModule/"+folderNames.at(ifN)+"/h_sigma_"+std::to_string(i)+"_"+folderNames.at(ifN);
         h_sigma_hists.at(ifN).push_back((TH1D*)sigmaMap.Get(sigmaMapHistoName.c_str()));
 
-        std::cout << "test2" << std::endl;
-
         std::string pulseHeightHistoName = "DiffusionModule/"+folderNames.at(ifN)+"/h_pulse_height_"+std::to_string(i)+"_"+folderNames.at(ifN);
         h_pulse_height_hists.at(ifN).push_back((TH1D*)sigmaMap.Get(pulseHeightHistoName.c_str()));
-
-        std::cout << "test3" << std::endl;
 
         // Three options for picking out waveforms, either
         // 1) get waveforms around the median
         // 2) get the peak bin value
         // 3) calculate the truncated mean
 
-        std::cout << h_sigma_hists.at(ifN).at(i)->GetName() << std::endl;
-        std::cout << h_pulse_height_hists.at(ifN).at(i)->GetName() << std::endl;
-
         // OPTION 1) Calculate medians in each bin
         sigmaMedians      .push_back(_waveform_func.getMedian(h_sigma_hists.at(ifN).at(i)));
         pulseHeightMedians.push_back(_waveform_func.getMedian(h_pulse_height_hists.at(ifN).at(i)));
 
-        std::cout << "test4" << std::endl;
         // OPTION 2) Calculate maximum in each bin
         int sigmaMaxBin       = h_sigma_hists.at(ifN).at(i)->GetMaximumBin();
         int pulseHeightMaxBin = h_pulse_height_hists.at(ifN).at(i)->GetMaximumBin();
@@ -906,7 +905,6 @@ void diffmod::LArDiffusion::beginJob()
             }
           }
         }
-        std::cout << "test5" << std::endl;
 
         std::sort(sigmaDistsPerBin.begin(), sigmaDistsPerBin.end() );
         if (sigmaDistsPerBin.size() > 0){
@@ -928,13 +926,13 @@ void diffmod::LArDiffusion::beginJob()
         std::string sigmaHistName = "h_sigma_" + std::to_string(n)+"_"+folderNames.at(ifN);
         h_sigma_hists.at(ifN).push_back(
             theseTDs.back().make<TH1D>(sigmaHistName.c_str(), 
-                            ";#sigma_{t};", 
-                            250, 0, 10) );
+              ";#sigma_{t};", 
+              250, 0, 10) );
         std::string pulseHeightHistName = "h_pulse_height_" + std::to_string(n)+"_"+folderNames.at(ifN);
         h_pulse_height_hists.at(ifN).push_back(
             theseTDs.back().make<TH1D>(pulseHeightHistName.c_str(), 
-                            ";Pulse Height;", 
-                            250, 0, 20) );
+              ";Pulse Height;", 
+              250, 0, 20) );
       }
     }
   }
