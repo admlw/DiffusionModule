@@ -4,7 +4,7 @@
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_25">
 <!ENTITY name "ext">
-<!ENTITY outname "mcc9.1_ext_run1_c1/">
+<!ENTITY outname "mcc9.1_ext_run1_c1_hitViewTests/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
@@ -57,9 +57,9 @@
         <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
         <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
         <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
-        <numjobs>35</numjobs> <!-- 500 -->
+        <numjobs>34</numjobs> <!-- 500 -->
         <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
-        <numevents>2500</numevents> <!-- 2000: ~20 events/file * 10 files/job -->
+        <numevents>25000</numevents> <!-- 2000: ~20 events/file * 10 files/job -->
         <memory>2000</memory>
         <datatier>diffusionfilter</datatier>
         <schema>root</schema>
@@ -67,15 +67,15 @@
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_acpt_overlay_run3.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_mcc9.1_ext_run1_Feb2020.list</inputlist> 
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>5</numjobs> 
+        <numjobs>4</numjobs> 
         <maxfilesperjob>10</maxfilesperjob>
-        <numevents>500</numevents>
+        <numevents>10000</numevents>
         <memory>1000</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
@@ -86,16 +86,16 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_acpt_overlay_run3.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_mcc9.1_ext_run1_Feb2020.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>5</numjobs> 
+        <numjobs>4</numjobs> 
         <maxfilesperjob>10</maxfilesperjob>
-        <numevents>500</numevents>
-        <memory>800</memory>
+        <numevents>10000</numevents>
+        <memory>1200</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>
    </stage>
