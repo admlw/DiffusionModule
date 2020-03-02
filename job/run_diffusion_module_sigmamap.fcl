@@ -32,4 +32,4 @@ physics:
 
 services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: true
-physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
+physics.analyzers.DiffusionModule.UseT0TaggedTracks: false

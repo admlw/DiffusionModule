@@ -5,12 +5,13 @@ BEGIN_PROLOG
 diffusionconfig       : {
   module_type         : "LArDiffusion"
 
-  SigmaMapFilePath     : "DiffusionData/2019_08_16_sigma_map.root"
+  SigmaMapFilePath     : "DiffusionData/2020_01_10_sigma_map.root"
   SigmaMapDirectoryFile: "DiffusionModule"
 
   DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
+  TrackDirRMSCut      : 1e10 # Some large value for now, fix later
   SigmaCut            : 1.0 # Nominal 1.0
   PulseHeightCut      : 100.0 # Nominal 100.0
   HitGOFCut           : 1.1
@@ -26,13 +27,13 @@ diffusionconfig       : {
 
   FiducialVolume      : @local::DiffusionFiducialVolume
 
-  TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise
-  HitLabel            : "diffsel" # diffsel for filtered, gaushit otherwise
+  TrackLabel          : "pandora" # diffsel for filtered, pandora otherwise
+  HitLabel            : "gaushit" # diffsel for filtered, gaushit otherwise
   WireLabel           : "butcher"
   
-  TrackHitAssn        : "diffsel" # diffsel for filtered, pandora otherwise
-  TrackT0Assn         : "diffsel" # diffsel for filtered, pandora otherwise
-  HitSpacePointAssn   : "diffsel" # diffsel for filtered, pandora otherwise
+  TrackHitAssn        : "pandora" # diffsel for filtered, pandora otherwise
+  TrackT0Assn         : "pandora" # diffsel for filtered, pandora otherwise
+  HitSpacePointAssn   : "pandora" # diffsel for filtered, pandora otherwise
 
 }
 

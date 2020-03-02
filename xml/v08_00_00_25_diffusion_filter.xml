@@ -2,9 +2,9 @@
 
 <!-- project details -->
 <!DOCTYPE project [
-<!ENTITY release "v08_00_00_20">
-<!ENTITY name "filter_key">
-<!ENTITY outname "mcc9.1_ext_run1_key/">
+<!ENTITY release "v08_00_00_25">
+<!ENTITY name "ext">
+<!ENTITY outname "mcc9.1_ext_run1_c1_hitViewTests/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
@@ -19,7 +19,7 @@
     <numevents>100000</numevents>
 
     <!-- batchOS -->
-    <os>SL6</os>
+    <os>SL7</os>
 
     <resource>DEDICATED,OPPORTUNISTIC</resource>
 
@@ -27,11 +27,11 @@
     <larsoft>
         <tag>&release;</tag>
         <qual>e17:prof</qual>
-        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_20_Diffusion.tar</local> 
+        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_25_Diffusion.tar</local> 
     </larsoft>
 
     <!-- t0 production -->
-    <!-- Automatically run as of MCC9.1; only use this stage for pre-MCC9.1 -->
+    <!-- Automatically run as of MCC9.1; only use this stage for pre-MCC9.1 
     <stage name="t0prod">
         <inputdef>data_extbnb_mcc9.1_v08_00_00_16_18_run1_reco2</inputdef> 
         <fcl>run_diffusion_T0RecoAnodeCathodePiercing.fcl</fcl>
@@ -46,36 +46,37 @@
         <datatier>t0prod</datatier>
         <schema>root</schema>
    </stage>
+   -->
 
    <!-- diffusion filter -->
    <stage name="diffusionfilter">
-        <inputdef>data_extbnb_mcc9.1_v08_00_00_16_18_run1_reco2</inputdef> 
-        <!-- <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/bad_events_files.list</inputlist> -->
+        <inputdef>data_extbnb_mcc9.1_v08_00_00_25_reco2_C1_all_reco2</inputdef> 
+        <!--<inputdef>prod_crossingmuon_uboone_overlay_run1_reco2_reco2</inputdef> -->
         <fcl>run_diffusion_filter.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_filter</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
         <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
         <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
-        <numjobs>500</numjobs> <!-- 500 -->
-        <maxfilesperjob>100</maxfilesperjob> <!-- 100 -->
-        <numevents>2000</numevents> <!-- 2000: ~20 events/file * 10 files/job -->
-        <memory>1400</memory>
+        <numjobs>34</numjobs> <!-- 500 -->
+        <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
+        <numevents>25000</numevents> <!-- 2000: ~20 events/file * 10 files/job -->
+        <memory>2000</memory>
         <datatier>diffusionfilter</datatier>
         <schema>root</schema>
    </stage>
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_ext_key_run1.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_mcc9.1_ext_run1_Feb2020.list</inputlist> 
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>37</numjobs> 
+        <numjobs>4</numjobs> 
         <maxfilesperjob>10</maxfilesperjob>
-        <numevents>500</numevents>
-        <memory>1200</memory>
+        <numevents>10000</numevents>
+        <memory>1000</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
    </stage>
@@ -85,15 +86,15 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_ext_key_run1.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_mcc9.1_ext_run1_Feb2020.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>37</numjobs> 
+        <numjobs>4</numjobs> 
         <maxfilesperjob>10</maxfilesperjob>
-        <numevents>500</numevents>
+        <numevents>10000</numevents>
         <memory>1200</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>

@@ -125,7 +125,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
     TVector3 track_start;
     TVector3 track_end;
-    float trunc_mean; /// Truncated mean has to be a float
+    float trunc_mean; // Truncated mean has to be a float
 
     // For calculations 
     int number_ticks_per_bin;
@@ -143,6 +143,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::string track_t0_assn;
     std::string sigma_map_file_path;
     std::string sigma_map_directory_file;
+    const char* uboonedata_env;
     bool        use_t0tagged_tracks;
     bool        make_sigma_map;
     double      sigma_cut;
@@ -183,6 +184,11 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
     // For truncated mean calculation; needs to be float
     std::vector<float> sigmaDistsPerBin;
+
+    // Hit vectors - separated by plane
+    std::vector<recob::Hit> hitsPlane0;
+    std::vector<recob::Hit> hitsPlane1;
+    std::vector<recob::Hit> hitsPlane2;
 
     // Output histograms - separated per plane
     std::vector<std::vector<TH1D*>> h_summed_wire_info_per_bin; 
@@ -335,7 +341,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     }
     else {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
-      track_t0->push_back(800.); // time in ticks
+      track_t0->push_back(400.); // time in us
     }
 
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset
@@ -370,6 +376,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       double dotProd = firstDir.Dot(thisDir);
       dotProds.push_back(dotProd);
     }
+
     track_direction_rms->push_back(TMath::RMS(dotProds.size(), &dotProds[0]));
 
     // ensure track straightness
@@ -440,7 +447,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       tsp_z   .push_back(spXYZ[2]);
 
       // looping over planes 
-      for (int i_v = 0; i_v < 3; i_v++){
+      //for (int thisHit->View() = 0; thisHit->View() < 3; thisHit->View()++){
 
         // get wire information for hit
         art::Ptr< recob::Wire > wire_from_hit;
@@ -532,7 +539,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
           << "\n-- tick_window_size     : "  << tick_window_size
           << "\n-- tick_window_left     : "  << tick_window_left
           << "\n-- tick_window_right    : "  << tick_window_right
-          << "\n-- hit_maximum_tick     : "  << thit_maximum_tick.back();
+          << "\n-- hit_maximum_tick     : "  << thit_maximum_tick.back()
+          << "\n-- hit_view             : "  << thit_view.back();
 
         // now the magic: 
         // loop over the drift bins and check to see if the 
@@ -603,29 +611,29 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
 
             if (make_sigma_map) {
-              h_sigma_hists                     .at(i_v).at(twvfm_bin_no.back())->Fill(twvfm_fit_sigma.back());
-              h_wvfm_pulse_height_hists         .at(i_v).at(twvfm_bin_no.back())->Fill(twvfm_pulse_height.back());
-              h_sigma_v_bin_precut              .at(i_v)->Fill(twvfm_bin_no.back()   , twvfm_fit_sigma.back());
-              h_wvfm_pulse_height_v_bin_precut  .at(i_v)->Fill(twvfm_bin_no.back()   , twvfm_pulse_height.back());
-              h_sigma_v_wvfm_pulse_height_precut.at(i_v)->Fill(twvfm_fit_sigma.back(), twvfm_pulse_height.back());
+              h_sigma_hists                     .at(thisHit->View()).at(twvfm_bin_no.back())->Fill(twvfm_fit_sigma.back());
+              h_wvfm_pulse_height_hists         .at(thisHit->View()).at(twvfm_bin_no.back())->Fill(twvfm_pulse_height.back());
+              h_sigma_v_bin_precut              .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_fit_sigma.back());
+              h_wvfm_pulse_height_v_bin_precut  .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_pulse_height.back());
+              h_sigma_v_wvfm_pulse_height_precut.at(thisHit->View())->Fill(twvfm_fit_sigma.back(), twvfm_pulse_height.back());
 
               if (track_theta_xz->back() < 90)
-                h_track_theta_xz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), track_theta_xz->back());
+                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
               if (track_theta_xz->back() > 90)
-                h_track_theta_xz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
+                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
               if (track_theta_yz->back() < 90)
-                h_track_theta_yz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), track_theta_yz->back());
+                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
               if (track_theta_yz->back() > 90)
-                h_track_theta_yz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
+                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
             }
 
             else {
               // For comparison
-              h_sigma_v_bin_precut              .at(i_v)->Fill(twvfm_bin_no.back()   , twvfm_fit_sigma.back());
-              h_wvfm_pulse_height_v_bin_precut  .at(i_v)->Fill(twvfm_bin_no.back()   , twvfm_pulse_height.back());
-              h_sigma_v_wvfm_pulse_height_precut.at(i_v)->Fill(twvfm_fit_sigma.back(), twvfm_pulse_height.back());
-              h_sigma_hist_medians              .at(i_v)->Fill(sigmaMedians.at(bin_it));
-              h_sigma_hist_maxs                 .at(i_v)->Fill(sigmaMaxs   .at(bin_it));
+              h_sigma_v_bin_precut              .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_fit_sigma.back());
+              h_wvfm_pulse_height_v_bin_precut  .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_pulse_height.back());
+              h_sigma_v_wvfm_pulse_height_precut.at(thisHit->View())->Fill(twvfm_fit_sigma.back(), twvfm_pulse_height.back());
+              h_sigma_hist_medians              .at(thisHit->View())->Fill(sigmaMedians.at(bin_it));
+              h_sigma_hist_maxs                 .at(thisHit->View())->Fill(sigmaMaxs   .at(bin_it));
 
               // Dynamic sigma cut: check if pulseHeight, sigma, 
               // fall within some region around the median
@@ -642,13 +650,13 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
               // Maximum 
               double sigma_lowerLimit = 
-                sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(i_v).at(twvfm_bin_no.back())->GetStdDev();
+                sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double sigma_higherLimit = 
-                sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(i_v).at(twvfm_bin_no.back())->GetStdDev();
+                sigmaMaxs.at(bin_it) + sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double pulseHeight_lowerLimit = 
-                pulseHeightMaxs.at(bin_it) - wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(i_v).at(twvfm_bin_no.back())->GetStdDev();
+                pulseHeightMaxs.at(bin_it) - wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double pulseHeight_higherLimit = 
-                pulseHeightMaxs.at(bin_it) + wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(i_v).at(twvfm_bin_no.back())->GetStdDev();
+                pulseHeightMaxs.at(bin_it) + wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
 
               if (twvfm_fit_sigma.back() < sigma_lowerLimit 
                   || twvfm_fit_sigma.back() > sigma_higherLimit 
@@ -657,31 +665,31 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 continue;
               }
 
-              h_sigma_hists                      .at(i_v).at(twvfm_bin_no.back())->Fill(twvfm_fit_sigma.back());
-              h_wvfm_pulse_height_hists          .at(i_v).at(twvfm_bin_no.back())->Fill(twvfm_pulse_height.back());
-              h_sigma_v_bin_postcut              .at(i_v)->Fill(twvfm_bin_no.back()      , twvfm_fit_sigma.back());
-              h_wvfm_pulse_height_v_bin_postcut  .at(i_v)->Fill(twvfm_bin_no.back()      , twvfm_pulse_height.back());
-              h_sigma_v_wvfm_pulse_height_postcut.at(i_v)->Fill(twvfm_pulse_height.back(), twvfm_fit_sigma.back());
+              h_sigma_hists                      .at(thisHit->View()).at(twvfm_bin_no.back())->Fill(twvfm_fit_sigma.back());
+              h_wvfm_pulse_height_hists          .at(thisHit->View()).at(twvfm_bin_no.back())->Fill(twvfm_pulse_height.back());
+              h_sigma_v_bin_postcut              .at(thisHit->View())->Fill(twvfm_bin_no.back()      , twvfm_fit_sigma.back());
+              h_wvfm_pulse_height_v_bin_postcut  .at(thisHit->View())->Fill(twvfm_bin_no.back()      , twvfm_pulse_height.back());
+              h_sigma_v_wvfm_pulse_height_postcut.at(thisHit->View())->Fill(twvfm_pulse_height.back(), twvfm_fit_sigma.back());
 
               if (track_theta_xz->back() < 90)
-                h_track_theta_xz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), track_theta_xz->back());
+                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
               if (track_theta_xz->back() > 90)
-                h_track_theta_xz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
+                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
               if (track_theta_yz->back() < 90)
-                h_track_theta_yz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), track_theta_yz->back());
+                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
               if (track_theta_yz->back() > 90)
-                h_track_theta_yz_v_bin.at(i_v)->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
+                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
 
               h_nWvfmsInBin->Fill(bin_it, 1);
 
               // Now find the shift (in ticks) needed to minimise the rms 
               // of the sum of the histograms
-              if (h_summed_wire_info_per_bin.at(i_v).at(bin_it)->Integral() == 0){
+              if (h_summed_wire_info_per_bin.at(thisHit->View()).at(bin_it)->Integral() == 0){
                 twvfm_tick_correction.push_back(0);
               }
               else {
                 twvfm_tick_correction.push_back(  
-                  _waveform_func.findXCorrection(h_summed_wire_info_per_bin.at(i_v).at(bin_it), 
+                  _waveform_func.findXCorrection(h_summed_wire_info_per_bin.at(thisHit->View()).at(bin_it), 
                       h_wire_baseline_corrected, 
                       number_ticks_per_bin, 
                       twvfm_fit_mean.back()));
@@ -700,12 +708,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                     h_wire_baseline_corrected->GetBinContent(ntick+twvfm_tick_correction.back()));
 
               // finally add to output histograms
-              h_summed_wire_info_per_bin.at(i_v).at(bin_it)->Add(h_wvfm_tick_correction);
+              h_summed_wire_info_per_bin.at(thisHit->View()).at(bin_it)->Add(h_wvfm_tick_correction);
 
             } // !make_sigma_map
           } // if maximum tick in bin
         } // loop bins
-      } // loop planes
+      //} // loop planes
     } // loop hits
 
     sp_x                ->push_back(tsp_x                 );
