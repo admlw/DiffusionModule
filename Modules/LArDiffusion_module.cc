@@ -430,6 +430,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                                         spXYZ[1],
                                         spXYZ[2]);
 
+      if (!use_t0tagged_tracks)
+        isInFV = _fiducial_vol.InFV(spXYZ[0],
+                                    spXYZ[1],
+                                    spXYZ[2]);
+
       // if hit selection is not passed then ignore the hit
       if (!isInFV) continue;
       if (!_waveform_func.passesHitSelection(thisHit, 
