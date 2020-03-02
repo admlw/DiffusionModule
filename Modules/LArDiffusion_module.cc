@@ -341,7 +341,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     }
     else {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
-      track_t0->push_back(400.); // time in us
+      track_t0->push_back(800.); // time in us
     }
 
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset
