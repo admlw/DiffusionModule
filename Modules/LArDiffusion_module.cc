@@ -384,7 +384,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     std::vector<double> thit_charge           = {};
     std::vector<int>    thit_multiplicity     = {};
     std::vector<int>    thit_view             = {};
-    std::vector<int>    thit_maximum_tick      = {};
+    std::vector<int>    thit_maximum_tick     = {};
     std::vector<double> tsp_x                 = {};
     std::vector<double> tsp_y                 = {};
     std::vector<double> tsp_z                 = {};
@@ -422,6 +422,11 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       bool  isInFV = _fiducial_vol.InFV(spXYZ[0] - track_t0_x_shift->back(),
                                         spXYZ[1],
                                         spXYZ[2]);
+
+      if (!use_t0tagged_tracks)
+        isInFV = _fiducial_vol.InFV(spXYZ[0],
+                                    spXYZ[1],
+                                    spXYZ[2]);
 
       // if hit selection is not passed then ignore the hit
       if (!isInFV) continue;
