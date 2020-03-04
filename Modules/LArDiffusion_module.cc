@@ -127,7 +127,9 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::vector< std::vector< int    > >* wvfm_bin_no          = nullptr;
 
     TVector3 track_start;
+    TVector3 track_start_t0corr;
     TVector3 track_end;
+    TVector3 track_end_t0corr;
     float trunc_mean; // Truncated mean has to be a float
 
     // For calculations 
@@ -386,43 +388,34 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     double line_point_x, line_point_y, line_point_z;
     double track_point_x, track_point_y, track_point_z;
     */
-    for (size_t i_pt = 1; i_pt < thisTrack->NumberTrajectoryPoints(); i_pt++){
+    TVector3 track_dirv = track_end - track_start;
+    for (size_t i_pt = 0; i_pt < thisTrack->CountValidPoints(); i_pt++){
+
+      if (!thisTrack->HasValidPoint(i_pt)) continue;
+
       recob::Track::Vector_t firstDir = thisTrack->DirectionAtPoint(0);
       recob::Track::Vector_t thisDir  = thisTrack->DirectionAtPoint(i_pt);
 
       double dotProd = firstDir.Dot(thisDir);
       dotProds.push_back(dotProd);
       
-      // EXPERIMENTAL: Instead of the above, draw a straight line between
-      // the track start and end point, then find the average transverse 
-      // distance between that line and each point along the track
+      // EXPERIMENTAL: Instead of the above, find the average distance
+      // between each trajectory point and a straight line connecting
+      // the track start and end points (i.e., transverse distance)
 
       // Find track point at i_th position, and its components
       recob::Track::TrajectoryPoint_t thisTrackTrajPoint = thisTrack->TrajectoryPoint(i_pt);
-      TVector3 linePoint(thisTrackTrajPoint.position.X(),
+      TVector3 trajPoint(thisTrackTrajPoint.position.X(),
                          thisTrackTrajPoint.position.Y(),
                          thisTrackTrajPoint.position.Z()
       );
 
-      // Find minimum distance between line point and track point. For derivation,
+      // Find minimum distance between trajectory point and a point on 
+      // the straight line connecting the start and end points. For derivation,
       // see http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-      double thisTransDist = ((linePoint - track_start).Cross(linePoint - track_end)).Mag() / 
-                             (track_end - track_start).Mag();
+      double thisTransDist = ((trajPoint - track_start).Cross(trajPoint - track_end)).Mag() / 
+                             ((track_end - track_start).Mag() );
       transDists.push_back(thisTransDist);
-
-      /*
-      track_point_x = thisTrackTrajPoint.position.X();
-      track_point_y = thisTrackTrajPoint.position.Y();
-      track_point_z = thisTrackTrajPoint.position.Z();
-
-      // Find point on the line between the start and end
-      line_point_x = track_start_x_t0corr->at(0) + track_dirv_x*track_point_x;
-      line_point_y = track_start_y       ->at(0) + track_dirv_y*track_point_y;
-      line_point_z = track_start_z       ->at(0) + track_dirv_z*track_point_z;
-      std::cout << "Line point x = " << line_point_x << std::endl;
-      std::cout << "Line point y = " << line_point_y << std::endl;
-      std::cout << "Line point z = " << line_point_z << std::endl;
-      */
 
     }
 
