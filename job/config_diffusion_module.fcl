@@ -11,8 +11,8 @@ diffusionconfig       : {
   DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
-  TrackDirRMSCut      : 1e10 # Some large value for now, fix later
-  TrackTransDistCut   : 1e10 # Some large value for now, fix later
+  TrackDirRMSCut      : 1e10 # Can probably remove this variable
+  TrackTransDistCut   : 6.0 # Start with 6 cm, update later if necessary
   SigmaCut            : 1.0 # Nominal 1.0
   PulseHeightCut      : 100.0 # Nominal 100.0
   HitGOFCut           : 1.1

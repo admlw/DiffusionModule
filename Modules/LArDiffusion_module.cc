@@ -424,7 +424,10 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     // ensure track straightness
     if (track_direction_rms ->back() > track_rms_cut)        continue;
-    if (track_avg_trans_dist->back() > track_trans_dist_cut) continue;
+    if (track_avg_trans_dist->back() > track_trans_dist_cut) {
+      std::cout << "[TEST]: Removing track with trans dist = " << track_avg_trans_dist->back() << std::endl;
+      continue;
+    }
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 

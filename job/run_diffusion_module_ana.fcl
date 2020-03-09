@@ -32,6 +32,6 @@ physics:
 
 services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: false
-physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_singleMuons_DLoff.root"
+physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_ext_run1_Mar2020.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
