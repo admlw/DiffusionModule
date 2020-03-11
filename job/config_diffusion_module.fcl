@@ -12,6 +12,7 @@ diffusionconfig       : {
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
   TrackDirRMSCut      : 1e10 # Some large value for now, fix later
+  TrackTransDistCut   : 1e10 # Some large value for now, fix later
   SigmaCut            : 1.0 # Nominal 1.0
   PulseHeightCut      : 100.0 # Nominal 100.0
   HitGOFCut           : 1.1
@@ -27,13 +28,13 @@ diffusionconfig       : {
 
   FiducialVolume      : @local::DiffusionFiducialVolume
 
-  TrackLabel          : "pandora" # diffsel for filtered, pandora otherwise
-  HitLabel            : "gaushit" # diffsel for filtered, gaushit otherwise
+  TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise
+  HitLabel            : "diffsel" # diffsel for filtered, gaushit otherwise
   WireLabel           : "butcher"
   
-  TrackHitAssn        : "pandora" # diffsel for filtered, pandora otherwise
-  TrackT0Assn         : "pandora" # diffsel for filtered, pandora otherwise
-  HitSpacePointAssn   : "pandora" # diffsel for filtered, pandora otherwise
+  TrackHitAssn        : "diffsel" # diffsel for filtered, pandora otherwise
+  TrackT0Assn         : "diffsel" # diffsel for filtered, pandora otherwise
+  HitSpacePointAssn   : "diffsel" # diffsel for filtered, pandora otherwise
 
 }
 

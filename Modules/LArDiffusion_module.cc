@@ -26,6 +26,8 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Wire.h"
+#include "lardataobj/RecoBase/TrackTrajectory.h"
+#include "lardataobj/RecoBase/TrackingTypes.h"
 #include "lardataobj/AnalysisBase/T0.h"
 #include "larana/TruncatedMean/Algorithm/TruncMean.h"
 #include "larcore/Geometry/Geometry.h"
@@ -90,6 +92,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int event                                                  = -9999;
     std::vector< double >*                track_length         = nullptr;
     std::vector< double >*                track_direction_rms  = nullptr;
+    std::vector< double >*                track_avg_trans_dist = nullptr;
     std::vector< double >*                track_cos_theta      = nullptr;
     std::vector< double >*                track_theta_xz       = nullptr;
     std::vector< double >*                track_theta_yz       = nullptr;
@@ -124,7 +127,9 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::vector< std::vector< int    > >* wvfm_bin_no          = nullptr;
 
     TVector3 track_start;
+    TVector3 track_start_t0corr;
     TVector3 track_end;
+    TVector3 track_end_t0corr;
     float trunc_mean; // Truncated mean has to be a float
 
     // For calculations 
@@ -159,6 +164,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     float       drift_distance;
     float       peak_finder_threshold;
     float       track_rms_cut;
+    float       track_trans_dist_cut;
     int         number_dropped_ticks;
 
     std::vector<art::TFileDirectory> theseTDs;
@@ -236,6 +242,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   hit_GOF_cut              = p.get< double       > ("HitGOFCut"            , 1.1);
   peak_finder_threshold    = p.get< float        > ("PeakFinderThreshold"  , 3.0);
   track_rms_cut            = p.get< float        > ("TrackRMSCut"          , 1000);
+  track_trans_dist_cut     = p.get< float        > ("TrackTransDistCut"    , 1000);
   hit_min_channel          = p.get< unsigned int > ("HitMinChannel"        , 6150);
   hit_multiplicity_cut     = p.get< int          > ("HitMultiplicityCut"   , 1);
   waveform_size            = p.get< int          > ("WaveformSize"         , 6400);
@@ -262,6 +269,7 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- hit_GOF_cut           : " << hit_GOF_cut
     << "\n-- peak_finder_threshold : " << peak_finder_threshold
     << "\n-- track rms cut         : " << track_rms_cut
+    << "\n-- track trans dist cut  : " << track_trans_dist_cut
     << "\n-- hit_min_channel       : " << hit_min_channel
     << "\n-- hit_multiplicity_cut  : " << hit_multiplicity_cut
     << "\n-- waveform_size         : " << waveform_size
@@ -341,7 +349,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     }
     else {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
-      track_t0->push_back(400.); // time in us
+      track_t0->push_back(800.); // time in us
     }
 
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset
@@ -369,18 +377,54 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     // and the first trajectory point direction, and then take the RMS
     std::vector<double> dotProds;
     dotProds.resize(0);
-    for (size_t i_pt = 1; i_pt < thisTrack->NumberTrajectoryPoints(); i_pt++){
+    std::vector<double> transDists;
+    transDists.resize(0);
+
+    // Get direction vector between first and last point
+    /*
+    double track_dirv_x = track_end_x_t0corr - track_start_x_t0corr;
+    double track_dirv_y = track_end_y        - track_start_y;
+    double track_dirv_z = track_end_z        - track_start_z;
+    double line_point_x, line_point_y, line_point_z;
+    double track_point_x, track_point_y, track_point_z;
+    */
+    TVector3 track_dirv = track_end - track_start;
+    for (size_t i_pt = 0; i_pt < thisTrack->CountValidPoints(); i_pt++){
+
+      if (!thisTrack->HasValidPoint(i_pt)) continue;
+
       recob::Track::Vector_t firstDir = thisTrack->DirectionAtPoint(0);
       recob::Track::Vector_t thisDir  = thisTrack->DirectionAtPoint(i_pt);
 
       double dotProd = firstDir.Dot(thisDir);
       dotProds.push_back(dotProd);
+      
+      // EXPERIMENTAL: Instead of the above, find the average distance
+      // between each trajectory point and a straight line connecting
+      // the track start and end points (i.e., transverse distance)
+
+      // Find track point at i_th position, and its components
+      recob::Track::TrajectoryPoint_t thisTrackTrajPoint = thisTrack->TrajectoryPoint(i_pt);
+      TVector3 trajPoint(thisTrackTrajPoint.position.X(),
+                         thisTrackTrajPoint.position.Y(),
+                         thisTrackTrajPoint.position.Z()
+      );
+
+      // Find minimum distance between trajectory point and a point on 
+      // the straight line connecting the start and end points. For derivation,
+      // see http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+      double thisTransDist = ((trajPoint - track_start).Cross(trajPoint - track_end)).Mag() / 
+                             ((track_end - track_start).Mag() );
+      transDists.push_back(thisTransDist);
+
     }
 
-    track_direction_rms->push_back(TMath::RMS(dotProds.size(), &dotProds[0]));
+    track_direction_rms->push_back (TMath::RMS (dotProds.size()  , &dotProds[0]));
+    track_avg_trans_dist->push_back(TMath::Mean(transDists.size(), &transDists[0])); 
 
     // ensure track straightness
-    if (track_direction_rms->back() > track_rms_cut) continue;
+    if (track_direction_rms ->back() > track_rms_cut)        continue;
+    if (track_avg_trans_dist->back() > track_trans_dist_cut) continue;
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
@@ -757,6 +801,7 @@ void diffmod::LArDiffusion::beginJob()
   difftree->Branch("event"                , &event);
   difftree->Branch("track_length"         , "std::vector<double>"                  , &track_length);
   difftree->Branch("track_direction_rms"  , "std::vector<double>"                  , &track_direction_rms);
+  difftree->Branch("track_avg_trans_dist" , "std::vector<double>"                  , &track_avg_trans_dist);
   difftree->Branch("track_cos_theta"      , "std::vector<double>"                  , &track_cos_theta);
   difftree->Branch("track_theta_xz"       , "std::vector<double>"                  , &track_theta_xz);
   difftree->Branch("track_theta_yz"       , "std::vector<double>"                  , &track_theta_yz);
@@ -982,6 +1027,7 @@ void diffmod::LArDiffusion::printHistogram(TH1D* h){
 void diffmod::LArDiffusion::clearVectors(){
   track_length          ->resize(0);
   track_direction_rms   ->resize(0);
+  track_avg_trans_dist  ->resize(0);
   track_cos_theta       ->resize(0);
   track_theta_xz        ->resize(0);
   track_theta_yz        ->resize(0);
