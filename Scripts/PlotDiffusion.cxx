@@ -136,7 +136,7 @@ void makePlot(TString* inputFileName){
   t->Draw("hit_peak_time>>h_correctedTicks");
   c->SaveAs("hit_peak_time.png", "PNG");
 
-  TH1D *histoNWvfms = (TH1D*)fInput->Get("DiffusionModule/h_nWvfmsInBin");
+  TH1D *histoNWvfms = (TH1D*)fInput->Get("DiffusionModule/plane2/h_nWvfmsInBinplane2");
   if (!histoNWvfms) {
     std::cout << "Bad waveform hist" << std::endl;
     return;
@@ -172,7 +172,12 @@ void makePlot(TString* inputFileName){
     }
 
     fOutput->cd();
-    waveformHist = (TH1D*)fInput->Get(Form("DiffusionModule/summed_waveform_bin_%i", i));
+    waveformHist = (TH1D*)fInput->Get(Form("DiffusionModule/plane2/summed_waveform_bin_%i_plane2", i));
+    // Ensure histogram exists
+    if (!waveformHist) {
+      std::cout << "Bad summed waveform hist in bin " << i << std::endl;
+      continue;
+    }
     // Ensure histogram is filled
     if (waveformHist->Integral() == 0){
       std::cout << "bin " << i << " is empty!" << std::endl;

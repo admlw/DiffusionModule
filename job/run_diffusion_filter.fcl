@@ -55,10 +55,10 @@ physics:
       HitLabel:               "gaushit"
       HitSPAssnLabel:         "pandora"
       TrackLengthCut:  50
-      TrackAngleCutXZLow:  -10 # -10
-      TrackAngleCutXZHigh: 10 # 10
-      TrackAngleCutYZLow:  -40 # -40
-      TrackAngleCutYZHigh: 40 # 40
+      TrackAngleCutXZLow:  2.5 # -10
+      TrackAngleCutXZHigh: 5.0 # 10
+      TrackAngleCutYZLow:  0.0 # -40
+      TrackAngleCutYZHigh: 40. # 40
 
     }
   }
