@@ -179,12 +179,12 @@ void makePlot(std::string inputFileName){
                                       -waveformDriftStartTick; // End tick (5400 - 800)
   const int  numWaveformCut         = 0;                     // Cut bins with fewer than this number of waveforms
   const int  numDriftBins           = 25;
-  int        nuTicksPerBin                = waveformDriftSize 
+  int        nuTicksPerBin          = waveformDriftSize 
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = false;
-  const bool isMakeWaveformPlots    = true;
+  const bool isData                 = true;
+  const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
   // For data measurement, use drift velocity at anode. For MC, use
@@ -295,6 +295,21 @@ void makePlot(std::string inputFileName){
         continue;
       }
 
+      for (int k = 5; k < 21; k++) {
+          if (sigmaSqrVals[ip][k] != 0) {
+
+              sigmaSqrVals[ip][k]     = 0;
+              sigmaSqrValsErrs[ip][k] = 0;
+
+          }
+          if (driftTimes[ip][k] != -1) {
+
+              driftTimes    [ip][k] = -1;
+              driftTimesErrs[ip][k] = -1;
+
+          }
+      }
+
       fOutput->cd();
       std::string histLoc = "DiffusionModule/"
                             + planeName
@@ -373,7 +388,7 @@ void makePlot(std::string inputFileName){
 
       // get drift time from truncated mean of sigma distribution
       // in each bin
-      // Error is (1/(sqrt(N)) * 0.5/2 (half a tuck width, if not using 
+      // Error is (1/(sqrt(N)) * 0.5/2 (half a tick width, if not using 
       // hit information)
       std::cout << "binMean: " << binMean << " minTime: " << minTime << std::endl;
       driftTimes    [ip][idb] = binMean - minTime;

@@ -57,9 +57,9 @@
         <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
         <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
         <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
-        <numjobs>34</numjobs> <!-- 500 -->
+        <numjobs>34</numjobs>
         <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
-        <numevents>25000</numevents> <!-- 2000: ~20 events/file * 10 files/job -->
+        <numevents>50000</numevents> <!-- ~50 events/file * 50 files/job -->
         <memory>2000</memory>
         <datatier>diffusionfilter</datatier>
         <schema>root</schema>
@@ -67,14 +67,14 @@
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_mcc9.1_ext_run1_Feb2020.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_ext_run1_thetaXZ_0.0_2.5.list</inputlist> 
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>4</numjobs> 
-        <maxfilesperjob>10</maxfilesperjob>
+        <numjobs>7</numjobs> 
+        <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
         <memory>1400</memory>
         <datatier>diffusionsigmamap</datatier>
@@ -86,16 +86,16 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_mcc9.1_ext_run1_Feb2020.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_ext_run1_thetaXZ_2.5_5.0.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>4</numjobs> 
-        <maxfilesperjob>10</maxfilesperjob>
+        <numjobs>7</numjobs> 
+        <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>3000</memory>
+        <memory>2000</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>
    </stage>

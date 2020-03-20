@@ -180,8 +180,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
     TH1D *h_nWvfmsInBin;
 
-    //TH1D *h_single_waveform;
-
     // For dynamic sigma cut
     std::vector<double> sigmaMedians;
     std::vector<double> pulseHeightMedians;
@@ -975,7 +973,6 @@ void diffmod::LArDiffusion::beginJob()
 
         sigmaMaxs      .push_back(h_sigma_hists.at(ifN).at(i)->GetXaxis()->GetBinCenter(sigmaMaxBin));
         pulseHeightMaxs.push_back(h_wvfm_pulse_height_hists.at(ifN).at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin));
-
 
         // OPTION 3) Take sigma hist and calculate truncated mean 
         for (int j = 1; j < h_sigma_hists.at(ifN).at(i)->GetNbinsX()+1; j++) {
