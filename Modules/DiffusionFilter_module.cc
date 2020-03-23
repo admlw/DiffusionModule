@@ -42,6 +42,9 @@
 // cpp
 #include <exception>
 
+// local includes
+#include "ubana/DiffusionModule/Algorithms/Utilities.h"
+
 class DiffusionFilter;
 
 
@@ -70,6 +73,7 @@ class DiffusionFilter : public art::EDFilter {
 
     // service and class instances
     art::ServiceHandle< art::TFileService > tfs;
+    diffmod::Utilities _util;
 
     // fhicl
     std::string fTrackLabel;
@@ -96,6 +100,8 @@ class DiffusionFilter : public art::EDFilter {
     double thisTrackTheta;
     double thisTrackPhi;
     bool thisTrackIsPassLengthCut;
+    bool thisTrackIsPassThetaXZ;
+    bool thisTrackIsPassThetaYZ;
     bool thisTrackIsPassAngularCut;
     bool thisTrackIsHasT0;
     bool thisTrackIsSelected;
@@ -117,6 +123,8 @@ class DiffusionFilter : public art::EDFilter {
     std::vector<double>* trackTheta          = nullptr;
     std::vector<double>* trackPhi            = nullptr;
     std::vector<bool>* trackIsPassLengthCut  = nullptr;
+    std::vector<bool>* trackIsPassThetaXZ    = nullptr;
+    std::vector<bool>* trackIsPassThetaYZ    = nullptr;
     std::vector<bool>* trackIsPassAngularCut = nullptr;
     std::vector<bool>* trackIsHasT0          = nullptr;
     std::vector<bool>* trackIsSelected       = nullptr;
@@ -183,6 +191,8 @@ void DiffusionFilter::beginJob()
   tree->Branch("trackThetaXZ"          , &trackThetaXZ);
   tree->Branch("trackThetaYZ"          , &trackThetaYZ);
   tree->Branch("trackIsPassLengthCut"  , &trackIsPassLengthCut);
+  tree->Branch("trackIsPassThetaXZ"    , &trackIsPassThetaXZ);
+  tree->Branch("trackIsPassThetaYZ"    , &trackIsPassThetaYZ);
   tree->Branch("trackIsPassAngularCut" , &trackIsPassAngularCut);
   tree->Branch("trackIsHasT0"          , &trackIsHasT0);
   tree->Branch("trackIsSelected"       , &trackIsSelected);
@@ -253,25 +263,17 @@ bool DiffusionFilter::filter(art::Event & e)
       throw std::logic_error(errMsg);
     }
 
-    thisTrackLength        = thisTrack->Length();
-    thisTrackStartX        = thisTrack->Start().X();
-    thisTrackStartY        = thisTrack->Start().Y();
-    thisTrackStartZ        = thisTrack->Start().Z();
-    thisTrackEndX          = thisTrack->End().X();
-    thisTrackEndY          = thisTrack->End().Y();
-    thisTrackEndZ          = thisTrack->End().Z();
-    thisTrackTheta         = thisTrack->Theta();
-    thisTrackPhi           = thisTrack->Phi();
-    thisTrackThetaXZ 
-      = std::atan2(
-          thisTrack->StartDirection().X(), 
-          thisTrack->StartDirection().Z()) 
-      * 180/TMath::Pi();
-    thisTrackThetaYZ 
-      = std::atan2(
-          thisTrack->StartDirection().Y(), 
-          thisTrack->StartDirection().Z()) 
-      * 180/TMath::Pi();
+    thisTrackLength  = thisTrack->Length();
+    thisTrackStartX  = thisTrack->Start().X();
+    thisTrackStartY  = thisTrack->Start().Y();
+    thisTrackStartZ  = thisTrack->Start().Z();
+    thisTrackEndX    = thisTrack->End().X();
+    thisTrackEndY    = thisTrack->End().Y();
+    thisTrackEndZ    = thisTrack->End().Z();
+    thisTrackTheta   = thisTrack->Theta();
+    thisTrackPhi     = thisTrack->Phi();
+    thisTrackThetaXZ = _util.getThetaXZ(thisTrack);
+    thisTrackThetaYZ = _util.getThetaYZ(thisTrack);
 
     if (thisTrackIsHasT0){
       thisTrackStartX_t0Corr = thisTrackStartX - t0s.at(0)->Time()*1.098;
@@ -284,16 +286,13 @@ bool DiffusionFilter::filter(art::Event & e)
     
     thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
 
-    thisTrackIsPassAngularCut = 
-      (( thisTrackThetaXZ <= fTrackAngleCutXZHigh 
-         && thisTrackThetaXZ >= fTrackAngleCutXZLow
-         && thisTrackThetaYZ <= fTrackAngleCutYZHigh 
-         && thisTrackThetaYZ >= fTrackAngleCutYZLow)) 
-      ||
-      (( thisTrackThetaXZ >= (180 - fTrackAngleCutXZHigh) 
-         && thisTrackThetaXZ <= (180 - fTrackAngleCutXZLow)) 
-         && thisTrackThetaYZ >= (180 - fTrackAngleCutYZHigh) 
-         && thisTrackThetaYZ <= (180 - fTrackAngleCutYZLow));
+    thisTrackIsPassThetaXZ = (thisTrackThetaXZ > fTrackAngleCutXZLow &&
+                              thisTrackThetaXZ < fTrackAngleCutXZHigh);
+
+    thisTrackIsPassThetaYZ = (thisTrackThetaYZ > fTrackAngleCutYZLow &&
+                              thisTrackThetaYZ < fTrackAngleCutYZHigh);
+
+    thisTrackIsPassAngularCut = thisTrackIsPassThetaXZ && thisTrackIsPassThetaYZ;
 
     // if the track starts or ends near the anode, and neither end is located near to the cathode
     if ((thisTrackStartX_t0Corr < 5 || thisTrackEndX_t0Corr < 5) && (thisTrackStartX_t0Corr < 250.0 && thisTrackEndX_t0Corr < 250.0)){
@@ -325,9 +324,13 @@ bool DiffusionFilter::filter(art::Event & e)
     trackThetaXZ         ->push_back(thisTrackThetaXZ);
     trackThetaYZ         ->push_back(thisTrackThetaYZ);
     trackIsPassLengthCut ->push_back(thisTrackIsPassLengthCut);
+    trackIsPassThetaXZ   ->push_back(thisTrackIsPassThetaXZ);
+    trackIsPassThetaYZ   ->push_back(thisTrackIsPassThetaYZ);
     trackIsPassAngularCut->push_back(thisTrackIsPassAngularCut);
     trackIsHasT0         ->push_back(thisTrackIsHasT0);
-    trackIsSelected      ->push_back((thisTrackIsPassLengthCut && thisTrackIsPassAngularCut && thisTrackIsHasT0));
+    trackIsSelected      ->push_back((thisTrackIsPassLengthCut && 
+                                      thisTrackIsPassAngularCut && 
+                                      thisTrackIsHasT0));
     trackIsCathodeCrosser->push_back(thisTrackIsCathodeCrosser);
     trackIsAnodeCrosser  ->push_back(thisTrackIsAnodeCrosser);
 
@@ -430,25 +433,27 @@ bool DiffusionFilter::filter(art::Event & e)
 }
 
 void DiffusionFilter::emptyVectors(){
-  trackLength->resize(0);
-  trackStartX->resize(0);
-  trackStartX_t0Corr->resize(0);
-  trackStartY->resize(0);
-  trackStartZ->resize(0);
-  trackEndX->resize(0);
-  trackEndX_t0Corr->resize(0);
-  trackEndY->resize(0);
-  trackEndZ->resize(0);
-  trackThetaXZ->resize(0);
-  trackThetaYZ->resize(0);
-  trackTheta->resize(0);
-  trackPhi->resize(0);
-  trackIsPassLengthCut->resize(0);
-  trackIsPassAngularCut->resize(0);
-  trackIsHasT0->resize(0);
-  trackIsSelected->resize(0);
-  trackIsCathodeCrosser->resize(0);
-  trackIsAnodeCrosser->resize(0);
+  trackLength           -> resize(0);
+  trackStartX           -> resize(0);
+  trackStartX_t0Corr    -> resize(0);
+  trackStartY           -> resize(0);
+  trackStartZ           -> resize(0);
+  trackEndX             -> resize(0);
+  trackEndX_t0Corr      -> resize(0);
+  trackEndY             -> resize(0);
+  trackEndZ             -> resize(0);
+  trackThetaXZ          -> resize(0);
+  trackThetaYZ          -> resize(0);
+  trackTheta            -> resize(0);
+  trackPhi              -> resize(0);
+  trackIsPassLengthCut  -> resize(0);
+  trackIsPassThetaXZ    -> resize(0);
+  trackIsPassThetaYZ    -> resize(0);
+  trackIsPassAngularCut -> resize(0);
+  trackIsHasT0          -> resize(0);
+  trackIsSelected       -> resize(0);
+  trackIsCathodeCrosser -> resize(0);
+  trackIsAnodeCrosser   -> resize(0);
 }
 
 
