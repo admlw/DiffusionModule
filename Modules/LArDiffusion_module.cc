@@ -47,8 +47,8 @@
 
 // local
 #include "ubana/DiffusionModule/Algorithms/WaveformFunctions.h"
+#include "ubana/DiffusionModule/Algorithms/Utilities.h"
 #include "ubana/UBXSec/Algorithms/FiducialVolume.h"        
-
 
 namespace diffmod {
   class LArDiffusion;
@@ -211,6 +211,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
 
     // other classes
     diffmod::WaveformFunctions _waveform_func;
+    diffmod::Utilities         _util;
     TruncMean                  _trunc_mean_func;
     ubana::FiducialVolume      _fiducial_vol;
 
@@ -353,10 +354,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset
     track_t0_tick_shift ->push_back(track_t0->back() * 2);              // convert to ticks
 
-    recob::Track::Vector_t trkDir = thisTrack->StartDirection();
-    track_theta_xz->push_back(std::abs(std::atan2(trkDir.X(), trkDir.Z()))* 180 / 3.14159);
-    track_theta_yz->push_back(std::abs(std::atan2(trkDir.Y(), trkDir.Z()))* 180 / 3.14159);
-
+    track_theta_xz->push_back(_util.getThetaXZ(thisTrack));
+    track_theta_yz->push_back(_util.getThetaYZ(thisTrack));
     track_length        ->push_back(thisTrack->Length());
     track_cos_theta     ->push_back(thisTrack->Theta());
     track_start         = thisTrack->Start<TVector3>();
@@ -662,14 +661,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               h_wvfm_pulse_height_v_bin_precut  .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_pulse_height.back());
               h_sigma_v_wvfm_pulse_height_precut.at(thisHit->View())->Fill(twvfm_fit_sigma.back(), twvfm_pulse_height.back());
 
-              if (track_theta_xz->back() < 90)
-                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
-              if (track_theta_xz->back() > 90)
-                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
-              if (track_theta_yz->back() < 90)
-                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
-              if (track_theta_yz->back() > 90)
-                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
+              h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
+              h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
+
+              //if (track_theta_xz->back() < 90)
+              //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
+              //if (track_theta_xz->back() > 90)
+              //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
+              //if (track_theta_yz->back() < 90)
+              //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
+              //if (track_theta_yz->back() > 90)
+              //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
             }
 
             else {
@@ -716,14 +718,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               h_wvfm_pulse_height_v_bin_postcut  .at(thisHit->View())->Fill(twvfm_bin_no.back()      , twvfm_pulse_height.back());
               h_sigma_v_wvfm_pulse_height_postcut.at(thisHit->View())->Fill(twvfm_pulse_height.back(), twvfm_fit_sigma.back());
 
-              if (track_theta_xz->back() < 90)
-                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
-              if (track_theta_xz->back() > 90)
-                h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
-              if (track_theta_yz->back() < 90)
-                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
-              if (track_theta_yz->back() > 90)
-                h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
+              h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
+              h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
+
+              //if (track_theta_xz->back() < 90)
+              //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
+              //if (track_theta_xz->back() > 90)
+              //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
+              //if (track_theta_yz->back() < 90)
+              //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
+              //if (track_theta_yz->back() > 90)
+              //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
 
               h_nWvfmsInBin->Fill(bin_it, 1);
 

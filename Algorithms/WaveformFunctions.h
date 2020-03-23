@@ -23,26 +23,34 @@
 
 namespace diffmod {
 
-    class WaveformFunctions {
-        public: 
-          bool passesHitSelection(art::Ptr< recob::Hit > hit, double HIT_GOODNESSOFFIT_CUT, 
-              int HIT_MULTIPILCITY); 
+  class WaveformFunctions {
+    public: 
 
-          double convertXToTicks(double xPosition, int WAVEFORM_DRIFT_START_TICK, int WAVEFORM_DRIFT_SIZE, double X_WIDTH);
+      /// does hit pass selection?
+      bool passesHitSelection(art::Ptr< recob::Hit > hit, double hitGOFCut, int hitMultiplicity); 
 
-          double convertTicksToX(int tick, int WAVEFORM_DRIFT_START_TICK, int WAVEFORM_DRIFT_SIZE, double X_WIDTH);
+      /// convert x position to number of ticks
+      double convertXToTicks(double xPosition, int wvfmDriftStartTick, int wvfmDriftSize, double xWidth);
 
-          TH1D* applyGlobalBaselineCorrection(TH1D *h_rawD, TH1D *h_rawDCorrected);
+      /// convert number of ticks to an x position
+      double convertTicksToX(int tick, int wvfmDriftStartTick, int wvfmDriftSize, double xWidth);
 
-          double findXCorrection(TH1D *summedWaveform, TH1D *h, int NUMBER_TICKS_PER_BIN, double mean);
+      /// apply a global baseline correction to the waveforms
+      TH1D* applyGlobalBaselineCorrection(TH1D *h_rawD, TH1D *h_rawDCorrected);
 
-          std::vector<double> getSigma(TH1D *h_rawDCorrected);
+      /// find x correction factor
+      double findXCorrection(TH1D *summedWaveform, TH1D *h, int nTicksPerBin, double mean);
 
-          double getMedian(TH1D *h);
+      /// get sigma value
+      std::vector<double> getSigma(TH1D *h_rawDCorrected);
 
-          double getRms2(TH1D *h);
+      /// get median value
+      double getMedian(TH1D *h);
 
-    };
+      /// get rms2 value
+      double getRms2(TH1D *h);
+
+  };
 
 }
 
