@@ -295,6 +295,8 @@ void makePlot(std::string inputFileName){
         continue;
       }
 
+      // Change fit range/binning
+      /*
       for (int k = 5; k < 21; k++) {
           if (sigmaSqrVals[ip][k] != 0) {
 
@@ -309,6 +311,7 @@ void makePlot(std::string inputFileName){
 
           }
       }
+      */
 
       fOutput->cd();
       std::string histLoc = "DiffusionModule/"

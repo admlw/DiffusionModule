@@ -285,15 +285,15 @@ bool DiffusionFilter::filter(art::Event & e)
     thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
 
     thisTrackIsPassAngularCut = 
-      (( thisTrackThetaXZ <= fTrackAngleCutXZHigh 
-         && thisTrackThetaXZ >= fTrackAngleCutXZLow
-         && thisTrackThetaYZ <= fTrackAngleCutYZHigh 
-         && thisTrackThetaYZ >= fTrackAngleCutYZLow)) 
+      ((    fabs(thisTrackThetaXZ) <= fTrackAngleCutXZHigh
+         && fabs(thisTrackThetaXZ) >= fTrackAngleCutXZLow
+         && fabs(thisTrackThetaYZ) <= fTrackAngleCutYZHigh 
+         && fabs(thisTrackThetaYZ) >= fTrackAngleCutYZLow)) 
       ||
-      (( thisTrackThetaXZ >= (180 - fTrackAngleCutXZHigh) 
-         && thisTrackThetaXZ <= (180 - fTrackAngleCutXZLow)) 
-         && thisTrackThetaYZ >= (180 - fTrackAngleCutYZHigh) 
-         && thisTrackThetaYZ <= (180 - fTrackAngleCutYZLow));
+      ((    fabs(thisTrackThetaXZ) >= (180 - fTrackAngleCutXZHigh) 
+         && fabs(thisTrackThetaXZ) <= (180 - fTrackAngleCutXZLow)) 
+         && fabs(thisTrackThetaYZ) >= (180 - fTrackAngleCutYZHigh) 
+         && fabs(thisTrackThetaYZ) <= (180 - fTrackAngleCutYZLow));
 
     // if the track starts or ends near the anode, and neither end is located near to the cathode
     if ((thisTrackStartX_t0Corr < 5 || thisTrackEndX_t0Corr < 5) && (thisTrackStartX_t0Corr < 250.0 && thisTrackEndX_t0Corr < 250.0)){
