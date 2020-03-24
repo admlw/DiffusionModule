@@ -1,4 +1,5 @@
 #include "config_diffusion_module_fiducialvolume.fcl"
+#include "config_diffusion_constants.fcl"
 
 BEGIN_PROLOG
 
@@ -8,7 +9,6 @@ diffusionconfig       : {
   SigmaMapFilePath     : "DiffusionData/2020_01_10_sigma_map.root"
   SigmaMapDirectoryFile: "DiffusionModule"
 
-  DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
   TrackDirRMSCut      : 1e10 # Can probably remove this variable
@@ -17,15 +17,10 @@ diffusionconfig       : {
   PulseHeightCut      : 100.0 # Nominal 100.0
   HitGOFCut           : 1.1
   HitMultiplicityCut  : 1
-  HitView             : 2 # Collection plane
-  HitMinChannel       : 6150 # Avoids overlap with U-shorted region
-  WaveformSize        : 6400
-  WaveformIntimeStart : 800
-  WaveformIntimeEnd   : 5400
   NumberDriftBins     : 25
-  NumberDroppedTicks  : 2400
   PeakFinderThreshold : 3.0
 
+  Constants           : @local::DiffusionConstantConfig
   FiducialVolume      : @local::DiffusionFiducialVolume
 
   TrackLabel          : "diffsel" # diffsel for filtered, pandora otherwise

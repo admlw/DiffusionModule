@@ -156,7 +156,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     float       drift_velocity;
     double      hit_GOF_cut;
     int         hit_multiplicity_cut;
-    int         hit_min_channel;
     int         waveform_size;
     int         waveform_intime_start;
     int         waveform_intime_end;
@@ -233,7 +232,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   track_t0_assn            = p.get< std::string  > ("TrackT0Assn"          , "t0reco");
   sigma_map_file_path      = p.get< std::string  > ("SigmaMapFilePath"     , "");
   sigma_map_directory_file = p.get< std::string  > ("SigmaMapFileDirectory", "DiffusionModule");
-  drift_velocity           = p.get< float        > ("DriftVelocity"        , 0.1098);
   use_t0tagged_tracks      = p.get< bool         > ("UseT0TaggedTracks"    , true);
   make_sigma_map           = p.get< bool         > ("MakeSigmaMap"         , false);
   sigma_cut                = p.get< double       > ("SigmaCut"             , 1.0);
@@ -242,15 +240,17 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   peak_finder_threshold    = p.get< float        > ("PeakFinderThreshold"  , 3.0);
   track_rms_cut            = p.get< float        > ("TrackRMSCut"          , 1000);
   track_trans_dist_cut     = p.get< float        > ("TrackTransDistCut"    , 1000);
-  hit_min_channel          = p.get< unsigned int > ("HitMinChannel"        , 6150);
   hit_multiplicity_cut     = p.get< int          > ("HitMultiplicityCut"   , 1);
-  waveform_size            = p.get< int          > ("WaveformSize"         , 6400);
-  waveform_intime_start    = p.get< int          > ("WaveformIntimeStart"  , 800);
-  waveform_intime_end      = p.get< int          > ("WaveformIntimeEnd"    , 5400);
   number_time_bins         = p.get< int          > ("NumberTimeBins"       , 25);
-  number_dropped_ticks     = p.get< int          > ("NumberDroppedTicks"   , 2400);
+
+  fhicl::ParameterSet const p_const = p.get<fhicl::ParameterSet>("Constants");
+  drift_velocity           = p_const.get< float        > ("DriftVelocity");
+  waveform_size            = p_const.get< int          > ("WaveformSize"         , 6400);
+  waveform_intime_start    = p_const.get< int          > ("WaveformIntimeStart"  , 800);
+  waveform_intime_end      = p_const.get< int          > ("WaveformIntimeEnd"    , 5400);
+  number_dropped_ticks     = p_const.get< int          > ("NumberDroppedTicks"   , 2400);
   waveform_drift_size      = waveform_intime_end - waveform_intime_start; // 4600
-  number_ticks_per_bin     = waveform_drift_size/number_time_bins; // 184
+  number_ticks_per_bin     = waveform_drift_size/number_time_bins;        // 184
 
   MF_LOG_VERBATIM("LArDiffusion") 
     << "PRINTING FHICL CONFIGURATION"
@@ -269,7 +269,6 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
     << "\n-- peak_finder_threshold : " << peak_finder_threshold
     << "\n-- track rms cut         : " << track_rms_cut
     << "\n-- track trans dist cut  : " << track_trans_dist_cut
-    << "\n-- hit_min_channel       : " << hit_min_channel
     << "\n-- hit_multiplicity_cut  : " << hit_multiplicity_cut
     << "\n-- waveform_size         : " << waveform_size
     << "\n-- waveform_intime_start : " << waveform_intime_start
@@ -348,7 +347,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     }
     else {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
-      track_t0->push_back(800.); // time in us
+      track_t0->push_back(waveform_intime_start); // time in us
     }
 
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset

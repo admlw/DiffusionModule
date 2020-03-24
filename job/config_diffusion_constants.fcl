@@ -1,0 +1,14 @@
+# this just holds variables which are not "analysis" variables
+
+BEGIN_PROLOG
+
+DiffusionConstantConfig       : {
+  DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
+  
+  WaveformSize        : 6400
+  WaveformIntimeStart : 800
+  WaveformIntimeEnd   : 5400
+  NumberDroppedTicks  : 2400
+}
+
+END_PROLOG

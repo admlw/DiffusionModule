@@ -3,6 +3,7 @@
 #include "triggeralgo_service.fcl"
 #include "time_memory_tracker_microboone.fcl"
 #include "T0RecoAnodeCathodePiercing.fcl"
+#include "config_diffusion_constants.fcl"
 
 process_name: diffusionselection
 
@@ -39,7 +40,7 @@ physics:
       module_type: RandomNumberSaver
     }
 
-#t0reco: @local::T0RecoAnodeCathodePiercing_mc
+    #t0reco: @local::T0RecoAnodeCathodePiercing_mc
 
   }
   
@@ -59,6 +60,8 @@ physics:
       TrackAngleCutXZHigh:  10.  #  10
       TrackAngleCutYZLow:   0.0  # -40
       TrackAngleCutYZHigh:  40.  #  40
+  
+      Constants           : @local::DiffusionConstantConfig
 
     }
   }

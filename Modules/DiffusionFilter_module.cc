@@ -85,6 +85,7 @@ class DiffusionFilter : public art::EDFilter {
     double fTrackAngleCutXZHigh;
     double fTrackAngleCutYZLow;
     double fTrackAngleCutYZHigh;
+    float driftVelocity;
 
     double thisTrackLength;
     double thisTrackStartX;
@@ -151,6 +152,9 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
   fTrackAngleCutYZLow  = p.get<double> ("TrackAngleCutYZLow");
   fTrackAngleCutYZHigh = p.get<double> ("TrackAngleCutYZHigh");
 
+  fhicl::ParameterSet const p_const = p.get<fhicl::ParameterSet>("Constants");
+  driftVelocity        = p_const.get< float > ("DriftVelocity");
+
   std::cout << "--- Printing Configuration: " << std::endl;
   std::cout << "TrackLabel          : " << fTrackLabel << std::endl;
   std::cout << "fT0Label            : " << fT0Label << std::endl;
@@ -159,6 +163,7 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
   std::cout << "TrackAngleCutXZHigh : " << fTrackAngleCutXZHigh << std::endl;
   std::cout << "TrackAngleCutYZLow  : " << fTrackAngleCutYZLow << std::endl;
   std::cout << "TrackAngleCutYZHigh : " << fTrackAngleCutYZHigh << std::endl;
+  std::cout << "Drift Veclocity     : " << driftVelocity << std::endl;
   std::cout << "---------------------------" << std::endl;
 
   produces< std::vector< recob::Track > >();
@@ -280,8 +285,8 @@ bool DiffusionFilter::filter(art::Event & e)
 
     if (thisTrackIsHasT0){
       thisTrackT0 = t0s.at(0)->Time();
-      thisTrackStartX_t0Corr = thisTrackStartX - thisTrackT0*1.098;
-      thisTrackEndX_t0Corr   = thisTrackEndX   - thisTrackT0*1.098;
+      thisTrackStartX_t0Corr = thisTrackStartX - thisTrackT0*driftVelocity;
+      thisTrackEndX_t0Corr   = thisTrackEndX   - thisTrackT0*driftVelocity;
     }
     else{
       thisTrackT0 = -1e-9;
