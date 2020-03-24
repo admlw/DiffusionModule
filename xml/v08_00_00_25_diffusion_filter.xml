@@ -4,7 +4,7 @@
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_25">
 <!ENTITY name "ext">
-<!ENTITY outname "mcc9.1_ext_run1_c1_thetaXZ_2.5_5.0/">
+<!ENTITY outname "run3_g1_crt/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
@@ -50,14 +50,14 @@
 
    <!-- diffusion filter -->
    <stage name="diffusionfilter">
-        <inputdef>data_extbnb_mcc9.1_v08_00_00_25_reco2_C1_all_reco2</inputdef> 
+        <inputdef>data_extbnb_mcc9.1_v08_00_00_25_reco2_G1_all_reco2</inputdef> 
         <!--<inputdef>prod_crossingmuon_uboone_overlay_run1_reco2_reco2</inputdef> -->
         <fcl>run_diffusion_filter.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_filter</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
         <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
         <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
-        <numjobs>34</numjobs>
+        <numjobs>5</numjobs>
         <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
         <numevents>50000</numevents> <!-- ~50 events/file * 50 files/job -->
         <memory>2000</memory>

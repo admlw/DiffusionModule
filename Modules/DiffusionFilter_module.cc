@@ -95,6 +95,7 @@ class DiffusionFilter : public art::EDFilter {
     double thisTrackEndX_t0Corr;
     double thisTrackEndY;
     double thisTrackEndZ;
+    double thisTrackT0;
     double thisTrackThetaXZ;
     double thisTrackThetaYZ;
     double thisTrackTheta;
@@ -118,6 +119,7 @@ class DiffusionFilter : public art::EDFilter {
     std::vector<double>* trackEndX_t0Corr    = nullptr;
     std::vector<double>* trackEndY           = nullptr;
     std::vector<double>* trackEndZ           = nullptr;
+    std::vector<double>* trackT0             = nullptr;
     std::vector<double>* trackThetaXZ        = nullptr;
     std::vector<double>* trackThetaYZ        = nullptr;
     std::vector<double>* trackTheta          = nullptr;
@@ -186,6 +188,7 @@ void DiffusionFilter::beginJob()
   tree->Branch("trackEndX_t0Corr"      , &trackEndX_t0Corr);
   tree->Branch("trackEndY"             , &trackEndY);
   tree->Branch("trackEndZ"             , &trackEndZ);
+  tree->Branch("trackT0"               , &trackT0);
   tree->Branch("trackTheta"            , &trackTheta);
   tree->Branch("trackPhi"              , &trackPhi);
   tree->Branch("trackThetaXZ"          , &trackThetaXZ);
@@ -276,10 +279,12 @@ bool DiffusionFilter::filter(art::Event & e)
     thisTrackThetaYZ = _util.getThetaYZ(thisTrack);
 
     if (thisTrackIsHasT0){
-      thisTrackStartX_t0Corr = thisTrackStartX - t0s.at(0)->Time()*1.098;
-      thisTrackEndX_t0Corr   = thisTrackEndX - t0s.at(0)->Time()*1.098;
+      thisTrackT0 = t0s.at(0)->Time();
+      thisTrackStartX_t0Corr = thisTrackStartX - thisTrackT0*1.098;
+      thisTrackEndX_t0Corr   = thisTrackEndX   - thisTrackT0*1.098;
     }
     else{
+      thisTrackT0 = -1e-9;
       thisTrackStartX_t0Corr = thisTrackStartX;
       thisTrackEndX_t0Corr = thisTrackEndX;
     }
@@ -319,6 +324,7 @@ bool DiffusionFilter::filter(art::Event & e)
     trackEndX_t0Corr     ->push_back(thisTrackEndX_t0Corr);
     trackEndY            ->push_back(thisTrackEndY);
     trackEndZ            ->push_back(thisTrackEndZ);
+    trackT0              ->push_back(thisTrackT0);
     trackTheta           ->push_back(thisTrackTheta);
     trackPhi             ->push_back(thisTrackPhi);
     trackThetaXZ         ->push_back(thisTrackThetaXZ);
@@ -442,6 +448,7 @@ void DiffusionFilter::emptyVectors(){
   trackEndX_t0Corr      -> resize(0);
   trackEndY             -> resize(0);
   trackEndZ             -> resize(0);
+  trackT0               -> resize(0);
   trackThetaXZ          -> resize(0);
   trackThetaYZ          -> resize(0);
   trackTheta            -> resize(0);
