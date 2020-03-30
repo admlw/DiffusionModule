@@ -99,7 +99,7 @@ void makePlot(TString* inputFileName){
   int NUMBER_TICKS_PER_BIN = WAVEFORM_DRIFT_SIZE / NUMBER_DRIFT_BINS;
   const int minTime = waveformDriftStartTick/2; // 400 microseconds
   const int maxTime = waveformDriftEndTick/2; // 2700 microseconds
-  const bool isData = false;
+  const bool isData = true;
   double DRIFT_VELOCITY;
   // For data measurement, use drift velocity at anode. For MC, use
   // drift velocity at nominal E-field of 273 V/cm. Why? Basically 
@@ -367,7 +367,7 @@ void makePlot(TString* inputFileName){
   pt->SetBorderSize(0);
   TString diffTextMeas = Form("Measured D_{L}: %0.2f +/- %0.2f cm^{2}/s", diffusionValue, diffusionValueErr);
   TString diffTextInp = Form("Input D_{L}: 6.40 cm^{2}/s");
-  TString dataString = Form("MicroBooNE Run 1 Data");
+  TString dataString = Form("MicroBooNE Run 3 CRT Data");
   TString chi2 = Form("#chi^{2}/NDF: %0.2f/%i = %0.2f", polFit->GetChisquare(), polFit->GetNDF(), polFit->GetChisquare()/polFit->GetNDF() );
   TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
   pt->AddText(diffTextMeas);

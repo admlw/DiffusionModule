@@ -3,7 +3,7 @@
 <!-- project details -->
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_25">
-<!ENTITY name "ext">
+<!ENTITY name "crt">
 <!ENTITY outname "run3_g1_crt/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
@@ -57,7 +57,7 @@
         <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
         <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
         <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
-        <numjobs>5</numjobs>
+        <numjobs>92</numjobs>
         <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
         <numevents>50000</numevents> <!-- ~50 events/file * 50 files/job -->
         <memory>2000</memory>
@@ -67,18 +67,19 @@
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_ext_run1_thetaXZ_0.0_2.5.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt.list</inputlist> 
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>7</numjobs> 
+        <numjobs>16</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>1400</memory>
+        <memory>1600</memory>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
+        <!--<schema>griftp</schema>-->
    </stage>
 
    <!-- diffusion ana -->
@@ -86,16 +87,16 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/diffusionFiltered_ext_run1_thetaXZ_2.5_5.0.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>7</numjobs> 
-        <maxfilesperjob>5</maxfilesperjob>
+        <numjobs>79</numjobs> 
+        <maxfilesperjob>1</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>2000</memory>
+        <memory>4000</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>
    </stage>
