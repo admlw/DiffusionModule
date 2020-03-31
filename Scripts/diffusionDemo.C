@@ -17,12 +17,12 @@ void diffusionDemo()
   TH1D* h[24];
   TF1* lin[24];
 
-  TFile *fin = new TFile("diffmod_mcc9.1_ext_run1_diffusionDemo.root", "READ");
+  TFile *fin = new TFile("diffmod_run3_crt.root", "READ");
 
   for (int i = 0; i < 25; i++) {
 
     //TString histoName = Form("calWireHistoBin_%i", i);
-    TString histoName = Form("DiffusionModule/summed_waveform_bin_%i", i);
+    TString histoName = Form("DiffusionModule/plane1/summed_waveform_bin_%i_plane1", i);
     if (fin->Get(histoName))
       h[i]=(TH1D*)fin->Get(histoName);
     else {
@@ -95,9 +95,9 @@ void diffusionDemo()
 
     //TPaveText* pt1 = new TPaveText(0.16, 0.86, 0.88, 0.92, "NDC");
     bool isData = 1;
-    TPaveText* pt1 = new TPaveText(0.225, 0.82, 0.62, 0.88, "NDC");
+    TPaveText* pt1 = new TPaveText(0.225, 0.82, 0.62, 0.90, "NDC");
     if (!isData) pt1->AddText("MicroBooNE Simulation");
-    else         pt1->AddText("MicroBooNE Run 1 Data");
+    else         pt1->AddText("MicroBooNE Run 3 CRT Data");
     pt1->SetFillStyle(0);
     pt1->SetBorderSize(0);
     pt1->SetTextAlign(12);
@@ -110,6 +110,13 @@ void diffusionDemo()
     pt2->SetBorderSize(0);
     pt2->SetTextAlign(12);
     pt2->Draw("same");    
+
+    TPaveText* pt3 = new TPaveText(0.23, 0.74, 0.53, 0.80, "NDC");
+    pt3->AddText("Plane 1");
+    pt3->SetFillStyle(0);
+    pt3->SetBorderSize(0);
+    pt3->SetTextAlign(12);
+    pt3->Draw("same");    
 
 
   }

@@ -9,7 +9,7 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
   return out.str();
 }
 
-void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf){
+void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf, double sig0, double sig0err){
 
   std::string diffString =
     "Diffusion Val: " 
@@ -24,7 +24,16 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
     + "/" 
     + to_string_with_precision(ndf  ,2);
 
-  TPaveText* tpv = new TPaveText(0.12, 0.65, 0.7, 0.85, "NDC");
+  std::string sigma0String =
+    "#sigma_{0}^{2}: "
+    + to_string_with_precision(sig0     , 2) 
+    + "+/-" 
+    + to_string_with_precision(sig0err  , 2);
+    + "#mus^{2}";
+
+  //TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
+
+  TPaveText* tpv = new TPaveText(0.12, 0.60, 0.7, 0.90, "NDC");
   tpv->SetTextAlign(11);
   tpv->SetFillStyle(0);
   tpv->SetLineWidth(0);
@@ -33,6 +42,7 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   tpv->AddText(plane.c_str());
   tpv->AddText(diffString.c_str());
   tpv->AddText(chisqString.c_str());
+  tpv->AddText(sigma0String.c_str());
   tpv->DrawClone("same");
 }
 
@@ -184,7 +194,7 @@ void makePlot(std::string inputFileName){
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
   const bool isData                 = true;
-  const bool isMakeWaveformPlots    = false;
+  const bool isMakeWaveformPlots    = true;
   double     driftVelocity;
 
   // For data measurement, use drift velocity at anode. For MC, use
@@ -336,6 +346,8 @@ void makePlot(std::string inputFileName){
       waveformHist->Fit(gausfit, "q", "", 
                         fitRanges.first, fitRanges.second);
 
+      std::cout << "Gaus fit range " << fitRanges.first  << 
+                   " to "            << fitRanges.second << std::endl;
       // Error inflation
       double chisqNdf = 10;
       double chisq    = 10;
@@ -343,6 +355,7 @@ void makePlot(std::string inputFileName){
       double sigma    = 100;
       double sigmaErr = 100;
       // Chi2 inflation
+      int iter = 0;
       while (chisqNdf > 1) {
         waveformHist->Fit(gausfit, "q", "", 
                           fitRanges.first, fitRanges.second);
@@ -353,16 +366,22 @@ void makePlot(std::string inputFileName){
         sigmaErr = gausfit->GetParError(2);
         chisqNdf = chisq/ndf;
         increaseError(waveformHist);
+        iter++;
       }
+      std::cout << "Num iter  = " << iter              << std::endl;
+      iter=0;
       
       std::cout << "chi^2     = " << chisq             << std::endl;
       std::cout << "NDF       = " << ndf               << std::endl;
       std::cout << "chi^2/NDF = " << (double)chisq/ndf << std::endl;
+      std::cout << "sigma     = " << sigma             << std::endl;
+      std::cout << "sigma err = " << sigmaErr          << std::endl;
 
       // this is to make plots for single waveforms
       if (isMakeWaveformPlots){
         TCanvas *c_test = new TCanvas("c_test", "", 750, 550);
         c_test->cd();
+        gStyle->SetOptFit(1);
         waveformHist->Draw("e1");
         TString waveformHistName = Form("waveformHist_%i", idb);
         TString testDir          = "waveformHistPlots/";
@@ -460,14 +479,20 @@ void makePlot(std::string inputFileName){
   double uGradErr = fitVec.at(0)->GetParError (1);
   double uChiSqr  = fitVec.at(0)->GetChisquare();
   double uNdf     = fitVec.at(0)->GetNDF();
+  double uSig0    = fitVec.at(0)->Eval(0);
+  double uSig0Err = fitVec.at(0)->GetParError(0);
   double vGrad    = fitVec.at(1)->GetParameter(1);
   double vGradErr = fitVec.at(1)->GetParError (1);
   double vChiSqr  = fitVec.at(1)->GetChisquare();
   double vNdf     = fitVec.at(1)->GetNDF();
+  double vSig0    = fitVec.at(1)->Eval(0);
+  double vSig0Err = fitVec.at(1)->GetParError(0);
   double yGrad    = fitVec.at(2)->GetParameter(1);
   double yGradErr = fitVec.at(2)->GetParError (1);
   double yChiSqr  = fitVec.at(2)->GetChisquare();
   double yNdf     = fitVec.at(2)->GetNDF();
+  double ySig0    = fitVec.at(2)->Eval(0);
+  double ySig0Err = fitVec.at(2)->GetParError(0);
 
   double uDiffV = uGrad    * std::pow(driftVelocity,2) * 1e6/2.;
   double uDiffE = uGradErr * std::pow(driftVelocity,2) * 1e6/2.;
@@ -546,7 +571,7 @@ void makePlot(std::string inputFileName){
     nWvfmsVec.at(0)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(0)->Draw("hist same");
   }
-  drawPaveText("U Plane", uDiffV, uDiffE, uChiSqr, uNdf);
+  drawPaveText("U Plane", uDiffV, uDiffE, uChiSqr, uNdf, uSig0, uSig0Err);
 
   uRat->cd();
   uRat->SetGridy();
@@ -568,7 +593,7 @@ void makePlot(std::string inputFileName){
     nWvfmsVec.at(1)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(1)->Draw("hist same");
   }
-  drawPaveText("V Plane", vDiffV, vDiffE, vChiSqr, vNdf);
+  drawPaveText("V Plane", vDiffV, vDiffE, vChiSqr, vNdf, vSig0, vSig0Err);
 
   vRat->cd();
   vRat->SetGridy();
@@ -589,7 +614,7 @@ void makePlot(std::string inputFileName){
     nWvfmsVec.at(2)->Draw("hist same");
     yCan->RedrawAxis();
   }
-  drawPaveText("Y Plane", yDiffV, vDiffE, vChiSqr, vNdf);
+  drawPaveText("Y Plane", yDiffV, yDiffE, yChiSqr, yNdf, ySig0, ySig0Err);
 
   yRat->cd();
   yRat->SetGridy();
@@ -600,6 +625,9 @@ void makePlot(std::string inputFileName){
 
   c1->cd();
   c1->SaveAs("output.png");
+
+  fOutput->Close();
+  fInput->Close();
 
 }
 
