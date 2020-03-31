@@ -194,7 +194,7 @@ void makePlot(std::string inputFileName){
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
   const bool isData                 = true;
-  const bool isMakeWaveformPlots    = true;
+  const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
   // For data measurement, use drift velocity at anode. For MC, use
@@ -244,6 +244,11 @@ void makePlot(std::string inputFileName){
   }
 
   std::vector<TH1D*> nWvfmsVec;
+
+  TH2D *sigErrsPlane0 = new TH2D("sigErrsPlane0", "", 100, 3e7, 1.4e8, 100, 4e-5, 2e-2);
+  TH2D *sigErrsPlane1 = new TH2D("sigErrsPlane1", "", 100, 3e7, 1.4e8, 100, 4e-5, 2e-2);
+  TH2D *sigErrsPlane2 = new TH2D("sigErrsPlane2", "", 100, 3e7, 1.4e8, 100, 4e-5, 2e-2);
+
   for (int ip = 0; ip < isUsePlane.size(); ip++){
   
     if (isUsePlane.at(ip) == false) 
@@ -304,7 +309,7 @@ void makePlot(std::string inputFileName){
         driftTimesErrs  [ip][idb] = -1;
         continue;
       }
-
+      
       // Change fit range/binning
       /*
       for (int k = 5; k < 21; k++) {
@@ -377,6 +382,13 @@ void makePlot(std::string inputFileName){
       std::cout << "sigma     = " << sigma             << std::endl;
       std::cout << "sigma err = " << sigmaErr          << std::endl;
 
+      // Troubleshooting errors, delete later
+      if      (ip==0) sigErrsPlane0->Fill(waveformHist->GetEntries(), gausfit->GetParError(2) );
+      else if (ip==1) sigErrsPlane1->Fill(waveformHist->GetEntries(), gausfit->GetParError(2) );
+      else if (ip==2) sigErrsPlane2->Fill(waveformHist->GetEntries(), gausfit->GetParError(2) );
+
+
+
       // this is to make plots for single waveforms
       if (isMakeWaveformPlots){
         TCanvas *c_test = new TCanvas("c_test", "", 750, 550);
@@ -423,7 +435,32 @@ void makePlot(std::string inputFileName){
     }
   }
 
+  TCanvas *c0_test = new TCanvas("c0_test", "c0_test", 750, 550);
+  c0_test->cd();
+  sigErrsPlane0->SetMarkerStyle(8);
+  sigErrsPlane0->SetMarkerSize (1);
+  sigErrsPlane0->Draw();
+  c0_test->SaveAs("sigErrsTest0.png");
+  c0_test->SaveAs("sigErrsTest0.pdf");
+
+  TCanvas *c1_test = new TCanvas("c1_test", "c1_test", 750, 550);
+  c1_test->cd();
+  sigErrsPlane1->SetMarkerStyle(8);
+  sigErrsPlane1->SetMarkerSize (1);
+  sigErrsPlane1->Draw();
+  c1_test->SaveAs("sigErrsTest1.png");
+  c1_test->SaveAs("sigErrsTest1.pdf");
+
+  TCanvas *c2_test = new TCanvas("c2_test", "c2_test", 750, 550);
+  c2_test->cd();
+  sigErrsPlane2->SetMarkerStyle(8);
+  sigErrsPlane2->SetMarkerSize (1);
+  sigErrsPlane2->Draw();
+  c2_test->SaveAs("sigErrsTest2.png");
+  c2_test->SaveAs("sigErrsTest2.pdf");
+
   TCanvas *c1 = new TCanvas("c1", "c1", 500, 1000);
+  c1->cd();
   gStyle->SetTextFont(43);
   TPad* uCan = new TPad("uCan", "", 0.005, 0.795 , 0.995, 0.995);
   TPad* uRat = new TPad("uRat", "", 0.005, 0.695 , 0.995, 0.785);
