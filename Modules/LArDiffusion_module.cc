@@ -179,7 +179,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // after baseline correcting
     TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
-    TH1D *h_nWvfmsInBin;
 
     // For dynamic sigma cut
     std::vector<double> sigmaMedians;
@@ -199,6 +198,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::vector<std::vector<TH1D*>> h_summed_wire_info_per_bin; 
     std::vector<std::vector<TH1D*>> h_sigma_hists; 
     std::vector<std::vector<TH1D*>> h_wvfm_pulse_height_hists;
+		std::vector<TH1D*>              h_nWvfmsInBin;
     std::vector<TH1D*>              h_sigma_hist_medians;
     std::vector<TH1D*>              h_sigma_hist_maxs;
     std::vector<TH2D*>              h_sigma_v_bin_precut;
@@ -737,7 +737,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               //if (track_theta_yz->back() > 90)
               //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
 
-              h_nWvfmsInBin->Fill(bin_it, 1);
+              h_nWvfmsInBin.at(thisHit->View())->Fill(bin_it, 1);
 
               // Now find the shift (in ticks) needed to minimise the rms 
               // of the sum of the histograms
@@ -924,7 +924,9 @@ void diffmod::LArDiffusion::beginJob()
     if (!make_sigma_map) {
       //h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
 
-      h_nWvfmsInBin = theseTDs.back().make<TH1D>(("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), ";Drift bin; No. Waveforms;", 25, 0, 25);
+      h_nWvfmsInBin.push_back(theseTDs.back().make<TH1D>(
+					("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), 
+					";Drift bin; No. Waveforms;", 25, 0, 25));
 
       // Import sigmaMap, assuming it already exists
       std::string filePath;
