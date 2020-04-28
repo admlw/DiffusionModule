@@ -164,6 +164,8 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     float       peak_finder_threshold;
     float       track_rms_cut;
     float       track_trans_dist_cut;
+		float       track_theta_xz_cut_low;
+		float       track_theta_xz_cut_high;
     int         number_dropped_ticks;
 
     std::vector<art::TFileDirectory> theseTDs;
@@ -240,6 +242,8 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
   peak_finder_threshold    = p.get< float        > ("PeakFinderThreshold"  , 3.0);
   track_rms_cut            = p.get< float        > ("TrackRMSCut"          , 1000);
   track_trans_dist_cut     = p.get< float        > ("TrackTransDistCut"    , 1000);
+	track_theta_xz_cut_low   = p.get< float        > ("TrackThetaXZCutLow"   , 0);       
+	track_theta_xz_cut_high  = p.get< float        > ("TrackThetaXZCutHigh"  , 0);       
   hit_multiplicity_cut     = p.get< int          > ("HitMultiplicityCut"   , 1);
   number_time_bins         = p.get< int          > ("NumberTimeBins"       , 25);
 
@@ -254,29 +258,31 @@ diffmod::LArDiffusion::LArDiffusion(fhicl::ParameterSet const & p)
 
   MF_LOG_VERBATIM("LArDiffusion") 
     << "PRINTING FHICL CONFIGURATION"
-    << "\n-- track_label           : " << track_label
-    << "\n-- wire_label            : " << wire_label
-    << "\n-- hit_label             : " << hit_label
-    << "\n-- track_hit_assn        : " << track_hit_assn
-    << "\n-- hit_sp_assn           : " << hit_sp_assn
-    << "\n-- track_t0_assn         : " << track_t0_assn
-    << "\n-- drift_velocity        : " << drift_velocity
-    << "\n-- use_t0tagged_tracks   : " << use_t0tagged_tracks
-    << "\n-- make_sigma_map        : " << make_sigma_map
-    << "\n-- sigma_cut             : " << sigma_cut
-    << "\n-- wvfm_pulse_height_cut : " << wvfm_pulse_height_cut
-    << "\n-- hit_GOF_cut           : " << hit_GOF_cut
-    << "\n-- peak_finder_threshold : " << peak_finder_threshold
-    << "\n-- track rms cut         : " << track_rms_cut
-    << "\n-- track trans dist cut  : " << track_trans_dist_cut
-    << "\n-- hit_multiplicity_cut  : " << hit_multiplicity_cut
-    << "\n-- waveform_size         : " << waveform_size
-    << "\n-- waveform_intime_start : " << waveform_intime_start
-    << "\n-- waveform_intime_end   : " << waveform_intime_end
-    << "\n-- number_time_bins      : " << number_time_bins
-    << "\n-- number_dropped_ticks  : " << number_dropped_ticks
-    << "\n-- waveform_drift_size   : " << waveform_drift_size
-    << "\n-- number_ticks_per_bin  : " << number_ticks_per_bin;
+    << "\n-- track_label            : " << track_label
+    << "\n-- wire_label             : " << wire_label
+    << "\n-- hit_label              : " << hit_label
+    << "\n-- track_hit_assn         : " << track_hit_assn
+    << "\n-- hit_sp_assn            : " << hit_sp_assn
+    << "\n-- track_t0_assn          : " << track_t0_assn
+    << "\n-- drift_velocity         : " << drift_velocity
+    << "\n-- use_t0tagged_tracks    : " << use_t0tagged_tracks
+    << "\n-- make_sigma_map         : " << make_sigma_map
+    << "\n-- sigma_cut              : " << sigma_cut
+    << "\n-- wvfm_pulse_height_cut  : " << wvfm_pulse_height_cut
+    << "\n-- hit_GOF_cut            : " << hit_GOF_cut
+    << "\n-- peak_finder_threshold  : " << peak_finder_threshold
+    << "\n-- track rms cut          : " << track_rms_cut
+    << "\n-- track trans dist cut   : " << track_trans_dist_cut
+		<< "\n-- track_theta_xz_cut_low : " << track_theta_xz_cut_low
+		<< "\n-- track_theta_xz_cut_high: " << track_theta_xz_cut_high
+    << "\n-- hit_multiplicity_cut   : " << hit_multiplicity_cut
+    << "\n-- waveform_size          : " << waveform_size
+    << "\n-- waveform_intime_start  : " << waveform_intime_start
+    << "\n-- waveform_intime_end    : " << waveform_intime_end
+    << "\n-- number_time_bins       : " << number_time_bins
+    << "\n-- number_dropped_ticks   : " << number_dropped_ticks
+    << "\n-- waveform_drift_size    : " << waveform_drift_size
+    << "\n-- number_ticks_per_bin   : " << number_ticks_per_bin;
 
   // define fiducial volume for analysis
   fhicl::ParameterSet const p_fv = p.get<fhicl::ParameterSet>("FiducialVolume");
@@ -424,6 +430,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       std::cout << "[TEST]: Removing track with trans dist = " << track_avg_trans_dist->back() << std::endl;
       continue;
     }
+		if (track_theta_xz->back() < track_theta_xz_cut_low || track_theta_xz->back() > track_theta_xz_cut_high)
+			continue;
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
