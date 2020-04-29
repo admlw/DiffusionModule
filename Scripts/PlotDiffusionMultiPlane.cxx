@@ -12,7 +12,7 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf, double sig0, double sig0err){
 
   std::string diffString =
-    "Diffusion Val: " 
+    "D_{L}: " 
     + to_string_with_precision(diffV,2)
     + " +/- "
     + to_string_with_precision(diffE,2)
@@ -34,11 +34,16 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   //TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
 
   TPaveText* tpv = new TPaveText(0.12, 0.60, 0.7, 0.90, "NDC");
+  /*
+=======
+  TPaveText* tpv = new TPaveText(0.16, 0.69, 0.7, 0.89, "NDC");
+>>>>>>> b6207e378f586eae25ad337694756eb941b67434
+*/
   tpv->SetTextAlign(11);
   tpv->SetFillStyle(0);
   tpv->SetLineWidth(0);
   tpv->SetTextFont(43);
-  tpv->SetTextSize(14);
+  tpv->SetTextSize(18);
   tpv->AddText(plane.c_str());
   tpv->AddText(diffString.c_str());
   tpv->AddText(chisqString.c_str());
@@ -46,8 +51,8 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   tpv->DrawClone("same");
 }
 
-void styleGraph(TGraph* h, float min, float max){
-  int fontSize = 16;
+void styleGraph(TGraph* h, float minx, float maxx, float miny, float maxy){
+  int fontSize = 20;
 
   h->GetXaxis()->SetTitleFont(43);
   h->GetYaxis()->SetTitleFont(43);
@@ -57,10 +62,10 @@ void styleGraph(TGraph* h, float min, float max){
   h->GetYaxis()->SetLabelFont(43);
   h->GetXaxis()->SetLabelSize(fontSize);
   h->GetYaxis()->SetLabelSize(fontSize);
-  h->GetXaxis()->SetTitleOffset(5.5);
-  h->GetYaxis()->SetTitleOffset(3.2);
-  h->GetXaxis()->SetRangeUser(0, 2300);
-  h->GetYaxis()->SetRangeUser(min, max);
+  h->GetXaxis()->SetTitleOffset(3.5);
+  h->GetYaxis()->SetTitleOffset(1.8);
+  h->GetXaxis()->SetRangeUser(minx, maxx);
+  h->GetYaxis()->SetRangeUser(miny, maxy);
   h->GetYaxis()->SetNdivisions(505);
   h->SetMarkerStyle(20);
   h->SetMarkerSize(0.4);
@@ -244,7 +249,8 @@ void makePlot(std::string inputFileName){
   }
 
   std::vector<TH1D*> nWvfmsVec;
-
+	float waveformHistXLow;
+	float waveformHistXHigh;
   for (int ip = 0; ip < isUsePlane.size(); ip++){
   
     if (isUsePlane.at(ip) == false) 
@@ -393,8 +399,8 @@ void makePlot(std::string inputFileName){
       hPeakTime->GetXaxis()->SetLimits(fitRanges.first, fitRanges.second);
   
       // get useful information from histogram
-      float waveformHistXLow  = waveformHist->GetBinLowEdge(1);
-      float waveformHistXHigh = 
+      waveformHistXLow  = waveformHist->GetBinLowEdge(1);
+      waveformHistXHigh = 
         waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1);
 
       std::cout << "Setting waveformHist bounds to " 
@@ -427,28 +433,38 @@ void makePlot(std::string inputFileName){
   TCanvas *c1 = new TCanvas("c1", "c1", 500, 1000);
   c1->cd();
   gStyle->SetTextFont(43);
-  TPad* uCan = new TPad("uCan", "", 0.005, 0.795 , 0.995, 0.995);
-  TPad* uRat = new TPad("uRat", "", 0.005, 0.695 , 0.995, 0.785);
-  TPad* vCan = new TPad("vCan", "", 0.005, 0.485 , 0.995, 0.685);
-  TPad* vRat = new TPad("vRat", "", 0.005, 0.375 , 0.995, 0.475);
-  TPad* yCan = new TPad("yCan", "", 0.005, 0.165 , 0.995, 0.365);
-  TPad* yRat = new TPad("yRat", "", 0.005, 0.005 , 0.995, 0.155);
+  TPad* uCan = new TPad("uCan", "", 0.005, 0.3 , 0.995, 0.995);
+  TPad* uRat = new TPad("uRat", "", 0.005, 0.005 , 0.995, 0.3);
   uCan->SetTopMargin(0.07);
   uCan->SetBottomMargin(0.01);
+	uCan->SetLeftMargin(0.15);
   uRat->SetTopMargin(0.02);
-  uRat->SetBottomMargin(0.01);
-  vCan->SetTopMargin(0.07);
-  vCan->SetBottomMargin(0.01);
-  vRat->SetTopMargin(0.02);
-  vRat->SetBottomMargin(0.01);
-  yCan->SetTopMargin(0.07);
-  yCan->SetBottomMargin(0.01);
-  yRat->SetTopMargin(0.02);
-  yRat->SetBottomMargin(0.35);
+  uRat->SetBottomMargin(0.3);
+	uRat->SetLeftMargin(0.15);
   uCan->Draw();
   uRat->Draw();
+
+	TCanvas *c2 = new TCanvas("c2", "c2", 500, 500);
+  TPad* vCan = new TPad("vCan", "", 0.005, 0.3 , 0.995, 0.995);
+  TPad* vRat = new TPad("vRat", "", 0.005, 0.005 , 0.995, 0.3);
+  vCan->SetTopMargin(0.07);
+  vCan->SetBottomMargin(0.01);
+	vCan->SetLeftMargin(0.15);
+  vRat->SetTopMargin(0.02);
+  vRat->SetBottomMargin(0.3);
+	vRat->SetLeftMargin(0.15);
   vCan->Draw();
   vRat->Draw();
+
+	TCanvas *c3 = new TCanvas("c3", "c3", 500, 500);
+  TPad* yCan = new TPad("yCan", "", 0.005, 0.3 , 0.995, 0.995);
+  TPad* yRat = new TPad("yRat", "", 0.005, 0.005 , 0.995, 0.3);
+  yCan->SetTopMargin(0.07);
+  yCan->SetBottomMargin(0.01);
+	yCan->SetLeftMargin(0.15);
+  yRat->SetTopMargin(0.02);
+  yRat->SetBottomMargin(0.3);
+	yRat->SetLeftMargin(0.15);
   yCan->Draw();
   yRat->Draw();
 
@@ -530,36 +546,19 @@ void makePlot(std::string inputFileName){
 
 
   // set histogram styles
-  uGr  -> SetLineColor  (kAzure+1);
-  uGr  -> SetMarkerColor(kAzure+1);
-  styleGraph(uGr, 0.0001, 5);
-
-  uGrR -> SetLineColor  (kAzure+1);
-  uGrR -> SetMarkerColor(kAzure+1);
-  styleGraph(uGrR, -0.09999, 0.09999);
-
-  vGr  -> SetLineColor  (kGreen+1);
-  vGr  -> SetMarkerColor(kGreen+1);
-  styleGraph(vGr, 0.0001, 5);
-
-  vGrR -> SetLineColor  (kGreen+1);
-  vGrR -> SetMarkerColor(kGreen+1);
-  styleGraph(vGrR, -0.09999, 0.09999);
-
-  yGr  -> SetLineColor  (kBlack);
-  yGr  -> SetMarkerColor(kBlack);
-  styleGraph(yGr, 0.0001, 5);
-
-  yGrR -> SetLineColor  (kBlack);
-  yGrR -> SetMarkerColor(kBlack);
-  styleGraph(yGrR, -0.09999, 0.09999);
+  styleGraph(uGr , 0.0, 2300, 0.0001   , 5       );
+  styleGraph(uGrR, 0.0, 2300, -0.09999 , 0.09999 );
+  styleGraph(vGr , 0.0, 2300, 0.0001   , 5       );
+  styleGraph(vGrR, 0.0, 2300, -0.09999 , 0.09999 );
+  styleGraph(yGr , 0.0, 2300, 0.0001   , 5       );
+  styleGraph(yGrR, 0.0, 2300, -0.09999 , 0.09999 );
 
   // set fit styles
-  fitVec.at(0)->SetLineColor(kAzure-6);
+  fitVec.at(0)->SetLineColor(kAzure+1);
   fitVec.at(0)->SetNpx(1000);
-  fitVec.at(1)->SetLineColor(kGreen+3);
+  fitVec.at(1)->SetLineColor(kGreen+1);
   fitVec.at(1)->SetNpx(1000);
-  fitVec.at(2)->SetLineColor(kGray);
+  fitVec.at(2)->SetLineColor(kRed);
   fitVec.at(2)->SetNpx(1000);
 
   uCan->cd();
@@ -568,7 +567,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(0)->Draw("same");
   if (nWvfmsVec.at(0)->Integral() > 0){
     nWvfmsVec.at(0)->Scale(2./nWvfmsVec.at(0)->GetMaximum());
-    nWvfmsVec.at(0)->SetFillColor(kAzure-9);
+    nWvfmsVec.at(0)->SetFillColor(kGray);
     nWvfmsVec.at(0)->SetLineWidth(0);
     nWvfmsVec.at(0)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(0)->Draw("hist same");
@@ -577,11 +576,11 @@ void makePlot(std::string inputFileName){
 
   uRat->cd();
   uRat->SetGridy();
-  uGrR->SetTitle(";;(#sigma^{2}-Fit)/#sigma^{2}");
+  uGrR->SetTitle(";Drift time (#mus);(#sigma^{2}-Fit)/#sigma^{2}");
   uGrR->Draw("ap");
 
   TF1* lin = new TF1("lin", "0.", 0, maxTime-minTime); 
-  lin->SetLineColor(kAzure-6);
+  lin->SetLineColor(kAzure+1);
   lin->DrawClone("same");
 
   vCan->cd();
@@ -590,7 +589,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(1)->Draw("same");
   if (nWvfmsVec.at(1)->Integral() > 0){
     nWvfmsVec.at(1)->Scale(2./nWvfmsVec.at(1)->GetMaximum());
-    nWvfmsVec.at(1)->SetFillColor(kGreen-6);
+    nWvfmsVec.at(1)->SetFillColor(kGray);
     nWvfmsVec.at(1)->SetLineWidth(0);
     nWvfmsVec.at(1)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(1)->Draw("hist same");
@@ -599,9 +598,9 @@ void makePlot(std::string inputFileName){
 
   vRat->cd();
   vRat->SetGridy();
-  vGrR->SetTitle(";;(#sigma^{2}-Fit)/#sigma^{2}");
+  vGrR->SetTitle(";Drift time (#mus);(#sigma^{2}-Fit)/#sigma^{2}");
   vGrR->Draw("ap");
-  lin->SetLineColor(kGreen+3);
+  lin->SetLineColor(kGreen+1);
   lin->DrawClone("same");
 
   yCan->cd();
@@ -610,7 +609,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(2)->Draw("same");
   if (nWvfmsVec.at(2)->Integral() > 0){
     nWvfmsVec.at(2)->Scale(2./nWvfmsVec.at(2)->GetMaximum());
-    nWvfmsVec.at(2)->SetFillColor(kGray+1);
+    nWvfmsVec.at(2)->SetFillColor(kGray);
     nWvfmsVec.at(2)->SetLineWidth(0);
     nWvfmsVec.at(2)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(2)->Draw("hist same");
@@ -620,13 +619,17 @@ void makePlot(std::string inputFileName){
 
   yRat->cd();
   yRat->SetGridy();
-  yGrR->SetTitle(";Drift time (#mu s);(#sigma^{2}-Fit)/#sigma^{2}");
+  yGrR->SetTitle(";Drift time (#mus);(#sigma^{2}-Fit)/#sigma^{2}");
   yGrR->Draw("ap");
-  lin->SetLineColor(kGray);
+  lin->SetLineColor(kRed);
   lin->DrawClone("same");
 
-  c1->cd();
-  c1->SaveAs("output.png");
+	c1->cd();
+  c1->SaveAs("output_uplane.png");
+	c2->cd();
+  c2->SaveAs("output_vplane.png");
+	c3->cd();
+  c3->SaveAs("output_yplane.png");
 
   fOutput->Close();
   fInput->Close();
