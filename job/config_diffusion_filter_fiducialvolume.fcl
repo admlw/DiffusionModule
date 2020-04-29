@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+DiffusionFilterVolume: {
+
+  # Checks that track start/end points are within 5 cm of TPC walls
+
+  BorderXLow:   [5.0]
+  BorderXHigh:  [5.0]
+  BorderYLow:   [5.0]
+  BorderYHigh:  [5.0]
+  BorderZLow:   [5.0]
+  BorderZHigh:  [5.0]
+
+}
+
+END_PROLOG

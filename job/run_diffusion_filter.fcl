@@ -4,6 +4,7 @@
 #include "time_memory_tracker_microboone.fcl"
 #include "T0RecoAnodeCathodePiercing.fcl"
 #include "config_diffusion_constants.fcl"
+#include "config_diffusion_filter_fiducialvolume.fcl"
 
 process_name: diffusionselection
 
@@ -57,11 +58,12 @@ physics:
       HitSPAssnLabel:         "pandora"
       TrackLengthCut:  50
       TrackAngleCutXZLow:   0.0  # -10
-      TrackAngleCutXZHigh:  10.  #  10
+      TrackAngleCutXZHigh:  6.0  #  10
       TrackAngleCutYZLow:   0.0  # -40
       TrackAngleCutYZHigh:  40.  #  40
   
       Constants           : @local::DiffusionConstantConfig
+      FilterVolume        : @local::DiffusionFilterVolume
 
     }
   }

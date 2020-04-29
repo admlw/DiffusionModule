@@ -34,6 +34,7 @@
 #include "larcore/Geometry/Geometry.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "art/Persistency/Common/PtrMaker.h"
+#include "ubana/UBXSec/Algorithms/FiducialVolume.h"        
 
 // ROOT includes
 #include "TTree.h"
@@ -73,7 +74,9 @@ class DiffusionFilter : public art::EDFilter {
 
     // service and class instances
     art::ServiceHandle< art::TFileService > tfs;
+    art::ServiceHandle< geo::Geometry > geo;
     diffmod::Utilities _util;
+    ubana::FiducialVolume _filter_vol;
 
     // fhicl
     std::string fTrackLabel;
@@ -105,6 +108,7 @@ class DiffusionFilter : public art::EDFilter {
     bool thisTrackIsPassThetaXZ;
     bool thisTrackIsPassThetaYZ;
     bool thisTrackIsPassAngularCut;
+    bool thisTrackIsPassVolumeCut;
     bool thisTrackIsHasT0;
     bool thisTrackIsSelected;
     bool thisTrackIsAnodeCrosser;
@@ -129,6 +133,7 @@ class DiffusionFilter : public art::EDFilter {
     std::vector<bool>* trackIsPassThetaXZ    = nullptr;
     std::vector<bool>* trackIsPassThetaYZ    = nullptr;
     std::vector<bool>* trackIsPassAngularCut = nullptr;
+    std::vector<bool>* trackIsPassVolumeCut  = nullptr;
     std::vector<bool>* trackIsHasT0          = nullptr;
     std::vector<bool>* trackIsSelected       = nullptr;
     std::vector<bool>* trackIsCathodeCrosser = nullptr;
@@ -174,6 +179,16 @@ DiffusionFilter::DiffusionFilter(fhicl::ParameterSet const & p)
   produces< std::vector< recob::SpacePoint > >();
   produces< art::Assns< recob::Hit, recob::SpacePoint > >();
 
+  // Fiducial volume: track start and end points are at the TPC boundary
+  fhicl::ParameterSet const p_fv = p.get<fhicl::ParameterSet>("FilterVolume");
+
+  _filter_vol.Configure(p_fv,
+      geo->DetHalfHeight(),
+      2.*geo->DetHalfWidth(),
+      geo->DetLength());
+
+  _filter_vol.PrintConfig();
+
 }
 
 void DiffusionFilter::beginJob()
@@ -202,6 +217,7 @@ void DiffusionFilter::beginJob()
   tree->Branch("trackIsPassThetaXZ"    , &trackIsPassThetaXZ);
   tree->Branch("trackIsPassThetaYZ"    , &trackIsPassThetaYZ);
   tree->Branch("trackIsPassAngularCut" , &trackIsPassAngularCut);
+  tree->Branch("trackIsPassVolumeCut" , &trackIsPassVolumeCut);
   tree->Branch("trackIsHasT0"          , &trackIsHasT0);
   tree->Branch("trackIsSelected"       , &trackIsSelected);
   tree->Branch("trackIsAnodeCrosser"   , &trackIsAnodeCrosser);
@@ -270,7 +286,7 @@ bool DiffusionFilter::filter(art::Event & e)
           + " associated t0s. That can't be right");
       throw std::logic_error(errMsg);
     }
-
+    
     thisTrackLength  = thisTrack->Length();
     thisTrackStartX  = thisTrack->Start().X();
     thisTrackStartY  = thisTrack->Start().Y();
@@ -291,9 +307,16 @@ bool DiffusionFilter::filter(art::Event & e)
     else{
       thisTrackT0 = -1e-9;
       thisTrackStartX_t0Corr = thisTrackStartX;
-      thisTrackEndX_t0Corr = thisTrackEndX;
+      thisTrackEndX_t0Corr   = thisTrackEndX;
     }
-    
+
+    // Check that track start and end are at/near TPC boundaries
+    bool isInFV = _filter_vol.InFV(thisTrackStartX_t0Corr,
+                                   thisTrackStartY,
+                                   thisTrackStartZ );
+
+    thisTrackIsPassVolumeCut = !isInFV;
+
     thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
 
     thisTrackIsPassThetaXZ = (thisTrackThetaXZ > fTrackAngleCutXZLow &&
@@ -338,9 +361,11 @@ bool DiffusionFilter::filter(art::Event & e)
     trackIsPassThetaXZ   ->push_back(thisTrackIsPassThetaXZ);
     trackIsPassThetaYZ   ->push_back(thisTrackIsPassThetaYZ);
     trackIsPassAngularCut->push_back(thisTrackIsPassAngularCut);
+    trackIsPassVolumeCut ->push_back(thisTrackIsPassVolumeCut);
     trackIsHasT0         ->push_back(thisTrackIsHasT0);
     trackIsSelected      ->push_back((thisTrackIsPassLengthCut && 
                                       thisTrackIsPassAngularCut && 
+                                      thisTrackIsPassVolumeCut &&
                                       thisTrackIsHasT0));
     trackIsCathodeCrosser->push_back(thisTrackIsCathodeCrosser);
     trackIsAnodeCrosser  ->push_back(thisTrackIsAnodeCrosser);
@@ -462,6 +487,7 @@ void DiffusionFilter::emptyVectors(){
   trackIsPassThetaXZ    -> resize(0);
   trackIsPassThetaYZ    -> resize(0);
   trackIsPassAngularCut -> resize(0);
+  trackIsPassVolumeCut  -> resize(0);
   trackIsHasT0          -> resize(0);
   trackIsSelected       -> resize(0);
   trackIsCathodeCrosser -> resize(0);

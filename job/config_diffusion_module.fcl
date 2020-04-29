@@ -11,7 +11,6 @@ diffusionconfig       : {
 
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
-  TrackDirRMSCut      : 1e10 # Can probably remove this variable
   TrackTransDistCut   : 6.0 # Start with 6 cm, update later if necessary
   SigmaCut            : 1.0 # Nominal 1.0
   PulseHeightCut      : 100.0 # Nominal 100.0
