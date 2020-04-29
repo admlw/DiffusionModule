@@ -4,7 +4,7 @@
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_25">
 <!ENTITY name "crt">
-<!ENTITY outname "run3_g1_crt/">
+<!ENTITY outname "run3_g1_crt_yz20/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
@@ -73,7 +73,7 @@
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>16</numjobs> 
+        <numjobs>19</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
         <memory>1600</memory>
@@ -93,10 +93,10 @@
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>79</numjobs> 
+        <numjobs>92</numjobs> 
         <maxfilesperjob>1</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>4000</memory>
+        <memory>3000</memory>
         <datatier>diffusionana</datatier>
         <schema>root</schema>
    </stage>
