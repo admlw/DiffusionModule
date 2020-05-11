@@ -35,6 +35,9 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "art/Persistency/Common/PtrMaker.h"
 #include "ubana/UBXSec/Algorithms/FiducialVolume.h"        
+#include "larevt/SpaceChargeServices/SpaceChargeService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h" 
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 // ROOT includes
 #include "TTree.h"
@@ -311,9 +314,10 @@ bool DiffusionFilter::filter(art::Event & e)
     }
 
     // Check that track start and end are at/near TPC boundaries
-    bool isInFV = _filter_vol.InFV(thisTrackStartX_t0Corr,
-                                   thisTrackStartY,
-                                   thisTrackStartZ );
+    // For two points, InFV takes TVectors
+    TVector3 startX(thisTrackStartX_t0Corr, thisTrackStartY, thisTrackStartZ);
+    TVector3 endX  (thisTrackEndX_t0Corr  , thisTrackEndY  , thisTrackEndZ);
+    bool isInFV = _filter_vol.InFV(startX, endX);
 
     thisTrackIsPassVolumeCut = !isInFV;
 

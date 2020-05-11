@@ -42,7 +42,16 @@ void make_diffusion_coefficient_plot() {
   l->AddEntry(f_dl, "D_{L} = 6.4 cm^{2}/s", "l");
   l->Draw("same");
 
-  c->SaveAs("diffusion_v_drift_time.png");
+  TPaveText *pt = new TPaveText(0.63, 0.13, 0.83, 0.33, "NDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetTextAlign(12);
+  pt->SetTextFont(22); // Was 132
+  pt->AddText("E = 273 V/cm");
+  pt->Draw("same");
+
+  //c->SaveAs("diffusion_v_drift_time.png", "PNG");
+  c->SaveAs("sigma_v_drift_time.pdf", "PDF");
 
 
 }

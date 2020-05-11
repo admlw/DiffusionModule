@@ -11,7 +11,7 @@ diffusionconfig       : {
 
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
-  TrackTransDistCut   : 6.0 # Start with 6 cm, update later if necessary
+  TrackTransDistCut   : 6.0
   SigmaCut            : 1.0 # Nominal 1.0
   PulseHeightCut      : 100.0 # Nominal 100.0
   HitGOFCut           : 1.1

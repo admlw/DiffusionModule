@@ -1,4 +1,6 @@
-void plot_filter(){
+void plot_noise_filter(){
+  gStyle->SetOptStat(0);
+
   TF1 *filter_u = new TF1("filter_u","exp(-0.5*pow(x/[0],[1]))");
   double par[2]={1.43555e+01/200.*2.,4.95096e+00};
   filter_u->SetParameters(par);
@@ -129,10 +131,12 @@ void plot_filter(){
 
 
   TCanvas *c1 = new TCanvas("c1","c1", 600,600);
-  hfilter_time_u->SetTitle("Time Domain");
+  hfilter_time_u->SetTitle("");
   hfilter_time_u->Draw();
   hfilter_time_u->SetXTitle("t (#mus)");
-  hfilter_time_u->SetYTitle("Filter(t)");
+  //hfilter_time_u->SetYTitle("Filter(t)");
+  hfilter_time_u->SetYTitle("Magnitude/0.5 #mus");
+  hfilter_time_u->GetYaxis()->SetTitleOffset(1.2);
   hfilter_time_v->Draw("same");
   hfilter_time_w->Draw("same");
   hfilter_time_u->SetLineColor(2);

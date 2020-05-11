@@ -8,7 +8,7 @@
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
-<!ENTITY data_dir "/pnfs/uboone/scratch/users/&user;/&release;_data/">
+<!ENTITY data_dir "/uboone/data/users/&user;/&release;_data/">
 ]>
 
 <job>
@@ -74,10 +74,11 @@
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>17</numjobs> 
+        <numjobs>19</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
         <memory>1600</memory>
+        <disk>30GB</disk>
         <datatier>diffusionsigmamap</datatier>
         <schema>root</schema>
         <!--<schema>griftp</schema>-->
@@ -88,16 +89,17 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt_fidVol.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>92</numjobs> 
-        <maxfilesperjob>1</maxfilesperjob>
+        <numjobs>19</numjobs> 
+        <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>3000</memory>
+        <memory>1600</memory>
+        <disk>30GB</disk>
         <datatier>diffusionana</datatier>
         <schema>root</schema>
    </stage>
