@@ -1,0 +1,71 @@
+<!-- project details -->
+<!DOCTYPE project [
+<!ENTITY release "v08_00_00_25">
+<!ENTITY name "single_muons">
+<!ENTITY user "amogan">
+<!ENTITY prod_mode "prod">
+<!ENTITY out_name "single_muons_nominal">
+<!ENTITY persistent_dir "/pnfs/uboone/persistent/users/amogan">
+<!ENTITY scratch_dir "/pnfs/uboone/scratch/users/amogan">
+<!ENTITY res_dir "/pnfs/uboone/resilient/users/amogan">
+<!ENTITY data_dir "/uboone/data/users/amogan">
+<!ENTITY tar_dir "/pnfs/uboone/resilient/users/amogan/tar_files">
+<!ENTITY my_fcl_dir "/pnfs/uboone/resilient/users/amogan/fcl">
+<!ENTITY my_other_fcl_dir "/uboone/app/users/amogan/mcc9_diffusion/srcs/uboonecode/fcl/systematics/detector/MCC9">
+<!ENTITY numjobs "10">
+<!ENTITY numevents "500">
+]>
+
+<!-- Note: 50 events per job -->
+<!-- i.e., 10 jobs = 500 events-->
+<job>
+    <project name="&name;">
+
+        <group>uboone</group>
+
+        <!-- batchOS -->
+        <OS>SL7</OS>
+
+        <!-- project size -->
+        <numevents>&numevents;</numevents> 
+
+        <resource>DEDICATED,OPPORTUNISTIC</resource> <!-- removed "OFFSITE" -->
+
+        <!-- larsoft info -->
+        <larsoft>
+            <tag>&release;</tag>    
+            <qual>e17:prof</qual>
+            <local>&tar_dir;/v08_00_00_25_Diffusion.tar</local>
+        </larsoft> 
+
+        <check>0</check>
+        <copy>0</copy>
+
+        <stage name = "all">
+            <fcl>&my_fcl_dir;/prod_muminus_fwdgoing_custom_diffusion.fcl</fcl>
+            <fcl>wirecell_g4_uboone.fcl</fcl> 
+            <!-- <fcl>wirecell_g4_nospacecharge_uboone.fcl</fcl> -->
+            <fcl>wirecell_detsim_uboone.fcl</fcl> 
+            <!--<fcl>&my_other_fcl_dir;/wirecell_detsim_DL_down_uboone.fcl</fcl> -->
+            <fcl>reco_uboone_mcc9_8_driver_stage1.fcl</fcl>
+            <fcl>reco_uboone_mcc9_8_driver_stage2.fcl</fcl>
+            <!-- <fcl>run_sigma_map.fcl</fcl> -->
+            <!-- <fcl>run_diffusion_module.fcl</fcl> -->
+            <maxfluxfilemb>0</maxfluxfilemb>
+            <maxfilesperjob>1</maxfilesperjob>
+            <memory>4000</memory>
+            <disk>30GB</disk>
+            <numjobs>&numjobs;</numjobs>
+            <schema>root</schema>
+            <datatier>reconstructed</datatier>
+            <workdir>&res_dir;/&release;/&out_name;/workdir</workdir>
+            <outdir>&persistent_dir;/&release;/&out_name;</outdir>
+            <logdir>&persistent_dir;/&release;/&out_name;</logdir>
+            <bookdir>&data_dir;/&release;/&out_name;</bookdir>
+            <jobsub>--expected-lifetime=25h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+            <jobsub_start>--expected-lifetime=25h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+        </stage>
+
+    </project>
+
+</job>

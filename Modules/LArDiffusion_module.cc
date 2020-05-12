@@ -91,6 +91,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int sub_run                                                = -9999;
     int event                                                  = -9999;
     std::vector< double >*                track_length         = nullptr;
+    std::vector< double >*                track_direction_rms  = nullptr;
     std::vector< double >*                track_avg_trans_dist = nullptr;
     std::vector< double >*                track_cos_theta      = nullptr;
     std::vector< double >*                track_theta_xz       = nullptr;
@@ -178,6 +179,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // after baseline correcting
     TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
+    TH1D *h_nWvfmsInBin;
 
     // For dynamic sigma cut
     std::vector<double> sigmaMedians;
@@ -197,7 +199,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::vector<std::vector<TH1D*>> h_summed_wire_info_per_bin; 
     std::vector<std::vector<TH1D*>> h_sigma_hists; 
     std::vector<std::vector<TH1D*>> h_wvfm_pulse_height_hists;
-		std::vector<TH1D*>              h_nWvfmsInBin;
     std::vector<TH1D*>              h_sigma_hist_medians;
     std::vector<TH1D*>              h_sigma_hist_maxs;
     std::vector<TH2D*>              h_sigma_v_bin_precut;
@@ -420,10 +421,15 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     }
 
+    track_direction_rms->push_back (TMath::RMS (dotProds.size()  , &dotProds[0]));
     track_avg_trans_dist->push_back(TMath::Mean(transDists.size(), &transDists[0])); 
 
     // ensure track straightness
-    if (track_avg_trans_dist->back() > track_trans_dist_cut) continue;
+    if (track_direction_rms ->back() > track_rms_cut)        continue;
+    if (track_avg_trans_dist->back() > track_trans_dist_cut) {
+      std::cout << "[TEST]: Removing track with trans dist = " << track_avg_trans_dist->back() << std::endl;
+      continue;
+    }
 		if (track_theta_xz->back() < track_theta_xz_cut_low || track_theta_xz->back() > track_theta_xz_cut_high)
 			continue;
 
@@ -731,7 +737,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               //if (track_theta_yz->back() > 90)
               //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
 
-              h_nWvfmsInBin.at(thisHit->View())->Fill(bin_it, 1);
+              h_nWvfmsInBin->Fill(bin_it, 1);
 
               // Now find the shift (in ticks) needed to minimise the rms 
               // of the sum of the histograms
@@ -807,6 +813,7 @@ void diffmod::LArDiffusion::beginJob()
   difftree->Branch("sub_run"              , &sub_run);
   difftree->Branch("event"                , &event);
   difftree->Branch("track_length"         , "std::vector<double>"                  , &track_length);
+  difftree->Branch("track_direction_rms"  , "std::vector<double>"                  , &track_direction_rms);
   difftree->Branch("track_avg_trans_dist" , "std::vector<double>"                  , &track_avg_trans_dist);
   difftree->Branch("track_cos_theta"      , "std::vector<double>"                  , &track_cos_theta);
   difftree->Branch("track_theta_xz"       , "std::vector<double>"                  , &track_theta_xz);
@@ -917,9 +924,7 @@ void diffmod::LArDiffusion::beginJob()
     if (!make_sigma_map) {
       //h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
 
-      h_nWvfmsInBin.push_back(theseTDs.back().make<TH1D>(
-					("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), 
-					";Drift bin; No. Waveforms;", 25, 0, 25));
+      h_nWvfmsInBin = theseTDs.back().make<TH1D>(("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), ";Drift bin; No. Waveforms;", 25, 0, 25);
 
       // Import sigmaMap, assuming it already exists
       std::string filePath;
@@ -1033,6 +1038,7 @@ void diffmod::LArDiffusion::printHistogram(TH1D* h){
 
 void diffmod::LArDiffusion::clearVectors(){
   track_length          ->resize(0);
+  track_direction_rms   ->resize(0);
   track_avg_trans_dist  ->resize(0);
   track_cos_theta       ->resize(0);
   track_theta_xz        ->resize(0);
