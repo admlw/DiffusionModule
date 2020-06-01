@@ -96,12 +96,24 @@ class DiffusionFilter : public art::EDFilter {
     double thisTrackLength;
     double thisTrackStartX;
     double thisTrackStartX_t0Corr;
+    double thisTrackStartX_SCEcorr;
+    double thisTrackStartX_offset;
     double thisTrackStartY;
+    double thisTrackStartY_SCEcorr;
+    double thisTrackStartY_offset;
     double thisTrackStartZ;
+    double thisTrackStartZ_SCEcorr;
+    double thisTrackStartZ_offset;
     double thisTrackEndX;
     double thisTrackEndX_t0Corr;
+    double thisTrackEndX_SCEcorr;
+    double thisTrackEndX_offset;
     double thisTrackEndY;
+    double thisTrackEndY_SCEcorr;
+    double thisTrackEndY_offset;
     double thisTrackEndZ;
+    double thisTrackEndZ_SCEcorr;
+    double thisTrackEndZ_offset;
     double thisTrackT0;
     double thisTrackThetaXZ;
     double thisTrackThetaYZ;
@@ -121,12 +133,24 @@ class DiffusionFilter : public art::EDFilter {
     std::vector<double>* trackLength         = nullptr;
     std::vector<double>* trackStartX         = nullptr;
     std::vector<double>* trackStartX_t0Corr  = nullptr;
+    std::vector<double>* trackStartX_SCEcorr = nullptr;
+    std::vector<double>* trackStartX_offset  = nullptr;
     std::vector<double>* trackStartY         = nullptr;
+    std::vector<double>* trackStartY_SCEcorr = nullptr;
+    std::vector<double>* trackStartY_offset  = nullptr;
     std::vector<double>* trackStartZ         = nullptr;
+    std::vector<double>* trackStartZ_SCEcorr = nullptr;
+    std::vector<double>* trackStartZ_offset  = nullptr;
     std::vector<double>* trackEndX           = nullptr;
     std::vector<double>* trackEndX_t0Corr    = nullptr;
+    std::vector<double>* trackEndX_SCEcorr   = nullptr;
+    std::vector<double>* trackEndX_offset    = nullptr;
     std::vector<double>* trackEndY           = nullptr;
+    std::vector<double>* trackEndY_SCEcorr   = nullptr;
+    std::vector<double>* trackEndY_offset    = nullptr;
     std::vector<double>* trackEndZ           = nullptr;
+    std::vector<double>* trackEndZ_SCEcorr   = nullptr;
+    std::vector<double>* trackEndZ_offset    = nullptr;
     std::vector<double>* trackT0             = nullptr;
     std::vector<double>* trackThetaXZ        = nullptr;
     std::vector<double>* trackThetaYZ        = nullptr;
@@ -141,6 +165,10 @@ class DiffusionFilter : public art::EDFilter {
     std::vector<bool>* trackIsSelected       = nullptr;
     std::vector<bool>* trackIsCathodeCrosser = nullptr;
     std::vector<bool>* trackIsAnodeCrosser   = nullptr;
+    std::vector< std::vector< double > >* spacePointX        = nullptr;
+    std::vector< std::vector< double > >* spacePointX_t0Corr = nullptr;
+    std::vector< std::vector< double > >* spacePointY        = nullptr;
+    std::vector< std::vector< double > >* spacePointZ        = nullptr;
 
 };
 
@@ -205,12 +233,24 @@ void DiffusionFilter::beginJob()
   tree->Branch("trackLength"           , &trackLength);
   tree->Branch("trackStartX"           , &trackStartX);
   tree->Branch("trackStartX_t0Corr"    , &trackStartX_t0Corr);
+  tree->Branch("trackStartX_SCEcorr"   , &trackStartX_SCEcorr);
+  tree->Branch("trackStartX_offset"    , &trackStartX_offset);
   tree->Branch("trackStartY"           , &trackStartY);
+  tree->Branch("trackStartY_SCEcorr"   , &trackStartY_SCEcorr);
+  tree->Branch("trackStartY_offset"    , &trackStartY_offset);
   tree->Branch("trackStartZ"           , &trackStartZ);
+  tree->Branch("trackStartZ_SCEcorr"   , &trackStartZ_SCEcorr);
+  tree->Branch("trackStartZ_offset"    , &trackStartZ_offset);
   tree->Branch("trackEndX"             , &trackEndX);
   tree->Branch("trackEndX_t0Corr"      , &trackEndX_t0Corr);
+  tree->Branch("trackEndX_SCEcorr"     , &trackEndX_SCEcorr);
+  tree->Branch("trackEndX_offset"      , &trackEndX_offset);
   tree->Branch("trackEndY"             , &trackEndY);
+  tree->Branch("trackEndY_SCEcorr"     , &trackEndY_SCEcorr);
+  tree->Branch("trackEndY_offset"      , &trackEndY_offset);
   tree->Branch("trackEndZ"             , &trackEndZ);
+  tree->Branch("trackEndZ_SCEcorr"     , &trackEndZ_SCEcorr);
+  tree->Branch("trackEndZ_offset"      , &trackEndZ_offset);
   tree->Branch("trackT0"               , &trackT0);
   tree->Branch("trackTheta"            , &trackTheta);
   tree->Branch("trackPhi"              , &trackPhi);
@@ -220,11 +260,15 @@ void DiffusionFilter::beginJob()
   tree->Branch("trackIsPassThetaXZ"    , &trackIsPassThetaXZ);
   tree->Branch("trackIsPassThetaYZ"    , &trackIsPassThetaYZ);
   tree->Branch("trackIsPassAngularCut" , &trackIsPassAngularCut);
-  tree->Branch("trackIsPassVolumeCut" , &trackIsPassVolumeCut);
+  tree->Branch("trackIsPassVolumeCut"  , &trackIsPassVolumeCut);
   tree->Branch("trackIsHasT0"          , &trackIsHasT0);
   tree->Branch("trackIsSelected"       , &trackIsSelected);
   tree->Branch("trackIsAnodeCrosser"   , &trackIsAnodeCrosser);
   tree->Branch("trackIsCathodeCrosser" , &trackIsCathodeCrosser);
+  tree->Branch("spacePointX"           , "std::vector< std::vector< double > >" , &spacePointX);
+  tree->Branch("spacePointX_t0Corr"    , "std::vector< std::vector< double > >" , &spacePointX_t0Corr);
+  tree->Branch("spacePointY"           , "std::vector< std::vector< double > >" , &spacePointY);
+  tree->Branch("spacePointZ"           , "std::vector< std::vector< double > >" , &spacePointZ);
 
   std::cout << "DiffusionFilter::beginJob() end" << std::endl;
 
@@ -267,7 +311,8 @@ bool DiffusionFilter::filter(art::Event & e)
   art::PtrMaker< anab::T0 >          makeT0Ptr(e);
   art::PtrMaker< recob::SpacePoint > makeSpacePointPtr(e); 
 
-  for (size_t iTrack = 0; iTrack < trackPtrVector.size(); iTrack++){
+  // Track loop
+  for (size_t iTrack = 0; iTrack < trackPtrVector.size(); iTrack++) {
     art::Ptr< recob::Track > thisTrack = trackPtrVector.at(iTrack);
     std::vector< art::Ptr<anab::T0> > t0s = t0FromTracks.at(thisTrack.key());
 
@@ -301,7 +346,7 @@ bool DiffusionFilter::filter(art::Event & e)
     thisTrackPhi     = thisTrack->Phi();
     thisTrackThetaXZ = _util.getThetaXZ(thisTrack);
     thisTrackThetaYZ = _util.getThetaYZ(thisTrack);
-
+        
     if (thisTrackIsHasT0){
       thisTrackT0 = t0s.at(0)->Time();
       thisTrackStartX_t0Corr = thisTrackStartX - thisTrackT0*driftVelocity;
@@ -313,12 +358,36 @@ bool DiffusionFilter::filter(art::Event & e)
       thisTrackEndX_t0Corr   = thisTrackEndX;
     }
 
-    // Check that track start and end are at/near TPC boundaries
-    // For two points, InFV takes TVectors
-    TVector3 startX(thisTrackStartX_t0Corr, thisTrackStartY, thisTrackStartZ);
-    TVector3 endX  (thisTrackEndX_t0Corr  , thisTrackEndY  , thisTrackEndZ);
-    bool isInFV = _filter_vol.InFV(startX, endX);
+    // Get space charge correction
+    auto const* SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
 
+    // Only correcting start and end points, since that's what we use for selection
+    auto sceOffsetStart = SCE->GetCalPosOffsets(geo::Point_t(thisTrackStartX_t0Corr, thisTrackStartY, thisTrackStartZ));
+    thisTrackStartX_SCEcorr = thisTrackStartX_t0Corr - sceOffsetStart.X();
+    thisTrackStartY_SCEcorr = thisTrackStartY + sceOffsetStart.Y(); 
+    thisTrackStartZ_SCEcorr = thisTrackStartZ + sceOffsetStart.Z(); 
+
+    auto sceOffsetEnd   = SCE->GetCalPosOffsets(geo::Point_t(thisTrackEndX_t0Corr, thisTrackEndY  , thisTrackEndZ)  );
+    thisTrackEndX_SCEcorr = thisTrackEndX_t0Corr - sceOffsetEnd.X();
+    thisTrackEndY_SCEcorr = thisTrackEndY + sceOffsetEnd.Y(); 
+    thisTrackEndZ_SCEcorr = thisTrackEndZ + sceOffsetEnd.Z(); 
+    
+    // Calculate SCE offsets for validation
+    thisTrackStartX_offset = fabs(thisTrackStartX_t0Corr - thisTrackStartX_SCEcorr);
+    thisTrackStartY_offset = fabs(thisTrackStartY        - thisTrackStartY_SCEcorr);
+    thisTrackStartZ_offset = fabs(thisTrackStartZ        - thisTrackStartZ_SCEcorr);
+    thisTrackEndX_offset = fabs(thisTrackEndX_t0Corr - thisTrackEndX_SCEcorr);
+    thisTrackEndY_offset = fabs(thisTrackEndY        - thisTrackEndY_SCEcorr);
+    thisTrackEndY_offset = fabs(thisTrackEndZ        - thisTrackEndZ_SCEcorr);
+
+    // Check that tracks are throughgoing by making sure the track
+    // SCE-corrected start and end points are within some distance
+    // of each TPC wall; 5 cm here
+
+    // For two points, InFV takes TVectors
+    TVector3 startPoint_SCE(thisTrackStartX_SCEcorr, thisTrackStartY_SCEcorr, thisTrackStartZ_SCEcorr);
+    TVector3 endPoint_SCE  (thisTrackEndX_SCEcorr  , thisTrackEndY_SCEcorr  , thisTrackEndZ_SCEcorr);
+    bool isInFV = _filter_vol.InFV(startPoint_SCE, endPoint_SCE);
     thisTrackIsPassVolumeCut = !isInFV;
 
     thisTrackIsPassLengthCut = (thisTrackLength > fTrackLengthCut);
@@ -350,12 +419,24 @@ bool DiffusionFilter::filter(art::Event & e)
     trackLength          ->push_back(thisTrackLength);
     trackStartX          ->push_back(thisTrackStartX);
     trackStartX_t0Corr   ->push_back(thisTrackStartX_t0Corr);
+    trackStartX_SCEcorr  ->push_back(thisTrackStartX_SCEcorr);
+    trackStartX_offset   ->push_back(thisTrackStartX_offset);
     trackStartY          ->push_back(thisTrackStartY);
+    trackStartY_SCEcorr  ->push_back(thisTrackStartY_SCEcorr);
+    trackStartY_offset   ->push_back(thisTrackStartY_offset);
     trackStartZ          ->push_back(thisTrackStartZ);
+    trackStartZ_SCEcorr  ->push_back(thisTrackStartZ_SCEcorr);
+    trackStartZ_offset   ->push_back(thisTrackStartZ_offset);
     trackEndX            ->push_back(thisTrackEndX);
     trackEndX_t0Corr     ->push_back(thisTrackEndX_t0Corr);
+    trackEndX_SCEcorr    ->push_back(thisTrackEndX_SCEcorr);
+    trackEndX_offset     ->push_back(thisTrackEndX_offset);
     trackEndY            ->push_back(thisTrackEndY);
+    trackEndY_SCEcorr    ->push_back(thisTrackEndY_SCEcorr);
+    trackEndY_offset     ->push_back(thisTrackEndY_offset);
     trackEndZ            ->push_back(thisTrackEndZ);
+    trackEndZ_SCEcorr    ->push_back(thisTrackEndZ_SCEcorr);
+    trackEndZ_offset     ->push_back(thisTrackEndZ_offset);
     trackT0              ->push_back(thisTrackT0);
     trackTheta           ->push_back(thisTrackTheta);
     trackPhi             ->push_back(thisTrackPhi);
@@ -374,7 +455,7 @@ bool DiffusionFilter::filter(art::Event & e)
     trackIsCathodeCrosser->push_back(thisTrackIsCathodeCrosser);
     trackIsAnodeCrosser  ->push_back(thisTrackIsAnodeCrosser);
 
-    if (trackIsSelected->at(iTrack)){
+    if (trackIsSelected->at(iTrack)) {
 
       isPass = true;
 
@@ -389,10 +470,11 @@ bool DiffusionFilter::filter(art::Event & e)
 
       std::vector< art::Ptr<recob::Hit> > hits;
       std::vector< art::Ptr< recob::Hit > > hitPtrCollection;
-      if ((int)hitsFromTracks.at(thisTrack.key()).size() > 0){
+      if ((int)hitsFromTracks.at(thisTrack.key()).size() > 0) {
         hits  = hitsFromTracks.at(thisTrack.key());
 
-        for (art::Ptr<recob::Hit>& thisHit : hits){
+        // Hit loop
+        for (art::Ptr<recob::Hit>& thisHit : hits) {
 
           recob::Hit hitForCollection = *(thisHit.get());
           hitCollection->push_back(hitForCollection);
@@ -401,13 +483,14 @@ bool DiffusionFilter::filter(art::Event & e)
             = makeHitPtr(hitCollection->size()-1);
 
           hitPtrCollection.push_back(hitForCollectionPtr);
-
-          // get spacepoints
+    
+          // Get spacepoints
           std::vector< art::Ptr< recob::SpacePoint > > spacePoints;
           std::vector< art::Ptr< recob::SpacePoint > > spacePointPtrCollection;
           if ((int)spFromHits.at(thisHit.key()).size() > 0){
             spacePoints = spFromHits.at(thisHit.key());
 
+            // Spacepoint loop
             for (art::Ptr< recob::SpacePoint >& thisSpacePoint : spacePoints){
                recob::SpacePoint spacePointForCollection = *(thisSpacePoint.get());
                spacePointCollection->push_back(spacePointForCollection);
@@ -416,6 +499,8 @@ bool DiffusionFilter::filter(art::Event & e)
                  = makeSpacePointPtr(spacePointCollection->size()-1);
 
                spacePointPtrCollection.push_back(spacePointForCollectionPtr);
+               //const double* spXYZ = thisSpacePoint->XYZ();
+
             }
 
             util::CreateAssn(
@@ -426,9 +511,7 @@ bool DiffusionFilter::filter(art::Event & e)
                 *hitSpacePointAssn);
 
           }
-
-
-        }
+        } // Hit loop
       }
 
 
@@ -450,8 +533,8 @@ bool DiffusionFilter::filter(art::Event & e)
             trackForCollectionPtr,
             *trackT0Assn);
       }
-    }
-  }
+    } // if(trackIsSelected)
+  } // Track loop
 
 
   std::cout << "DiffusionFilter::filter() --- filling tree..." << std::endl;
@@ -476,12 +559,24 @@ void DiffusionFilter::emptyVectors(){
   trackLength           -> resize(0);
   trackStartX           -> resize(0);
   trackStartX_t0Corr    -> resize(0);
+  trackStartX_SCEcorr   -> resize(0);
+  trackStartX_offset    -> resize(0);
   trackStartY           -> resize(0);
+  trackStartY_SCEcorr   -> resize(0);
+  trackStartY_offset    -> resize(0);
   trackStartZ           -> resize(0);
+  trackStartZ_SCEcorr   -> resize(0);
+  trackStartZ_offset    -> resize(0);
   trackEndX             -> resize(0);
   trackEndX_t0Corr      -> resize(0);
+  trackEndX_SCEcorr     -> resize(0);
+  trackEndX_offset      -> resize(0);
   trackEndY             -> resize(0);
+  trackEndY_SCEcorr     -> resize(0);
+  trackEndY_offset      -> resize(0);
   trackEndZ             -> resize(0);
+  trackEndZ_SCEcorr     -> resize(0);
+  trackEndZ_offset      -> resize(0);
   trackT0               -> resize(0);
   trackThetaXZ          -> resize(0);
   trackThetaYZ          -> resize(0);

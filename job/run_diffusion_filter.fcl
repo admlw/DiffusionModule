@@ -5,6 +5,7 @@
 #include "T0RecoAnodeCathodePiercing.fcl"
 #include "config_diffusion_constants.fcl"
 #include "config_diffusion_filter_fiducialvolume.fcl"
+##include "microboone_spacecharge.fcl"
 
 process_name: diffusionselection
 
@@ -20,6 +21,7 @@ services:
   LArProperties          : @local::microboone_properties
   DetectorClocksService  : @local::microboone_detectorclocks
   FileCatalogMetadata    : @local::art_file_catalog_mc
+  SpaceChargeService     : @local::microboone_spacecharge
   RandomNumberGenerator  : {} # art native random number generator
                            @table::microboone_simulation_services
 
