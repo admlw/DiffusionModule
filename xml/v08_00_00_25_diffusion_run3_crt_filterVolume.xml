@@ -98,7 +98,7 @@
         <numjobs>19</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>1600</memory>
+        <memory>3000</memory>
         <disk>30GB</disk>
         <datatier>diffusionana</datatier>
         <schema>root</schema>

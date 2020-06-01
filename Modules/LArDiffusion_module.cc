@@ -91,7 +91,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     int sub_run                                                = -9999;
     int event                                                  = -9999;
     std::vector< double >*                track_length         = nullptr;
-    std::vector< double >*                track_direction_rms  = nullptr;
     std::vector< double >*                track_avg_trans_dist = nullptr;
     std::vector< double >*                track_cos_theta      = nullptr;
     std::vector< double >*                track_theta_xz       = nullptr;
@@ -401,10 +400,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
       double dotProd = firstDir.Dot(thisDir);
       dotProds.push_back(dotProd);
       
-      // EXPERIMENTAL: Instead of the above, find the average distance
-      // between each trajectory point and a straight line connecting
-      // the track start and end points (i.e., transverse distance)
-
       // Find track point at i_th position, and its components
       recob::Track::TrajectoryPoint_t thisTrackTrajPoint = thisTrack->TrajectoryPoint(i_pt);
       TVector3 trajPoint(thisTrackTrajPoint.position.X(),
@@ -421,17 +416,14 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     }
 
-    track_direction_rms->push_back (TMath::RMS (dotProds.size()  , &dotProds[0]));
     track_avg_trans_dist->push_back(TMath::Mean(transDists.size(), &transDists[0])); 
 
     // ensure track straightness
-    if (track_direction_rms ->back() > track_rms_cut)        continue;
-    if (track_avg_trans_dist->back() > track_trans_dist_cut) {
-      std::cout << "[TEST]: Removing track with trans dist = " << track_avg_trans_dist->back() << std::endl;
+    if (track_avg_trans_dist->back() > track_trans_dist_cut) 
       continue;
-    }
-		if (track_theta_xz->back() < track_theta_xz_cut_low || track_theta_xz->back() > track_theta_xz_cut_high)
-			continue;
+    // Why is this still here???
+		//if (track_theta_xz->back() < track_theta_xz_cut_low || track_theta_xz->back() > track_theta_xz_cut_high)
+	  //	continue;
 
     std::vector< art::Ptr< recob::Hit > > hits_from_track = hits_from_tracks.at(thisTrack.key());
 
@@ -813,7 +805,6 @@ void diffmod::LArDiffusion::beginJob()
   difftree->Branch("sub_run"              , &sub_run);
   difftree->Branch("event"                , &event);
   difftree->Branch("track_length"         , "std::vector<double>"                  , &track_length);
-  difftree->Branch("track_direction_rms"  , "std::vector<double>"                  , &track_direction_rms);
   difftree->Branch("track_avg_trans_dist" , "std::vector<double>"                  , &track_avg_trans_dist);
   difftree->Branch("track_cos_theta"      , "std::vector<double>"                  , &track_cos_theta);
   difftree->Branch("track_theta_xz"       , "std::vector<double>"                  , &track_theta_xz);
@@ -1038,7 +1029,6 @@ void diffmod::LArDiffusion::printHistogram(TH1D* h){
 
 void diffmod::LArDiffusion::clearVectors(){
   track_length          ->resize(0);
-  track_direction_rms   ->resize(0);
   track_avg_trans_dist  ->resize(0);
   track_cos_theta       ->resize(0);
   track_theta_xz        ->resize(0);

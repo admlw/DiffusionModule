@@ -112,10 +112,10 @@ void make_diffusion_selection_validation_plots(){
   selTracks_length->Draw("same");
   TLegend *leg = new TLegend(0.55, 0.65, 0.8, 0.9);
   gStyle->SetLegendBorderSize(0);
-  leg->AddEntry(lengthTracks_length, "Tracks > 50 cm");
-  leg->AddEntry(t0Tracks_length, "T0-tagged Tracks");
-  leg->AddEntry(fidVolTracks_length, "Tracks in FV");
-  leg->AddEntry(selTracks_length, "Angle Cuts");
+  leg->AddEntry(lengthTracks_length, "Tracks > 50 cm", "l");
+  leg->AddEntry(t0Tracks_length, "T0-tagged Tracks", "l");
+  leg->AddEntry(fidVolTracks_length, "Tracks in FV", "l");
+  leg->AddEntry(selTracks_length, "Angle Cuts", "l");
   leg->Draw("same");
   c1->SaveAs("trackLengths.png");
   c1->SaveAs("trackLengths.pdf");

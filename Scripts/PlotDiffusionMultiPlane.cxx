@@ -270,6 +270,7 @@ void makePlot(std::string inputFileName){
     c->cd();
 
     std::string drawString = "hit_peak_time >> hPeakTime" + planeName;
+    //std::string drawString = "hit_peak_time_t0corr >> hPeakTime" + planeName;
     std::string cutString  = "hit_view == "+std::to_string(ip);
     t->Draw(drawString.c_str(), cutString.c_str());
 
@@ -422,10 +423,12 @@ void makePlot(std::string inputFileName){
       std::cout << "binMean: " << binMean << " minTime: " << minTime << std::endl;
       driftTimes    [ip][idb] = binMean - minTime;
       driftTimesErrs[ip][idb] = (1/sqrt(N) * (0.5/2));
+      std::cout << "driftTimesErrs = " << driftTimesErrs[ip][idb] << std::endl;
 
       // get pulse width squared
       sigmaSqrVals    [ip][idb] = std::pow(sigma,2);
       sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
+      std::cout << "sigmaSqrValsErrs = " << sigmaSqrValsErrs[ip][idb] << std::endl;
 
     }
   }
