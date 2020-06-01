@@ -30,6 +30,36 @@ void make_diffusion_selection_validation_plots(){
                                        100, -180, 180, 
                                        100, -180, 180);
 
+  TH2D* selTracks_xy = new TH2D("selTracks_xy", 
+                                ";Track Start x (cm);Track Start y (cm)", 
+                                100, -10, 260,
+                                100, -120, 120);
+
+  TH2D* selTracks_xz = new TH2D("selTracks_xz", 
+                                ";Track Start x (cm);Track Start z (cm)", 
+                                100, -10, 1040,
+                                100, -10, 260);
+
+  TH2D* selTracks_yz = new TH2D("selTracks_yz", 
+                                ";Track Start z (cm);Track Start y (cm)", 
+                                100, -10, 1040,
+                                100, -120, 120); 
+
+  TH2D* selTracks_SCExy = new TH2D("selTracks_SCExy", 
+                                   ";SCE-Corrected Track Start x (cm);SCE-Corrected Track Start y (cm)", 
+                                   100, -10, 260,
+                                   100, -120, 120);
+
+  TH2D* selTracks_SCExz = new TH2D("selTracks_SCExz", 
+                                   ";SCE-Corrected Track Start x (cm);SCE-Corrected Track Start z (cm)", 
+                                   100, -10, 1040, 
+                                   100, -10, 260);
+
+  TH2D* selTracks_SCEyz = new TH2D("selTracks_SCEyz", 
+                                   ";SCE-Corrected Track Start z (cm);SCE-Corrected Track Start y (cm)", 
+                                   100, -10, 1040, 
+                                   100, -120, 120);
+
   TH1D* allTracks_length = new TH1D("allTracks_length",
                                     ";Track length (cm); Num. tracks",
                                     20, 0, 1000);
@@ -61,6 +91,20 @@ void make_diffusion_selection_validation_plots(){
   t->Draw("trackThetaYZ:trackThetaXZ >> t0Tracks_thxz_thyz", "trackLength>50 && trackIsHasT0 == 1");
   t->Draw("trackThetaYZ:trackThetaXZ >> fidVolTracks_thxz_thyz", "trackLength>50 && trackIsPassVolumeCut == 1 && trackIsHasT0 == 1");
   t->Draw("trackThetaYZ:trackThetaXZ >> selTracks_thxz_thyz", "trackIsSelected == 1");
+  t->Draw("trackStartY:trackStartX_t0Corr >> selTracks_xy", "trackIsSelected == 1");
+  t->Draw("trackStartX_t0Corr:trackStartZ >> selTracks_xz", "trackIsSelected == 1");
+  t->Draw("trackStartY:trackStartZ        >> selTracks_yz", "trackIsSelected == 1");
+  t->Draw("trackStartY_SCEcorr:trackStartX_SCEcorr >> selTracks_SCExy", "trackIsSelected == 1");
+  t->Draw("trackStartX_SCEcorr:trackStartZ_SCEcorr >> selTracks_SCExz", "trackIsSelected == 1");
+  t->Draw("trackStartY_SCEcorr:trackStartZ_SCEcorr >> selTracks_SCEyz", "trackIsSelected == 1");
+  /*
+  t->Draw("trackEndY:trackEndX_t0Corr >> selTracks_xy", "trackIsSelected == 1");
+  t->Draw("trackEndX_t0Corr:trackEndZ >> selTracks_xz", "trackIsSelected == 1");
+  t->Draw("trackEndY:trackEndZ        >> selTracks_yz", "trackIsSelected == 1");
+  t->Draw("trackEndY_SCEcorr:trackEndX_SCEcorr >> selTracks_SCExy", "trackIsSelected == 1");
+  t->Draw("trackEndX_SCEcorr:trackEndZ_SCEcorr >> selTracks_SCExz", "trackIsSelected == 1");
+  t->Draw("trackEndY_SCEcorr:trackEndZ_SCEcorr >> selTracks_SCEyz", "trackIsSelected == 1");
+  */
   t->Draw("trackLength >> allTracks_length");
   t->Draw("trackLength >> lengthTracks_length", "trackLength>50");
   t->Draw("trackLength >> t0Tracks_length", "trackLength>50 && trackIsHasT0 == 1");
@@ -91,6 +135,36 @@ void make_diffusion_selection_validation_plots(){
   selTracks_thxz_thyz->SetContour(1000);
   c1->SaveAs("selTracks_thxz_thyz.png");
   c1->SaveAs("selTracks_thxz_thyz.pdf");
+
+  selTracks_xy->Draw("colz");
+  selTracks_xy->SetContour(1000);
+  c1->SaveAs("selTracks_xy.png");
+  c1->SaveAs("selTracks_xy.pdf");
+
+  selTracks_xz->Draw("colz");
+  selTracks_xz->SetContour(1000);
+  c1->SaveAs("selTracks_xz.png");
+  c1->SaveAs("selTracks_xz.pdf");
+
+  selTracks_yz->Draw("colz");
+  selTracks_yz->SetContour(1000);
+  c1->SaveAs("selTracks_yz.png");
+  c1->SaveAs("selTracks_yz.pdf");
+
+  selTracks_SCExy->Draw("colz");
+  selTracks_SCExy->SetContour(1000);
+  c1->SaveAs("selTracks_SCExy.png");
+  c1->SaveAs("selTracks_SCExy.pdf");
+
+  selTracks_SCExz->Draw("colz");
+  selTracks_SCExz->SetContour(1000);
+  c1->SaveAs("selTracks_SCExz.png");
+  c1->SaveAs("selTracks_SCExz.pdf");
+
+  selTracks_SCEyz->Draw("colz");
+  selTracks_SCEyz->SetContour(1000);
+  c1->SaveAs("selTracks_SCEyz.png");
+  c1->SaveAs("selTracks_SCEyz.pdf");
 
   c1->SetLogy(1);
 
