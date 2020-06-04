@@ -26,11 +26,19 @@ LDFLAGS=$$(root-config --libs) \
 				-L $(HEP_CONCURRENCY_LIB) -l hep_concurrency\
 				-L $(LARCOREALG_LIB) -l larcorealg_Geometry -l larcorealg_GeoAlgo\
 
+GetWaveform: GetWaveform.cc
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
+GetSimChan: GetSimChan.cc
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
 GetWire: GetWire.cc
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-all: GetWire
+all: GetWaveform GetSimChan GetWire
 
 clean:
+	rm *.o GetWaveform
+	rm *.o GetSimChan
 	rm *.o GetWire
 

@@ -36,7 +36,7 @@ void make_diffusion_selection_validation_plots(){
                                 100, -120, 120);
 
   TH2D* selTracks_xz = new TH2D("selTracks_xz", 
-                                ";Track Start x (cm);Track Start z (cm)", 
+                                ";Track Start z (cm);Track Start x (cm)", 
                                 100, -10, 1040,
                                 100, -10, 260);
 
@@ -51,7 +51,7 @@ void make_diffusion_selection_validation_plots(){
                                    100, -120, 120);
 
   TH2D* selTracks_SCExz = new TH2D("selTracks_SCExz", 
-                                   ";SCE-Corrected Track Start x (cm);SCE-Corrected Track Start z (cm)", 
+                                   ";SCE-Corrected Track Start z (cm);SCE-Corrected Track Start x (cm)", 
                                    100, -10, 1040, 
                                    100, -10, 260);
 
@@ -83,7 +83,7 @@ void make_diffusion_selection_validation_plots(){
   // save plots
   TCanvas* c1 = new TCanvas();
   c1->SetRightMargin(0.18);
-  c1->SetLogz();
+  //c1->SetLogz();
 
   // draw to histograms using TTree::Draw()
   t->Draw("trackThetaYZ:trackThetaXZ >> allTracks_thxz_thyz");
@@ -138,39 +138,42 @@ void make_diffusion_selection_validation_plots(){
 
   selTracks_xy->Draw("colz");
   selTracks_xy->SetContour(1000);
+  selTracks_xy->SetMinimum(-1e-9);
   c1->SaveAs("selTracks_xy.png");
   c1->SaveAs("selTracks_xy.pdf");
 
   selTracks_xz->Draw("colz");
   selTracks_xz->SetContour(1000);
+  selTracks_xz->SetMinimum(-1e-9);
   c1->SaveAs("selTracks_xz.png");
   c1->SaveAs("selTracks_xz.pdf");
 
   selTracks_yz->Draw("colz");
   selTracks_yz->SetContour(1000);
+  selTracks_yz->SetMinimum(-1e-9);
   c1->SaveAs("selTracks_yz.png");
   c1->SaveAs("selTracks_yz.pdf");
 
   selTracks_SCExy->Draw("colz");
   selTracks_SCExy->SetContour(1000);
+  selTracks_SCExy->SetMinimum(-1e-9);
   c1->SaveAs("selTracks_SCExy.png");
   c1->SaveAs("selTracks_SCExy.pdf");
 
   selTracks_SCExz->Draw("colz");
   selTracks_SCExz->SetContour(1000);
+  selTracks_SCExz->SetMinimum(-1e-9);
   c1->SaveAs("selTracks_SCExz.png");
   c1->SaveAs("selTracks_SCExz.pdf");
 
   selTracks_SCEyz->Draw("colz");
   selTracks_SCEyz->SetContour(1000);
+  selTracks_SCEyz->SetMinimum(-1e-9);
   c1->SaveAs("selTracks_SCEyz.png");
   c1->SaveAs("selTracks_SCEyz.pdf");
 
   c1->SetLogy(1);
 
-  //allTracks_length->SetLineColor(kBlack);
-  //allTracks_length->SetLineWidth(2);
-  //allTracks_length->Draw();
   gStyle->SetOptStat(0);
   lengthTracks_length->SetLineColor(kBlack);
   lengthTracks_length->SetLineWidth(2);
@@ -187,8 +190,8 @@ void make_diffusion_selection_validation_plots(){
   TLegend *leg = new TLegend(0.55, 0.65, 0.8, 0.9);
   gStyle->SetLegendBorderSize(0);
   leg->AddEntry(lengthTracks_length, "Tracks > 50 cm", "l");
-  leg->AddEntry(t0Tracks_length, "T0-tagged Tracks", "l");
-  leg->AddEntry(fidVolTracks_length, "Tracks in FV", "l");
+  leg->AddEntry(t0Tracks_length, "#T0-tagged Tracks", "l");
+  leg->AddEntry(fidVolTracks_length, "Throughgoing Tracks", "l");
   leg->AddEntry(selTracks_length, "Angle Cuts", "l");
   leg->Draw("same");
   c1->SaveAs("trackLengths.png");

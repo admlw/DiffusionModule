@@ -11,6 +11,7 @@ diffusionconfig       : {
 
   UseT0TaggedTracks   : false
   MakeSigmaMap        : false
+  FillTree            : false
   TrackTransDistCut   : 6.0
   SigmaCut            : 1.0 # Nominal 1.0
   PulseHeightCut      : 100.0 # Nominal 100.0

@@ -32,6 +32,8 @@ physics:
 
 services.DetectorClocksService.InheritClockConfig: false
 physics.analyzers.DiffusionModule.MakeSigmaMap: false
-physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_run3_crt_fidVol.root"
+physics.analyzers.DiffusionModule.FillTree: false
+#physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_run3_crt_throughgoing_SCE.root"
+physics.analyzers.DiffusionModule.SigmaMapFilePath: "sigma_map_run3_crt_throughgoing_SCE.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.UseT0TaggedTracks: true

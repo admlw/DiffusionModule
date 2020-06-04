@@ -201,7 +201,7 @@ namespace diffmod {
     }
   
   
-    h_rawDCorrected->Fit("gaus", "q", "", fitLowerLimit, fitHigherLimit);
+    h_rawDCorrected->Fit("gaus", "0q", "", fitLowerLimit, fitHigherLimit);
   
     double sigma;
     double chisq;
