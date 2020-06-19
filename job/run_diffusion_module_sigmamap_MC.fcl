@@ -30,6 +30,13 @@ physics:
     end_paths: [ analysis ]
 } #physics
 
-services.DetectorClocksService.InheritClockConfig: false
-physics.analyzers.DiffusionModule.MakeSigmaMap: true
-physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
+services.DetectorClocksService.InheritClockConfig:   false
+physics.analyzers.DiffusionModule.UseT0TaggedTracks: false
+physics.analyzers.DiffusionModule.MakeSigmaMap:      true
+physics.analyzers.DiffusionModule.FillTree:          true
+physics.analyzers.DiffusionModule.TrackLabel:        "pandora"
+physics.analyzers.DiffusionModule.HitLabel:          "gaushit"
+physics.analyzers.DiffusionModule.TrackHitAssn:      "pandora"
+physics.analyzers.DiffusionModule.TrackT0Assn:       "pandora"
+physics.analyzers.DiffusionModule.HitSpacePointAssn: "pandora"
+

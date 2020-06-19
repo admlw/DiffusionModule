@@ -27,7 +27,7 @@
     <larsoft>
         <tag>&release;</tag>
         <qual>e17:prof</qual>
-        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_25_Diffusion.tar</local> 
+        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_25_Diffusion_SCE.tar</local> 
     </larsoft>
 
    <!-- diffusion filter -->
@@ -78,12 +78,13 @@
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
         <numjobs>19</numjobs> 
-        <maxfilesperjob>1</maxfilesperjob>
+        <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>4000</memory>
+        <memory>6000</memory>
         <disk>30GB</disk>
         <datatier>diffusionana</datatier>
-        <schema>root</schema>
+        <!--<schema>root</schema>-->
+        <schema>griftp</schema>
    </stage>
 
 </project>

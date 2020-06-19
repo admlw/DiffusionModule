@@ -5,6 +5,7 @@ BEGIN_PROLOG
 DiffusionConstantConfig       : {
   DriftVelocity       : 0.1098 # New MCC9 value! (cm/microsecond)
   
+  # Units: ticks
   WaveformSize        : 6400
   WaveformIntimeStart : 800
   WaveformIntimeEnd   : 5400

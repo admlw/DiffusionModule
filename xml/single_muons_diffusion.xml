@@ -4,7 +4,7 @@
 <!ENTITY name "single_muons">
 <!ENTITY user "amogan">
 <!ENTITY prod_mode "prod">
-<!ENTITY out_name "single_muons_nominal">
+<!ENTITY out_name "single_muons_SCEcorrected_angular">
 <!ENTITY persistent_dir "/pnfs/uboone/persistent/users/amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/amogan">
 <!ENTITY res_dir "/pnfs/uboone/resilient/users/amogan">
@@ -35,7 +35,7 @@
         <larsoft>
             <tag>&release;</tag>    
             <qual>e17:prof</qual>
-            <local>&tar_dir;/v08_00_00_25_Diffusion.tar</local>
+            <local>&tar_dir;/v08_00_00_25_Diffusion_SCE.tar</local>
         </larsoft> 
 
         <check>0</check>

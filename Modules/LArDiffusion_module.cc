@@ -180,8 +180,6 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // after baseline correcting
     TH1D* h_wire_baseline_corrected = tfs->make<TH1D>("h_wire_baseline_corrected", "", 100, 0, 100);
 
-    TH1D *h_nWvfmsInBin;
-
     // For dynamic sigma cut
     std::vector<double> sigmaMedians;
     std::vector<double> pulseHeightMedians;
@@ -197,6 +195,7 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     std::vector<recob::Hit> hitsPlane2;
 
     // Output histograms - separated per plane
+    std::vector<TH1D*>              h_nWvfmsInBin;
     std::vector<std::vector<TH1D*>> h_summed_wire_info_per_bin; 
     std::vector<std::vector<TH1D*>> h_sigma_hists; 
     std::vector<std::vector<TH1D*>> h_wvfm_pulse_height_hists;
@@ -331,8 +330,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
   art::FindManyP< recob::SpacePoint > sp_from_hits    (hit_handle  , e, hit_sp_assn);
   art::FindManyP< anab::T0 >          t0_from_tracks  (track_handle, e, track_t0_assn);
 
-  std::cout << "[DIFFMOD] Starting track loop with run " << run << "." << sub_run <<
-               " Event " << event << std::endl;
   // loop tracks, get associated hits
   for (size_t i_tr = 0; i_tr < track_ptr_vector.size(); i_tr++){
 
@@ -358,7 +355,8 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     }
     else {
       // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
-      track_t0->push_back(waveform_intime_start); // time in us
+      //track_t0->push_back(waveform_intime_start); // time in us
+      track_t0->push_back(0.); // time in us
     }
 
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset
@@ -388,13 +386,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
     transDists.resize(0);
 
     // Get direction vector between first and last point
-    /*
-    double track_dirv_x = track_end_x_t0corr - track_start_x_t0corr;
-    double track_dirv_y = track_end_y        - track_start_y;
-    double track_dirv_z = track_end_z        - track_start_z;
-    double line_point_x, line_point_y, line_point_z;
-    double track_point_x, track_point_y, track_point_z;
-    */
     TVector3 track_dirv = track_end - track_start;
     for (size_t i_pt = 0; i_pt < thisTrack->CountValidPoints(); i_pt++){
 
@@ -715,6 +706,9 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
               h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
 
+              //h_nWvfmsInBin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 1);
+              h_nWvfmsInBin.at(thisHit->View())->Fill(twvfm_bin_no.back() );
+
               //if (track_theta_xz->back() < 90)
               //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
               //if (track_theta_xz->back() > 90)
@@ -723,8 +717,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
               //if (track_theta_yz->back() > 90)
               //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
-
-              h_nWvfmsInBin->Fill(bin_it, 1);
 
               // Now find the shift (in ticks) needed to minimise the rms 
               // of the sum of the histograms
@@ -913,7 +905,17 @@ void diffmod::LArDiffusion::beginJob()
     if (!make_sigma_map) {
       //h_single_waveform = tfs->make<TH1D>("h_single_waveform", ";Time (ticks); Arb. Units;", 100, 0, 100);
 
-      h_nWvfmsInBin = theseTDs.back().make<TH1D>(("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), ";Drift bin; No. Waveforms;", 25, 0, 25);
+      //h_nWvfmsInBin = theseTDs.back().make<TH1D>(("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), ";Drift bin; No. Waveforms;", 25, 0, 25);
+
+      //theseTDs.push_back(tfs->mkdir(folderNames.at(ifN), folderNames.at(ifN)));
+
+      //MF_LOG_VERBATIM("LArDiffusion") << "made TFileDirectory " << folderNames.at(ifN);
+
+      h_nWvfmsInBin.push_back(theseTDs.back().make<TH1D>(
+            ("h_nWvfmsInBin"+folderNames.at(ifN)).c_str(), 
+            ";Bin no. ; No. Waveforms;", 
+            number_time_bins, 0, number_time_bins)
+      );
 
       // Import sigmaMap, assuming it already exists
       std::string filePath;
@@ -1033,7 +1035,6 @@ void diffmod::LArDiffusion::clearVectors(){
   track_cos_theta       ->resize(0);
   track_theta_xz        ->resize(0);
   track_theta_yz        ->resize(0);
-
   track_start_x         ->resize(0);
   track_start_x_t0corr  ->resize(0);
   track_start_y         ->resize(0);

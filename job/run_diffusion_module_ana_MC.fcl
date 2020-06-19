@@ -30,8 +30,14 @@ physics:
     end_paths: [ analysis ]
 } #physics
 
-services.DetectorClocksService.InheritClockConfig: false
-physics.analyzers.DiffusionModule.MakeSigmaMap: false
-physics.analyzers.DiffusionModule.SigmaMapFilePath: "/DiffusionData/sigma_map_run3_crt_fidVol.root"
+services.DetectorClocksService.InheritClockConfig:       false
+physics.analyzers.DiffusionModule.MakeSigmaMap:          false
+physics.analyzers.DiffusionModule.FillTree:              true
+physics.analyzers.DiffusionModule.UseT0TaggedTracks:     false
+physics.analyzers.DiffusionModule.SigmaMapFilePath:      "/DiffusionData/sigma_map_single_muons_angular_June2020.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
-physics.analyzers.DiffusionModule.UseT0TaggedTracks: true
+physics.analyzers.DiffusionModule.TrackLabel:            "pandora"
+physics.analyzers.DiffusionModule.HitLabel:              "gaushit"
+physics.analyzers.DiffusionModule.TrackHitAssn:          "pandora"
+physics.analyzers.DiffusionModule.TrackT0Assn:           "pandora"
+physics.analyzers.DiffusionModule.HitSpacePointAssn:     "pandora"

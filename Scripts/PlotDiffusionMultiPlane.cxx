@@ -16,7 +16,7 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
     + to_string_with_precision(diffV,2)
     + " +/- "
     + to_string_with_precision(diffE,2)
-    + "cm^{2}/s";
+    + " cm^{2}/s";
 
   std::string chisqString =
     "#chi^{2}/ndf: "
@@ -29,16 +29,13 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
     + to_string_with_precision(sig0     , 2) 
     + "+/-" 
     + to_string_with_precision(sig0err  , 2);
-    + "#mus^{2}";
+    + " #mus^{2}";
 
   //TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
 
-  TPaveText* tpv = new TPaveText(0.12, 0.60, 0.7, 0.90, "NDC");
-  /*
-=======
-  TPaveText* tpv = new TPaveText(0.16, 0.69, 0.7, 0.89, "NDC");
->>>>>>> b6207e378f586eae25ad337694756eb941b67434
-*/
+  //TPaveText* tpv = new TPaveText(0.12, 0.60, 0.7, 0.90, "NDC");
+  TPaveText* tpv = new TPaveText(0.16, 0.64, 0.7, 0.89, "NDC");
+
   tpv->SetTextAlign(11);
   tpv->SetFillStyle(0);
   tpv->SetLineWidth(0);
@@ -63,9 +60,11 @@ void styleGraph(TGraph* h, float minx, float maxx, float miny, float maxy){
   h->GetXaxis()->SetLabelSize(fontSize);
   h->GetYaxis()->SetLabelSize(fontSize);
   h->GetXaxis()->SetTitleOffset(3.5);
-  h->GetYaxis()->SetTitleOffset(1.8);
+  //h->GetYaxis()->SetTitleOffset(1.8);
+  h->GetYaxis()->SetTitleOffset(1.9);
   h->GetXaxis()->SetRangeUser(minx, maxx);
   h->GetYaxis()->SetRangeUser(miny, maxy);
+  h->GetXaxis()->SetNdivisions(505);
   h->GetYaxis()->SetNdivisions(505);
   h->SetMarkerStyle(20);
   h->SetMarkerSize(0.4);
@@ -187,24 +186,23 @@ std::pair<int, int> getBinXError(TH1D* driftHisto){
 void makePlot(std::string inputFileName){
 
   // Initialization 
-  // TODO: check these numbers are ok!
   const int  waveformDriftStartTick = 800;
   const int  waveformDriftEndTick   = 5400;
   const int  waveformDriftSize      = waveformDriftEndTick
                                       -waveformDriftStartTick; // End tick (5400 - 800)
   const int  numWaveformCut         = 0;                     // Cut bins with fewer than this number of waveforms
   const int  numDriftBins           = 25;
-  int        nuTicksPerBin          = waveformDriftSize 
+  int        numTicksPerBin         = waveformDriftSize 
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = true;
-  const bool isMakeWaveformPlots    = false;
+  const bool isData                 = false;
+  const bool isMakeWaveformPlots    = true;
   double     driftVelocity;
 
   // For data measurement, use drift velocity at anode. For MC, use
   // drift velocity at nominal E-field of 273 V/cm. Why? Basically 
-  // because that's what the simulation does, even though we think
+  // because that's what the simulation expects, even though we think
   // the anode drift velocity is the better thing to use
   if (isData) driftVelocity = 0.10762;  // Anode drift velocity
   else        driftVelocity = 0.1098;   // Average drift velocity
@@ -364,6 +362,22 @@ void makePlot(std::string inputFileName){
       double sigmaErr = 100;
       // Chi2 inflation
       int iter = 0;
+
+      std::cout << "----Bin " << idb << " Plane " << ip << "------" << std::endl;
+
+      // Wacky error nonsense
+      /*
+      for (int k = 1; k < waveformHist->GetNbinsX()+1; k++) {
+        std::cout << "--------------------------" << std::endl;
+        std::cout << "Bin " << k << std::endl;
+        std::cout << "Before " << waveformHist->GetBinError(k) << std::endl;
+        //waveformHist->SetBinError(k, 0.25*sqrt(hNWvfms->GetBinContent(idb) )*waveformHist->GetBinContent(k)/waveformHist->GetBinContent(waveformHist->GetMaximumBin() ) );
+        waveformHist->SetBinError(k, 0.25*waveformHist->GetBinContent(k)/sqrt(hNWvfms->GetBinContent(idb+1)) );
+        std::cout << "After " << waveformHist->GetBinError(k) << std::endl;
+        std::cout << "--------------------------" << std::endl;
+      }
+      */
+
       while (chisqNdf > 1) {
         waveformHist->Fit(gausfit, "q", "", 
                           fitRanges.first, fitRanges.second);
@@ -374,9 +388,11 @@ void makePlot(std::string inputFileName){
         sigmaErr = gausfit->GetParError(2);
         chisqNdf = chisq/ndf;
         increaseError(waveformHist);
+        if (iter==0) {
+          std::cout << "Starting error = " << sigmaErr << std::endl;
+        }
         iter++;
       }
-      iter=0;
       
       std::cout << "Num iter  = " << iter              << std::endl;
       std::cout << "chi^2     = " << chisq             << std::endl;
@@ -389,6 +405,10 @@ void makePlot(std::string inputFileName){
       if (isMakeWaveformPlots){
         TCanvas *c_test = new TCanvas("c_test", "", 750, 550);
         c_test->cd();
+        int zoomFactor = 10;
+        waveformHist->GetXaxis()->SetRangeUser(gausfit->GetParameter(1)-zoomFactor, gausfit->GetParameter(1)+zoomFactor );
+        waveformHist->Draw();
+        gausfit->Draw("same");
         gStyle->SetOptFit(1);
         waveformHist->Draw("e1");
         TString waveformHistName = Form("waveformHist_%i", idb);
@@ -428,12 +448,14 @@ void makePlot(std::string inputFileName){
       // get pulse width squared
       sigmaSqrVals    [ip][idb] = std::pow(sigma,2);
       sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
+      std::cout << "sigma = " << sigma << std::endl;
+      std::cout << "sigmaErr = " << sigmaErr << std::endl;
       std::cout << "sigmaSqrValsErrs = " << sigmaSqrValsErrs[ip][idb] << std::endl;
 
     }
   }
 
-  TCanvas *c1 = new TCanvas("c1", "c1", 500, 1000);
+  TCanvas *c1 = new TCanvas("c1", "c1", 600, 600);
   c1->cd();
   gStyle->SetTextFont(43);
   TPad* uCan = new TPad("uCan", "", 0.005, 0.3 , 0.995, 0.995);
@@ -447,7 +469,7 @@ void makePlot(std::string inputFileName){
   uCan->Draw();
   uRat->Draw();
 
-	TCanvas *c2 = new TCanvas("c2", "c2", 500, 500);
+	TCanvas *c2 = new TCanvas("c2", "c2", 600, 600);
   TPad* vCan = new TPad("vCan", "", 0.005, 0.3 , 0.995, 0.995);
   TPad* vRat = new TPad("vRat", "", 0.005, 0.005 , 0.995, 0.3);
   vCan->SetTopMargin(0.07);
@@ -459,7 +481,7 @@ void makePlot(std::string inputFileName){
   vCan->Draw();
   vRat->Draw();
 
-	TCanvas *c3 = new TCanvas("c3", "c3", 500, 500);
+	TCanvas *c3 = new TCanvas("c3", "c3", 600, 600);
   TPad* yCan = new TPad("yCan", "", 0.005, 0.3 , 0.995, 0.995);
   TPad* yRat = new TPad("yRat", "", 0.005, 0.005 , 0.995, 0.3);
   yCan->SetTopMargin(0.07);
@@ -474,6 +496,7 @@ void makePlot(std::string inputFileName){
   TGraph* uGr = new TGraphErrors(numDriftBins,
                                  driftTimes[0], sigmaSqrVals[0],
                                  driftTimesErrs[0], sigmaSqrValsErrs[0]);
+  if(!uGr) std::cout << "AHHHHHH" << std::endl;
 
   TGraph* vGr = new TGraphErrors(numDriftBins,
                                  driftTimes[1], sigmaSqrVals[1],
