@@ -93,6 +93,9 @@ class DiffusionFilter : public art::EDFilter {
     double fTrackAngleCutYZHigh;
     float driftVelocity;
 
+    int run;
+    int subRun;
+    int event; 
     double thisTrackLength;
     double thisTrackStartX;
     double thisTrackStartX_t0Corr;

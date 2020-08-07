@@ -1,10 +1,10 @@
 <!-- project details -->
 <!DOCTYPE project [
-<!ENTITY release "v08_00_00_25">
+<!ENTITY release "v08_00_00_45">
 <!ENTITY name "single_muons">
 <!ENTITY user "amogan">
 <!ENTITY prod_mode "prod">
-<!ENTITY out_name "single_muons_SCEcorrected_angular">
+<!ENTITY out_name "single_muons_Aug2020_fwdgoing">
 <!ENTITY persistent_dir "/pnfs/uboone/persistent/users/amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/amogan">
 <!ENTITY res_dir "/pnfs/uboone/resilient/users/amogan">
@@ -35,7 +35,7 @@
         <larsoft>
             <tag>&release;</tag>    
             <qual>e17:prof</qual>
-            <local>&tar_dir;/v08_00_00_25_Diffusion_SCE.tar</local>
+            <!--<local>&tar_dir;/v08_00_00_25_Diffusion_SCE.tar</local>-->
         </larsoft> 
 
         <check>0</check>
@@ -48,9 +48,7 @@
             <fcl>wirecell_detsim_uboone.fcl</fcl> 
             <!--<fcl>&my_other_fcl_dir;/wirecell_detsim_DL_down_uboone.fcl</fcl> -->
             <fcl>reco_uboone_mcc9_8_driver_stage1.fcl</fcl>
-            <fcl>reco_uboone_mcc9_8_driver_stage2.fcl</fcl>
-            <!-- <fcl>run_sigma_map.fcl</fcl> -->
-            <!-- <fcl>run_diffusion_module.fcl</fcl> -->
+            <fcl>reco_uboone_mcc9_8_driver_stage2_fullMC.fcl</fcl>
             <maxfluxfilemb>0</maxfluxfilemb>
             <maxfilesperjob>1</maxfilesperjob>
             <memory>4000</memory>

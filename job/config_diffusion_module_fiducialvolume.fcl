@@ -5,12 +5,12 @@ DiffusionFiducialVolume: {
   # First entry are the borders for the first volume, 
   # second entry for the second fiducial volume
 
-  BorderXLow:   [0.]
-  BorderXHigh:  [0.]
-  BorderYLow:   [0.]
-  BorderYHigh:  [0.]
-  BorderZLow:   [400.]
-  BorderZHigh:  [50.]
+  BorderXLow:   [0.,0.]
+  BorderXHigh:  [0.,0.]
+  BorderYLow:   [0.,0.]
+  BorderYHigh:  [0.,0.]
+  BorderZLow:   [400. , 775.]
+  BorderZHigh:  [361.8, 85. ]
 
 }
 

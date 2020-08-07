@@ -4,7 +4,7 @@
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_25">
 <!ENTITY name "crt">
-<!ENTITY outname "run3_g1_crt_throughgoing_SCE/">
+<!ENTITY outname "run3_crt_Aug2020_newFV/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
@@ -39,7 +39,7 @@
         <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
         <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
         <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
-        <numjobs>91</numjobs> <!-- 91 -->
+        <numjobs>169</numjobs> <!-- 91 -->
         <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
         <numevents>50000</numevents> <!-- ~50 events/file * 50 files/job -->
         <memory>2000</memory>
@@ -50,20 +50,20 @@
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt_throughgoing_SCE.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt_Aug2020_newFV.list</inputlist> 
         <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>19</numjobs> 
+        <numjobs>33</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
         <memory>1600</memory>
         <disk>30GB</disk>
         <datatier>diffusionsigmamap</datatier>
-        <schema>root</schema>
-        <!--<schema>griftp</schema>-->
+        <!--<schema>root</schema>-->
+        <schema>griftp</schema>
    </stage>
 
    <!-- diffusion ana -->
@@ -71,13 +71,13 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt_throughgoing_SCE.list</inputlist> 
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_run3_crt_Aug2020_newFV.list</inputlist> 
         <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>19</numjobs> 
+        <numjobs>33</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
         <memory>6000</memory>

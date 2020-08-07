@@ -190,7 +190,7 @@ void make_diffusion_selection_validation_plots(){
   TLegend *leg = new TLegend(0.55, 0.65, 0.8, 0.9);
   gStyle->SetLegendBorderSize(0);
   leg->AddEntry(lengthTracks_length, "Tracks > 50 cm", "l");
-  leg->AddEntry(t0Tracks_length, "#T0-tagged Tracks", "l");
+  leg->AddEntry(t0Tracks_length, "t_{0}-tagged Tracks", "l");
   leg->AddEntry(fidVolTracks_length, "Throughgoing Tracks", "l");
   leg->AddEntry(selTracks_length, "Angle Cuts", "l");
   leg->Draw("same");

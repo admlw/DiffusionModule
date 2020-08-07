@@ -27,14 +27,14 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   std::string sigma0String =
     "#sigma_{0}^{2}: "
     + to_string_with_precision(sig0     , 2) 
-    + "+/-" 
-    + to_string_with_precision(sig0err  , 2);
+    + " +/- " 
+    + to_string_with_precision(sig0err  , 2)
     + " #mus^{2}";
 
   //TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
 
   //TPaveText* tpv = new TPaveText(0.12, 0.60, 0.7, 0.90, "NDC");
-  TPaveText* tpv = new TPaveText(0.16, 0.64, 0.7, 0.89, "NDC");
+  TPaveText* tpv = new TPaveText(0.16, 0.69, 0.7, 0.89, "NDC");
 
   tpv->SetTextAlign(11);
   tpv->SetFillStyle(0);
@@ -43,7 +43,7 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   tpv->SetTextSize(18);
   tpv->AddText(plane.c_str());
   tpv->AddText(diffString.c_str());
-  tpv->AddText(chisqString.c_str());
+  //tpv->AddText(chisqString.c_str());
   tpv->AddText(sigma0String.c_str());
   tpv->DrawClone("same");
 }
@@ -97,6 +97,7 @@ std::pair<float, float> getFitRange(TH1D* wvfm){
   return fitRanges;
 }
 
+// Moving away from this as of June 2020
 void increaseError(TH1D* h){
   for (int i = 0; i < h->GetNbinsX(); i++){
     h->SetBinError(i+1, h->GetBinError(i+1)*1.02);
@@ -190,14 +191,14 @@ void makePlot(std::string inputFileName){
   const int  waveformDriftEndTick   = 5400;
   const int  waveformDriftSize      = waveformDriftEndTick
                                       -waveformDriftStartTick; // End tick (5400 - 800)
-  const int  numWaveformCut         = 0;                     // Cut bins with fewer than this number of waveforms
+  const int  numWaveformCut         = 1000;                       // Cut bins with fewer than this number of waveforms
   const int  numDriftBins           = 25;
   int        numTicksPerBin         = waveformDriftSize 
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = false;
-  const bool isMakeWaveformPlots    = true;
+  const bool isData                 = true;
+  const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
   // For data measurement, use drift velocity at anode. For MC, use
@@ -267,8 +268,8 @@ void makePlot(std::string inputFileName){
 
     c->cd();
 
-    std::string drawString = "hit_peak_time >> hPeakTime" + planeName;
-    //std::string drawString = "hit_peak_time_t0corr >> hPeakTime" + planeName;
+    //std::string drawString = "hit_peak_time >> hPeakTime" + planeName;
+    std::string drawString = "hit_peak_time_t0corr >> hPeakTime" + planeName;
     std::string cutString  = "hit_view == "+std::to_string(ip);
     t->Draw(drawString.c_str(), cutString.c_str());
 
@@ -378,6 +379,8 @@ void makePlot(std::string inputFileName){
       }
       */
 
+      /*
+      // Moved away from this as of June 2020
       while (chisqNdf > 1) {
         waveformHist->Fit(gausfit, "q", "", 
                           fitRanges.first, fitRanges.second);
@@ -393,8 +396,17 @@ void makePlot(std::string inputFileName){
         }
         iter++;
       }
+      */
       
-      std::cout << "Num iter  = " << iter              << std::endl;
+      waveformHist->Fit(gausfit, "q", "", 
+                        fitRanges.first, fitRanges.second);
+
+      chisq    = gausfit->GetChisquare();
+      ndf      = gausfit->GetNDF();
+      sigma    = gausfit->GetParameter(2);
+      sigmaErr = gausfit->GetParError(2);
+      chisqNdf = chisq/ndf;
+
       std::cout << "chi^2     = " << chisq             << std::endl;
       std::cout << "NDF       = " << ndf               << std::endl;
       std::cout << "chi^2/NDF = " << (double)chisq/ndf << std::endl;
@@ -447,10 +459,11 @@ void makePlot(std::string inputFileName){
 
       // get pulse width squared
       sigmaSqrVals    [ip][idb] = std::pow(sigma,2);
-      sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
+      //sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
+      sigmaSqrValsErrs[ip][idb] = 1e-9;
       std::cout << "sigma = " << sigma << std::endl;
-      std::cout << "sigmaErr = " << sigmaErr << std::endl;
-      std::cout << "sigmaSqrValsErrs = " << sigmaSqrValsErrs[ip][idb] << std::endl;
+      //std::cout << "sigmaErr = " << sigmaErr << std::endl;
+      //std::cout << "sigmaSqrValsErrs = " << sigmaSqrValsErrs[ip][idb] << std::endl;
 
     }
   }
@@ -588,7 +601,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(2)->SetNpx(1000);
 
   uCan->cd();
-  uGr->SetTitle(";;#sigma^{2}");
+  uGr->SetTitle(";;#sigma_{t}^{2}");
   uGr->Draw("ap");
   fitVec.at(0)->Draw("same");
   if (nWvfmsVec.at(0)->Integral() > 0){
@@ -602,7 +615,7 @@ void makePlot(std::string inputFileName){
 
   uRat->cd();
   uRat->SetGridy();
-  uGrR->SetTitle(";Drift time (#mus);(#sigma^{2}-Fit)/#sigma^{2}");
+  uGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/#sigma^{2}");
   uGrR->Draw("ap");
 
   TF1* lin = new TF1("lin", "0.", 0, maxTime-minTime); 
@@ -610,7 +623,7 @@ void makePlot(std::string inputFileName){
   lin->DrawClone("same");
 
   vCan->cd();
-  vGr->SetTitle(";;#sigma^{2}");
+  vGr->SetTitle(";;#sigma_{t}^{2}");
   vGr->Draw("ap");
   fitVec.at(1)->Draw("same");
   if (nWvfmsVec.at(1)->Integral() > 0){
@@ -624,13 +637,13 @@ void makePlot(std::string inputFileName){
 
   vRat->cd();
   vRat->SetGridy();
-  vGrR->SetTitle(";Drift time (#mus);(#sigma^{2}-Fit)/#sigma^{2}");
+  vGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/#sigma^{2}");
   vGrR->Draw("ap");
   lin->SetLineColor(kGreen+1);
   lin->DrawClone("same");
 
   yCan->cd();
-  yGr->SetTitle(";;#sigma^{2}");
+  yGr->SetTitle(";;#sigma_{t}^{2}");
   yGr->Draw("ap");
   fitVec.at(2)->Draw("same");
   if (nWvfmsVec.at(2)->Integral() > 0){
@@ -645,17 +658,17 @@ void makePlot(std::string inputFileName){
 
   yRat->cd();
   yRat->SetGridy();
-  yGrR->SetTitle(";Drift time (#mus);(#sigma^{2}-Fit)/#sigma^{2}");
+  yGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/#sigma^{2}");
   yGrR->Draw("ap");
   lin->SetLineColor(kRed);
   lin->DrawClone("same");
 
 	c1->cd();
-  c1->SaveAs("output_uplane.png");
+  c1->SaveAs("output_uplane.pdf");
 	c2->cd();
-  c2->SaveAs("output_vplane.png");
+  c2->SaveAs("output_vplane.pdf");
 	c3->cd();
-  c3->SaveAs("output_yplane.png");
+  c3->SaveAs("output_yplane.pdf");
 
   fOutput->Close();
   fInput->Close();

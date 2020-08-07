@@ -183,8 +183,8 @@ class diffmod::LArDiffusion : public art::EDAnalyzer {
     // For dynamic sigma cut
     std::vector<double> sigmaMedians;
     std::vector<double> pulseHeightMedians;
-    //std::vector<double> sigmaMaxs;
-    //std::vector<double> pulseHeightMaxs;
+    std::vector<double> sigmaMaxs;
+    std::vector<double> pulseHeightMaxs;
 
     // For truncated mean calculation; needs to be float
     std::vector<float> sigmaDistsPerBin;
@@ -602,7 +602,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               binEdgeLeft, 
               binEdgeRight);
 
-          // if maximum tick of the histogram is in this deift bin, grab it! 
+          // if maximum tick of the histogram is in this drift bin, grab it! 
           if (thit_maximum_tick.back() >= binEdgeLeft && thit_maximum_tick.back() < binEdgeRight) {
 
             twvfm_bin_no.push_back(bin_it);
@@ -654,21 +654,12 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               h_wvfm_pulse_height_v_bin_precut  .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_pulse_height.back());
               h_sigma_v_wvfm_pulse_height_precut.at(thisHit->View())->Fill(twvfm_fit_sigma.back(), twvfm_pulse_height.back());
               h_sigma_hist_medians              .at(thisHit->View())->Fill(sigmaMedians.at(bin_it));
-              //h_sigma_hist_maxs                 .at(thisHit->View())->Fill(sigmaMaxs   .at(bin_it));
+              h_sigma_hist_maxs                 .at(thisHit->View())->Fill(sigmaMaxs   .at(bin_it));
 
               // Dynamic sigma cut: check if pulseHeight, sigma, 
               // fall within some region around the median
-              /*
-              double sigma_lowerLimit = 
-              sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(twvfm_bin_no)->GetStdDev();
-              double sigma_higherLimit = 
-              sigmaMedians.at(bin_it) + sigma_cut * h_sigma_hists.at(twvfm_bin_no)->GetStdDev();
-              double pulseHeight_lowerLimit = 
-              pulseHeightMedians.at(bin_it) - wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(wvfm_bin_no)->GetStdDev();
-              double pulseHeight_higherLimit = 
-              pulseHeightMedians.at(bin_it) + wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(wvfm_bin_no)->GetStdDev();
-              */
 
+              // Median (default)
               double sigma_lowerLimit = 
                 sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double sigma_higherLimit = 
@@ -678,7 +669,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               double pulseHeight_higherLimit = 
                 pulseHeightMedians.at(bin_it) + wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
 
-              // Maximum 
+              // Maximum (for cross-check studies)
               /*
               double sigma_lowerLimit = 
                 sigmaMaxs.at(bin_it) - sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
@@ -688,7 +679,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
                 pulseHeightMaxs.at(bin_it) - wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double pulseHeight_higherLimit = 
                 pulseHeightMaxs.at(bin_it) + wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
-                */
+              */
 
               if (twvfm_fit_sigma.back() < sigma_lowerLimit 
                   || twvfm_fit_sigma.back() > sigma_higherLimit 
@@ -845,13 +836,13 @@ void diffmod::LArDiffusion::beginJob()
 
     h_sigma_v_bin_precut.push_back(theseTDs.back().make<TH2D>(
           ("h_sigma_v_bin_precut"+folderNames.at(ifN)).c_str(), 
-          ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", 
+          ";Bin no. ; Hit Width^{2} (#mus^{2});", 
           number_time_bins, 0, number_time_bins, 
           100, 0, 10));
 
     h_sigma_v_bin_postcut.push_back(theseTDs.back().make<TH2D>(
           ("h_sigma_v_bin_postcut"+folderNames.at(ifN)).c_str(), 
-          ";Bin no. ; #sigma_{t}^{2} (#mus^{2});", 
+          ";Bin no. ; Hit Width^{2} (#mus^{2});", 
           number_time_bins, 0, number_time_bins, 
           100, 0, 10));
 
@@ -971,14 +962,13 @@ void diffmod::LArDiffusion::beginJob()
         pulseHeightMedians.push_back(_waveform_func.getMedian(h_wvfm_pulse_height_hists.at(ifN).at(i)));
 
         // OPTION 2) Calculate maximum in each bin
-        //int sigmaMaxBin       = h_sigma_hists.at(ifN).at(i)->GetMaximumBin();
-        //int pulseHeightMaxBin = h_wvfm_pulse_height_hists.at(ifN).at(i)->GetMaximumBin();
+        int sigmaMaxBin       = h_sigma_hists.at(ifN).at(i)->GetMaximumBin();
+        int pulseHeightMaxBin = h_wvfm_pulse_height_hists.at(ifN).at(i)->GetMaximumBin();
 
-        //sigmaMaxs      .push_back(h_sigma_hists.at(ifN).at(i)->GetXaxis()->GetBinCenter(sigmaMaxBin));
-        //pulseHeightMaxs.push_back(h_wvfm_pulse_height_hists.at(ifN).at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin));
+        sigmaMaxs      .push_back(h_sigma_hists.at(ifN).at(i)->GetXaxis()->GetBinCenter(sigmaMaxBin));
+        pulseHeightMaxs.push_back(h_wvfm_pulse_height_hists.at(ifN).at(i)->GetXaxis()->GetBinCenter(pulseHeightMaxBin));
 
         // OPTION 3) Take sigma hist and calculate truncated mean 
-        /*
         for (int j = 1; j < h_sigma_hists.at(ifN).at(i)->GetNbinsX()+1; j++) {
           if (h_sigma_hists.at(ifN).at(i)->GetBinContent(j) > 0) {
             for (int k = 0; k < h_sigma_hists.at(ifN).at(i)->GetBinContent(j); k++ ) {
@@ -998,8 +988,7 @@ void diffmod::LArDiffusion::beginJob()
               0.02,                // convergence limit
               1);                  // nsigma
         }
-        */
-        //MF_LOG_VERBATIM("LArDiffusion") << sigmaMedians.at(i) << "\t" << sigmaMaxs.at(i) << "\t" << trunc_mean;
+        MF_LOG_VERBATIM("LArDiffusion") << sigmaMedians.at(i) << "\t" << sigmaMaxs.at(i) << "\t" << trunc_mean;
       }
     }
     else {
