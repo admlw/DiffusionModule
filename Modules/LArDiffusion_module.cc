@@ -928,6 +928,8 @@ void diffmod::LArDiffusion::beginJob()
           << "\nor check that you're in the right directory.";
       }
 
+      sigmaMaxs.resize(0);
+      sigmaMedians.resize(0);
       for (int i = 0; i < number_time_bins; i++){
 
         // declare summed waveforms
@@ -945,6 +947,7 @@ void diffmod::LArDiffusion::beginJob()
               waveform_intime_start + ((i+1) * number_ticks_per_bin)));
 
         sigmaDistsPerBin.resize(0);
+
 
         std::string sigmaMapHistoName = "DiffusionModule/"+folderNames.at(ifN)+"/h_sigma_"+std::to_string(i)+"_"+folderNames.at(ifN);
         h_sigma_hists.at(ifN).push_back((TH1D*)sigmaMap.Get(sigmaMapHistoName.c_str()));
