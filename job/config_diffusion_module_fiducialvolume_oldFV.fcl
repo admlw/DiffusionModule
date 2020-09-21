@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+DiffusionFiducialVolume: {
+
+  # First entry are the borders for the first volume, 
+  # second entry for the second fiducial volume
+
+  BorderXLow:   [0.]
+  BorderXHigh:  [0.]
+  BorderYLow:   [0.]
+  BorderYHigh:  [0.]
+  BorderZLow:   [400.]
+  BorderZHigh:  [50.]
+
+}
+
+END_PROLOG

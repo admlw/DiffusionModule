@@ -354,10 +354,17 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
     }
     else {
-      // TODO: Make sure this matches the t0 in the generator fcl file if using single muons 
+      // Make sure this matches the t0 in the generator fcl file if using single muons 
       //track_t0->push_back(waveform_intime_start); // time in us
       track_t0->push_back(0.); // time in us
     }
+
+    // If using a single muon (MC) sample, do track selection here, since
+    // we don't run the filter over MC samples
+    if (!use_t0tagged_tracks && (thisTrack->Length()<50. 
+                                 || _util.getThetaXZ(thisTrack)>6.
+                                 || _util.getThetaYZ(thisTrack)>40.) 
+    ) continue;
 
     track_t0_x_shift    ->push_back(track_t0->back() * drift_velocity); // convert to x offset
     track_t0_tick_shift ->push_back(track_t0->back() * 2);              // convert to ticks

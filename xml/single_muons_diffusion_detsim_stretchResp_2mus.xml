@@ -1,10 +1,10 @@
 <!-- project details -->
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_47">
-<!ENTITY name "single_muons">
+<!ENTITY name "single_muons_detsim_stretchResp_2mus">
 <!ENTITY user "amogan">
 <!ENTITY prod_mode "prod">
-<!ENTITY out_name "single_muons_Sep2020_DL_down_50percent">
+<!ENTITY out_name "single_muons_Sep2020_DL_detsim_stretchResp_2mus">
 <!ENTITY persistent_dir "/pnfs/uboone/persistent/users/amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/amogan">
 <!ENTITY res_dir "/pnfs/uboone/resilient/users/amogan">
@@ -41,10 +41,9 @@
         <check>0</check>
         <copy>0</copy>
 
-        <stage name = "all">
-            <fcl>&my_fcl_dir;/prod_muminus_fwdgoing_custom_diffusion.fcl</fcl>
-            <fcl>wirecell_g4_uboone.fcl</fcl> 
-            <fcl>wirecell_detsim_DL_down_50percent_uboone.fcl</fcl> 
+        <stage name = "detsim">
+            <inputlist>input_single_muons_g4.list</inputlist>
+            <fcl>wirecell_detsim_stretchResponse_2mus_uboone.fcl</fcl> 
             <fcl>reco_uboone_mcc9_8_driver_stage1.fcl</fcl>
             <fcl>reco_uboone_mcc9_8_driver_stage2_fullMC.fcl</fcl>
             <maxfluxfilemb>0</maxfluxfilemb>

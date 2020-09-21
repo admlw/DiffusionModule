@@ -34,7 +34,7 @@ services.DetectorClocksService.InheritClockConfig:       false
 physics.analyzers.DiffusionModule.MakeSigmaMap:          false
 physics.analyzers.DiffusionModule.FillTree:              true
 physics.analyzers.DiffusionModule.UseT0TaggedTracks:     false
-physics.analyzers.DiffusionModule.SigmaMapFilePath:      "/DiffusionData/sigma_map_single_muons_Aug2020_newFV.root"
+physics.analyzers.DiffusionModule.SigmaMapFilePath:      "/DiffusionData/sigma_map_single_muons_detsim_stretchResp_1mus.root"
 physics.analyzers.DiffusionModule.SigmaMapDirectoryFile: "DiffusionModule"
 physics.analyzers.DiffusionModule.TrackLabel:            "pandora"
 physics.analyzers.DiffusionModule.HitLabel:              "gaushit"

@@ -94,14 +94,22 @@ int main(int argv, char** argc){
 
             TString chanNo = Form("Event_%i_TimeWfm_channel%i", event, channel);
             waveform->SetName(chanNo);
-
             for (size_t i = 0; i < nTicks; i++){
                 waveform->SetBinContent(i, rawD.ADC(i)/*-rawD.GetPedestal()*/);
                 ADCs->Fill(rawD.ADC(i)/*-rawD.GetPedestal()*/);
             }
 
-            std::cout << "channel: " << channel << std::endl;
-            std::cout << "RMS total: " << ADCs->GetRMS() << std::endl;
+            //std::cout << "Event " << event << " channel " << channel << std::endl;
+            //std::cout << "Waveform peak " << waveform->GetMaximum() << std::endl;
+
+            /*
+            if (ADCs->GetRMS() > 10.0 || ADCs->GetMaximum() > 0.0 ) {
+                std::cout << "Event: " << event << std::endl;
+                std::cout << "channel: " << channel << std::endl;
+                std::cout << "Peak: " << ADCs->GetMaximum() << std::endl;
+                std::cout << "RMS total: " << ADCs->GetRMS() << std::endl;
+            }
+            */
 
             double rms = 0;
             if (ADCs->Integral() != 0){
@@ -118,7 +126,7 @@ int main(int argv, char** argc){
 
             TString ADCsName = Form("Event_%i_ADCs_channel%i", event, channel);
             ADCs->SetName(ADCsName);
-            std::cout << "RMS truncated " << rms << std::endl;
+            //std::cout << "RMS truncated " << rms << std::endl;
 
             TString frqname = Form("Event_%i_FrequencyWfm_channel%i", event, channel);
             frqspace = (TH1*)waveform->FFT(frqspace, "MAG");

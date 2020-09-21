@@ -3,8 +3,8 @@
 <!-- project details -->
 <!DOCTYPE project [
 <!ENTITY release "v08_00_00_25">
-<!ENTITY name "single_muons">
-<!ENTITY outname "single_muons_Sep2020/">
+<!ENTITY name "crt">
+<!ENTITY outname "prod_muminus/">
 <!ENTITY user "amogan">
 <!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
 <!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
@@ -27,18 +27,35 @@
     <larsoft>
         <tag>&release;</tag>
         <qual>e17:prof</qual>
-        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_47_Diffusion.tar</local> 
+        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_25_Diffusion_SCE.tar</local> 
     </larsoft>
+
+   <!-- diffusion filter -->
+   <stage name="diffusionfilter">
+        <inputdef>prod_singleparticle_isotropic_muminus_v08_00_00_35_reco1_reco2_reco2</inputdef> 
+        <fcl>run_diffusion_filter_MC.fcl</fcl>
+        <bookdir>&data_dir;&outname;diffusion_filter</bookdir>
+        <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
+        <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
+        <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
+        <numjobs>80</numjobs> <!-- 91 -->
+        <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
+        <numevents>50000</numevents> <!-- ~50 events/file * 50 files/job -->
+        <memory>2000</memory>
+        <disk>30GB</disk>
+        <datatier>diffusionfilter</datatier>
+        <schema>root</schema>
+   </stage>
 
    <!-- diffusion sigma map production -->
    <stage name="diffusionsigmamap">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_single_muons_detsim_stretchResp_1mus_Sep2020.list</inputlist> 
-        <fcl>run_diffusion_module_sigmamap_MC.fcl</fcl>
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_prod_muminus_200k.list</inputlist> 
+        <fcl>run_diffusion_module_sigmamap.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
         <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
         <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
-        <numjobs>4</numjobs> 
+        <numjobs>16</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
         <memory>1600</memory>
@@ -53,19 +70,20 @@
         and configure the path in this fhicl file in order for this 
         to work -->
    <stage name="diffusionana">
-        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_single_muons_detsim_stretchResp_1mus_Sep2020.list</inputlist> 
-        <fcl>run_diffusion_module_ana_MC.fcl</fcl>
+        <inputlist>/uboone/app/users/amogan/diffusion_mcc9/workdir/input_prod_muminus_200k.list</inputlist> 
+        <fcl>run_diffusion_module_ana.fcl</fcl>
         <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
         <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
         <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
         <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
-        <numjobs>19</numjobs> 
+        <numjobs>16</numjobs> 
         <maxfilesperjob>5</maxfilesperjob>
         <numevents>10000</numevents>
-        <memory>1600</memory>
+        <memory>6000</memory>
         <disk>30GB</disk>
         <datatier>diffusionana</datatier>
-        <schema>root</schema>
+        <!--<schema>root</schema>-->
+        <schema>griftp</schema>
    </stage>
 
 </project>

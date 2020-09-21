@@ -9,7 +9,11 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
   return out.str();
 }
 
-void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf, double sig0, double sig0err){
+void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf, double sig0, double sig0err, bool isData){
+
+  std::string isDataString;
+  if (isData) isDataString = "MicroBooNE Run 3 Cosmic Data";
+  else        isDataString = "MicroBooNE Simulation";
 
   std::string diffString =
     "D_{L}: " 
@@ -41,6 +45,7 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   tpv->SetLineWidth(0);
   tpv->SetTextFont(43);
   tpv->SetTextSize(18);
+  tpv->AddText(isDataString.c_str());
   tpv->AddText(plane.c_str());
   tpv->AddText(diffString.c_str());
   //tpv->AddText(chisqString.c_str());
@@ -191,13 +196,13 @@ void makePlot(std::string inputFileName){
   const int  waveformDriftEndTick   = 5400;
   const int  waveformDriftSize      = waveformDriftEndTick
                                       -waveformDriftStartTick; // End tick (5400 - 800)
-  const int  numWaveformCut         = 1000;                       // Cut bins with fewer than this number of waveforms
+  const int  numWaveformCut         = 0;                       // Cut bins with fewer than this number of waveforms
   const int  numDriftBins           = 25;
   int        numTicksPerBin         = waveformDriftSize 
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = true;
+  const bool isData                 = false;
   const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
@@ -206,6 +211,7 @@ void makePlot(std::string inputFileName){
   // because that's what the simulation expects, even though we think
   // the anode drift velocity is the better thing to use
   if (isData) driftVelocity = 0.10762;  // Anode drift velocity
+  //if (isData) driftVelocity = 0.1130;  // 5% variations: 0.10224, 0.1130
   else        driftVelocity = 0.1098;   // Average drift velocity
 
   TFile *fInput = new TFile(inputFileName.c_str(), "READ");
@@ -611,7 +617,7 @@ void makePlot(std::string inputFileName){
     nWvfmsVec.at(0)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(0)->Draw("hist same");
   }
-  drawPaveText("U Plane", uDiffV, uDiffE, uChiSqr, uNdf, uSig0, uSig0Err);
+  drawPaveText("U Plane", uDiffV, uDiffE, uChiSqr, uNdf, uSig0, uSig0Err, isData);
 
   uRat->cd();
   uRat->SetGridy();
@@ -633,7 +639,7 @@ void makePlot(std::string inputFileName){
     nWvfmsVec.at(1)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(1)->Draw("hist same");
   }
-  drawPaveText("V Plane", vDiffV, vDiffE, vChiSqr, vNdf, vSig0, vSig0Err);
+  drawPaveText("V Plane", vDiffV, vDiffE, vChiSqr, vNdf, vSig0, vSig0Err, isData);
 
   vRat->cd();
   vRat->SetGridy();
@@ -654,7 +660,7 @@ void makePlot(std::string inputFileName){
     nWvfmsVec.at(2)->Draw("hist same");
     yCan->RedrawAxis();
   }
-  drawPaveText("Y Plane", yDiffV, yDiffE, yChiSqr, yNdf, ySig0, ySig0Err);
+  drawPaveText("Y Plane", yDiffV, yDiffE, yChiSqr, yNdf, ySig0, ySig0Err, isData);
 
   yRat->cd();
   yRat->SetGridy();
