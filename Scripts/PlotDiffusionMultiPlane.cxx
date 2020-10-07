@@ -202,7 +202,7 @@ void makePlot(std::string inputFileName){
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = false;
+  const bool isData                 = true;
   const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
@@ -235,6 +235,7 @@ void makePlot(std::string inputFileName){
   double driftTimesErrs  [3][numDriftBins]; 
   double sigmaSqrVals    [3][numDriftBins]; 
   double sigmaSqrValsErrs[3][numDriftBins];
+  double chisqVals       [3][numDriftBins];
 
 
   // define output file
@@ -295,7 +296,7 @@ void makePlot(std::string inputFileName){
       throw std::logic_error ("bad waveform histogram");
 
     // loop over the drift bins for this plane
-    TH1D* waveformHist;
+    TH1D *waveformHist;
     for (int idb = 0; idb < numDriftBins; ++idb){
       std::cout 
         << "Looping plane " 
@@ -412,6 +413,8 @@ void makePlot(std::string inputFileName){
       sigma    = gausfit->GetParameter(2);
       sigmaErr = gausfit->GetParError(2);
       chisqNdf = chisq/ndf;
+      
+      chisqVals[ip][idb] = chisqNdf;
 
       std::cout << "chi^2     = " << chisq             << std::endl;
       std::cout << "NDF       = " << ndf               << std::endl;
@@ -675,6 +678,51 @@ void makePlot(std::string inputFileName){
   c2->SaveAs("output_vplane.pdf");
 	c3->cd();
   c3->SaveAs("output_yplane.pdf");
+
+	TCanvas *c4 = new TCanvas("c4");
+  c4->cd();
+  TGraph* g_chisqVdriftTimeU = new TGraph(numDriftBins,
+                                          driftTimes[0], 
+                                          chisqVals [0]
+  );
+  g_chisqVdriftTimeU->SetMarkerStyle(8);
+  g_chisqVdriftTimeU->SetMarkerSize(1);
+  g_chisqVdriftTimeU->SetTitle("");
+  g_chisqVdriftTimeU->GetXaxis()->SetTitle("Drift Time (#mus)");
+  g_chisqVdriftTimeU->GetXaxis()->SetNdivisions(505);
+  g_chisqVdriftTimeU->GetYaxis()->SetTitle("Gaus Fit #chi^{2}/NDF");
+  g_chisqVdriftTimeU->Draw("ap");
+  c4->SaveAs("chisqVdriftTimeU.pdf", "PDF");
+
+	TCanvas *c5 = new TCanvas("c5");
+  c5->cd();
+  TGraph* g_chisqVdriftTimeV = new TGraph(numDriftBins,
+                                          driftTimes[1], 
+                                          chisqVals [1]
+  );
+  g_chisqVdriftTimeV->SetMarkerStyle(8);
+  g_chisqVdriftTimeV->SetMarkerSize(1);
+  g_chisqVdriftTimeV->SetTitle("");
+  g_chisqVdriftTimeV->GetXaxis()->SetTitle("Drift Time (#mus)");
+  g_chisqVdriftTimeV->GetXaxis()->SetNdivisions(505);
+  g_chisqVdriftTimeV->GetYaxis()->SetTitle("Gaus Fit #chi^{2}/NDF");
+  g_chisqVdriftTimeV->Draw("ap");
+  c5->SaveAs("chisqVdriftTimeV.pdf", "PDF");
+
+	TCanvas *c6 = new TCanvas("c6");
+  c6->cd();
+  TGraph* g_chisqVdriftTimeY = new TGraph(numDriftBins,
+                                          driftTimes[2], 
+                                          chisqVals [2]
+  );
+  g_chisqVdriftTimeY->SetMarkerStyle(8);
+  g_chisqVdriftTimeY->SetMarkerSize(1);
+  g_chisqVdriftTimeY->SetTitle("");
+  g_chisqVdriftTimeY->GetXaxis()->SetTitle("Drift Time (#mus)");
+  g_chisqVdriftTimeY->GetXaxis()->SetNdivisions(505);
+  g_chisqVdriftTimeY->GetYaxis()->SetTitle("Gaus Fit #chi^{2}/NDF");
+  g_chisqVdriftTimeY->Draw("ap");
+  c6->SaveAs("chisqVdriftTimeY.pdf", "PDF");
 
   fOutput->Close();
   fInput->Close();
