@@ -1,6 +1,7 @@
 void analyze_Emap() {
   //TFile *fin = new TFile("Emap-NTT-500-N3-S500_laserdata_v1098_cathode2548_vectorstart_notshiftcurve.root", "read");
-  TFile *fin = new TFile("Emap-NTT-1-MergedMapsSmoothCosmicAndLaserNoDriftVVolumeSmoothed_newCurve.root", "read");
+  TString dir = "/uboone/app/users/amogan/diffusion_mcc9/workdir/";
+  TFile *fin = new TFile(dir+"Emap-NTT-1-MergedMapsSmoothCosmicAndLaserNoDriftVVolumeSmoothed_newCurve.root", "read");
 
   TH3 *hin = (TH3*)fin->Get("Distorted_v_X");
   // Slice in X near anode (26 total bins on z axis)
@@ -9,12 +10,12 @@ void analyze_Emap() {
   TH1D *h_vdist = new TH1D("h_vdist", "", 50, 1.0, 1.2);
 
   // Initialize some stuff
-  //double v0 = 1.098; // mm/us
-  double v0 = 1.0762; // mm/us
+  //double vd = 1.098; // mm/us
+  double vd = 1.0762; // mm/us
   double vi = 0.;
   double tmp_v = 0.;
   bool useFV = true;
-  TString v0string = Form("v_{0} = %0.3f mm/#mus", v0);
+  TString vdstring = Form("v_{d} = %0.3f mm/#mus", vd);
 
   // Loop over bins, calculate (v_i - v_0)/v_0
   for (int i = 1; i < hproj->GetNbinsX()+1; i++) {
@@ -22,8 +23,8 @@ void analyze_Emap() {
       vi = hproj->GetBinContent(i, j); 
       //std::cout << "vi = " << vi << std::endl;
       //std::cout << "i, j  = " << i << ", " << j << std::endl;
-      //std::cout << "v0 - vi = " << v0 - vi << std::endl;
-      tmp_v = (vi - v0)/v0 * 100.; 
+      //std::cout << "vd - vi = " << vd - vi << std::endl;
+      tmp_v = (vi - vd)/vd * 100.; 
       if (useFV) {
         if (hproj->GetXaxis()->GetBinLowEdge(i) < 400. ||
            (hproj->GetXaxis()->GetBinLowEdge(i) > 675. && hproj->GetXaxis()->GetBinLowEdge(i) < 775.) ||
@@ -46,7 +47,7 @@ void analyze_Emap() {
   hproj->GetXaxis()->SetTitle("Z [cm]");
   hproj->GetYaxis()->SetTitle("Y [cm]");
   hproj->GetZaxis()->SetRangeUser(-3, 3);
-  hproj->SetTitle("(v_{x} - v_{0})/v_{0} [%] at X = 10 cm, "+v0string);
+  hproj->SetTitle("(v_{x} - v_{d})/v_{d} [%] at X = 10 cm, "+vdstring);
   hproj->Draw("colz");
   c1->SaveAs("vmap.pdf", "PDF");
 

@@ -202,7 +202,7 @@ void makePlot(std::string inputFileName){
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = true;
+  const bool isData                 = false;
   const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
@@ -414,7 +414,8 @@ void makePlot(std::string inputFileName){
       sigmaErr = gausfit->GetParError(2);
       chisqNdf = chisq/ndf;
       
-      chisqVals[ip][idb] = chisqNdf;
+      //chisqVals[ip][idb] = chisqNdf;
+      chisqVals[ip][idb] = chisq;
 
       std::cout << "chi^2     = " << chisq             << std::endl;
       std::cout << "NDF       = " << ndf               << std::endl;
@@ -518,7 +519,6 @@ void makePlot(std::string inputFileName){
   TGraph* uGr = new TGraphErrors(numDriftBins,
                                  driftTimes[0], sigmaSqrVals[0],
                                  driftTimesErrs[0], sigmaSqrValsErrs[0]);
-  if(!uGr) std::cout << "AHHHHHH" << std::endl;
 
   TGraph* vGr = new TGraphErrors(numDriftBins,
                                  driftTimes[1], sigmaSqrVals[1],
@@ -624,7 +624,7 @@ void makePlot(std::string inputFileName){
 
   uRat->cd();
   uRat->SetGridy();
-  uGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/#sigma^{2}");
+  uGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/Fit");
   uGrR->Draw("ap");
 
   TF1* lin = new TF1("lin", "0.", 0, maxTime-minTime); 
@@ -646,7 +646,7 @@ void makePlot(std::string inputFileName){
 
   vRat->cd();
   vRat->SetGridy();
-  vGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/#sigma^{2}");
+  vGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/Fit");
   vGrR->Draw("ap");
   lin->SetLineColor(kGreen+1);
   lin->DrawClone("same");
@@ -667,7 +667,7 @@ void makePlot(std::string inputFileName){
 
   yRat->cd();
   yRat->SetGridy();
-  yGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/#sigma^{2}");
+  yGrR->SetTitle(";Drift time (#mus);(#sigma_{t}^{2}-Fit)/Fit");
   yGrR->Draw("ap");
   lin->SetLineColor(kRed);
   lin->DrawClone("same");

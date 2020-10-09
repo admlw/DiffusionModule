@@ -10,7 +10,6 @@ void diffusionDemo()
   gStyle->SetTitleFont(132);
   gStyle->SetTextFont(22);
   gStyle->SetTextSize(0.04);
-  //TCanvas *c1 = new TCanvas("c1","",550,1000);
   TCanvas *c1 = new TCanvas("c1","",650,1000);
   c1->SetLeftMargin(0.20);
 
@@ -18,7 +17,7 @@ void diffusionDemo()
   TF1* lin[24];
 
   TString diffdir = "/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/";
-  TFile *fin = new TFile(diffdir+"diffmod_run3_crt.root", "READ");
+  TFile *fin = new TFile(diffdir+"diffmod_run3_crt_Aug2020_newFV_bugFix.root", "READ");
 
   for (int i = 0; i < 25; i++) {
 
@@ -98,7 +97,7 @@ void diffusionDemo()
     bool isData = 1;
     TPaveText* pt1 = new TPaveText(0.225, 0.80, 0.70, 0.92, "NDC");
     if (!isData) pt1->AddText("MicroBooNE Simulation");
-    else         pt1->AddText("MicroBooNE Run 3 CRT Data");
+    else         pt1->AddText("MicroBooNE Run 3 Cosmic Data");
     pt1->AddText("E = 273 V/cm");
     pt1->AddText("Y Plane");
     pt1->SetFillStyle(0);
