@@ -133,7 +133,7 @@ namespace diffmod {
     double rms2 = 1000;
     for (int i = -5; i <= 5; i++){
       TH1D* h_summedClone = (TH1D*)summedWaveform->Clone("h_summedClone");
-      TH1D* h_clone = (TH1D*)h->Clone("h_clone");
+      TH1D* h_clone       = (TH1D*)             h->Clone("h_clone");
   
       testXCorr = centerBin - h->FindBin(fit_mean) + i;
   
