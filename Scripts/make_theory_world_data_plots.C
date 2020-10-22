@@ -138,6 +138,50 @@ void make_theory_world_data_plots(){
   el_icarus->SetLineWidth(2);
   el_icarus->SetLineColor(kPink+1);
 
+  // bnl
+  Double_t el_bnlx[17]   = {0.1*1000     , 0.134*1000   , 0.150*1000   , 0.2*1000     , 0.27*1000    , 0.30*1000    , 
+                            0.4*1000     , 0.454*1000   , 0.5*1000     , 0.54*1000    , 0.6*1000     , 0.70*1000    ,
+                            0.8*1000     , 1.00*1000    , 1.125*1000   , 1.47*1000   , 2.0*1000};
+  Double_t el_bnlxu[17]  = {0            , 0            , 0            , 0            , 0            , 0            , 
+                            0            , 0            , 0            , 0            , 0            , 0            ,
+                            0            , 0            , 0            , 0            , 0};
+  Double_t el_bnlxd[17]  = {0            , 0            , 0            , 0            , 0            , 0            , 
+                            0            , 0            , 0            , 0            , 0            , 0            ,
+                            0            , 0            , 0            , 0            , 0};
+  Double_t el_bnly[17]   = {0.0135       , 0.0212       , 0.0133       , 0.0151       , 0.0222       , 0.0187       , 
+                            0.0194       , 0.0200       , 0.0315       , 0.0199       , 0.0271       , 0.0246       ,
+                            0.0228       , 0.0331       , 0.0380       , 0.0331       , 0.0099};
+  Double_t el_bnlyu[17]  = {0.0153-0.0135, 0.0269-0.0212, 0.0154-0.0133, 0.0167-0.0151, 0.0289-0.0222, 0.0213-0.0187, 
+                            0.0218-0.0194, 0.0261-0.0200, 0.0372-0.0315, 0.0338-0.0199, 0.0317-0.0271, 0.0324-0.0246,
+                            0.0278-0.0228, 0.0414-0.0331, 0.0503-0.0380, 0.0518-0.0331, 0.0380-0.0099};
+  Double_t el_bnlyd[17]  = {0.0135-0.0121, 0.0212-0.0155, 0.0133-0.0113, 0.0151-0.0136, 0.0222-0.0157, 0.0187-0.0163, 
+                            0.0194-0.0171, 0.0200-0.0147, 0.0315-0.0257, 0.0199-0.0063, 0.0271-0.0224, 0.0246-0.0173,
+                            0.0228-0.0175, 0.0331-0.0250, 0.0380-0.0259, 0.0331-0.0146, 0.0099-0.0050};
+
+  TGraphAsymmErrors* el_bnl = new TGraphAsymmErrors(17, el_bnlx, el_bnly, el_bnlxd, el_bnlxu, el_bnlyd, el_bnlyu);
+  el_bnl->SetMarkerStyle(20);
+  el_bnl->SetMarkerColor(kBlack);
+  el_bnl->SetLineWidth(2);
+  el_bnl->SetLineColor(kBlack);
+
+  Double_t dl_bnly[17]; 
+  Double_t dl_bnlyu[17];
+  Double_t dl_bnlyd[17];
+
+  for (int i = 0; i < 17; ++i){
+    dl_bnly[i] = el_bnly[i]*bnl_mu_param(el_bnlx[i]);
+    dl_bnlyu[i] = el_bnlyu[i]*bnl_mu_param(el_bnlx[i]);
+    dl_bnlyd[i] = el_bnlyd[i]*bnl_mu_param(el_bnlx[i]);
+  }
+
+  TGraphAsymmErrors* dl_bnl = new TGraphAsymmErrors(17, el_bnlx, dl_bnly, el_bnlxd, el_bnlxu, dl_bnlyd, dl_bnlyu);
+  dl_bnl->SetMarkerStyle(20);
+  dl_bnl->SetMarkerColor(kBlack);
+  dl_bnl->SetLineWidth(2);
+  dl_bnl->SetLineColor(kBlack);
+
+
+
   //.............................................
   // electron energy
   //.............................................
@@ -150,7 +194,8 @@ void make_theory_world_data_plots(){
   c1->SetLeftMargin(0.12);
   c1->SetBottomMargin(0.12);
 
-  TH2D* el_bg = new TH2D("el_bg", ";E (V/cm);Electron Energy, #epsilon_{L} (eV)", 100, 80, 10000, 100, 5e-3, 3.1e-1);
+  TH2D* el_bg = new TH2D("el_bg", ";E (V/cm);Electron Energy, #epsilon_{L} (eV)", 100, 80, 10000, 100, 5e-3, 2.0e-1);
+  el_bg->GetXaxis()->SetTitleOffset(1.2);
   el_bg->GetXaxis()->CenterTitle();
   el_bg->GetYaxis()->CenterTitle();
   el_bg->Draw();
@@ -165,11 +210,13 @@ void make_theory_world_data_plots(){
   atrazhev_el->Draw("l same");
   
   el_icarus->Draw("p same");
+  el_bnl->Draw("p same");
   el_ub->Draw("p same");
 
-  TLegend* leg = new TLegend(0.15, 0.70, 0.75, 0.85);
+  TLegend* leg = new TLegend(0.15, 0.68, 0.87, 0.88);
   leg->AddEntry(atrazhev_el, "Atrazhev-Timoshkin [10.1109/94.689434]", "l");
-  leg->AddEntry(bnl_el     , "BNL [10.1016/j.nima.2016.01.094]", "l");
+  leg->AddEntry(bnl_el     , "BNL Param. [10.1016/j.nima.2016.01.094]", "l");
+  leg->AddEntry(el_bnl     , "BNL Data[10.1016/0168-9002(94)90996-2]", "pe");
   leg->AddEntry(el_icarus  , "ICARUS [10.1016/0168-9002(94)90996-2]", "pe");
   leg->AddEntry(el_ub      , "MicroBooNE Data", "pe");
   leg->Draw("same");
@@ -187,7 +234,8 @@ void make_theory_world_data_plots(){
   c2->SetLeftMargin(0.12);
   c2->SetBottomMargin(0.12);
 
-  TH2D* dl_bg = new TH2D("dl_bg", ";E (V/cm);D_{L}", 100, 80, 10000, 100, 0, 10);
+  TH2D* dl_bg = new TH2D("dl_bg", ";E (V/cm);D_{L} (cm^{2}/s)", 100, 80, 10000, 100, 0, 18.5);
+  dl_bg->GetXaxis()->SetTitleOffset(1.2);
   dl_bg->GetXaxis()->CenterTitle();
   dl_bg->GetYaxis()->CenterTitle();
   dl_bg->Draw();
@@ -202,6 +250,7 @@ void make_theory_world_data_plots(){
   atrazhev_dl->Draw("l same");
 
   dl_icarus->Draw("same p");
+  dl_bnl->Draw("same p");
   dl_ub->Draw("same p");
   leg->Draw("same");
 
