@@ -1,5 +1,86 @@
 #include "PlotDiffusionMultiPlane.h"
 
+void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
+                     Float_t lMargin, Float_t rMargin,
+                     Float_t bMargin, Float_t tMargin)
+{
+   if (!C) return;
+
+   // Setup Pad layout:
+   Float_t vSpacing = 0.0;
+   Float_t vStep  = (1.- bMargin - tMargin - (Ny-1) * vSpacing) / Ny;
+
+   Float_t hSpacing = 0.0;
+   Float_t hStep  = (1.- lMargin - rMargin - (Nx-1) * hSpacing) / Nx;
+
+   Float_t vposd,vposu,vmard,vmaru,vfactor;
+   Float_t hposl,hposr,hmarl,hmarr,hfactor;
+
+   for (Int_t i=0;i<Nx;i++) {
+
+      if (i==0) {
+         hposl = 0.0;
+         hposr = lMargin + hStep;
+         hfactor = hposr-hposl;
+         hmarl = lMargin / hfactor;
+         hmarr = 0.0;
+      } else if (i == Nx-1) {
+         hposl = hposr + hSpacing;
+         hposr = hposl + hStep + rMargin;
+         hfactor = hposr-hposl;
+         hmarl = 0.0;
+         hmarr = rMargin / (hposr-hposl);
+      } else {
+         hposl = hposr + hSpacing;
+         hposr = hposl + hStep;
+         hfactor = hposr-hposl;
+         hmarl = 0.0;
+         hmarr = 0.0;
+      }
+
+      for (Int_t j=0;j<Ny;j++) {
+
+         if (j==0) {
+            vposd = 0.0;
+            vposu = bMargin + vStep - 0.2;
+            vfactor = vposu-vposd;
+            vmard = bMargin / vfactor;
+            vmaru = 0.0;
+         } else if (j == Ny-1) {
+            vposd = vposu + vSpacing;
+            vposu = vposd + vStep + tMargin + 0.2;
+            vfactor = vposu-vposd;
+            vmard = 0.0;
+            vmaru = tMargin / (vposu-vposd);
+         } else {
+            vposd = vposu + vSpacing;
+            vposu = vposd + vStep;
+            vfactor = vposu-vposd;
+            vmard = 0.0;
+            vmaru = 0.0;
+         }
+
+         C->cd(0);
+
+         char name[16];
+         sprintf(name,"pad_%i_%i",i,j);
+         TPad *pad = (TPad*) gROOT->FindObject(name);
+         if (pad) delete pad;
+         pad = new TPad(name,"",hposl,vposd,hposr,vposu);
+         pad->SetLeftMargin(hmarl);
+         pad->SetRightMargin(hmarr);
+         pad->SetBottomMargin(vmard);
+         pad->SetTopMargin(vmaru);
+
+         pad->SetFrameBorderMode(0);
+         pad->SetBorderMode(0);
+         pad->SetBorderSize(0);
+
+         pad->Draw();
+      }
+   }
+}
+
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -9,36 +90,36 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
   return out.str();
 }
 
-void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf, double sig0, double sig0err, bool isData){
+void drawPaveText(std::string plane, double diffV, double diffE, double chisq, double ndf, double sig0, double sig0err, bool isData, float offsetx = 0, float offsety = 0){
 
   std::string isDataString;
-  if (isData) isDataString = "MicroBooNE Run 3 Cosmic Data";
+  if (isData) isDataString = "MicroBooNE Cosmic Data";
   else        isDataString = "MicroBooNE Simulation";
 
   std::string diffString =
     "D_{L}: " 
     + to_string_with_precision(diffV,2)
-    + " +/- "
-    + to_string_with_precision(diffE,2)
+    //+ " +/- "
+    //+ to_string_with_precision(diffE,2)
     + " cm^{2}/s";
 
   std::string chisqString =
     "#chi^{2}/ndf: "
-    + to_string_with_precision(chisq,2) 
-    + "/" 
+    + to_string_with_precision(chisq,2)
+    //+ "/" 
     + to_string_with_precision(ndf  ,2);
 
   std::string sigma0String =
-    "#sigma_{0}^{2}: "
-    + to_string_with_precision(sig0     , 2) 
-    + " +/- " 
-    + to_string_with_precision(sig0err  , 2)
+    "#sigma_{t}^{2}(0): "
+    + to_string_with_precision(sig0     , 2)
+    //+ " +/- " 
+    //+ to_string_with_precision(sig0err  , 2)
     + " #mus^{2}";
 
   //TString sigma0 = Form("Measured #sigma_{0}^{2}: %0.2f +/- %0.2f #mus^{2}", polFit->Eval(0), polFit->GetParError(0) );
 
   //TPaveText* tpv = new TPaveText(0.12, 0.60, 0.7, 0.90, "NDC");
-  TPaveText* tpv = new TPaveText(0.16, 0.69, 0.7, 0.89, "NDC");
+  TPaveText* tpv = new TPaveText(0.16 + offsetx, 0.69 + offsety, 0.7 + offsetx, 0.89 + offsety, "NDC");
 
   tpv->SetTextAlign(11);
   tpv->SetFillStyle(0);
@@ -72,7 +153,7 @@ void styleGraph(TGraph* h, float minx, float maxx, float miny, float maxy){
   h->GetXaxis()->SetNdivisions(505);
   h->GetYaxis()->SetNdivisions(505);
   h->SetMarkerStyle(20);
-  h->SetMarkerSize(0.4);
+  h->SetMarkerSize(0.6);
 }
 
 std::pair<float, float> getFitRange(TH1D* wvfm){
@@ -202,7 +283,7 @@ void makePlot(std::string inputFileName){
                                      /numDriftBins;
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
-  const bool isData                 = false;
+  const bool isData                 = true;
   const bool isMakeWaveformPlots    = false;
   double     driftVelocity;
 
@@ -594,12 +675,12 @@ void makePlot(std::string inputFileName){
 
 
   // set histogram styles
-  styleGraph(uGr , 0.0, 2300, 0.0001   , 5       );
-  styleGraph(uGrR, 0.0, 2300, -0.09999 , 0.09999 );
-  styleGraph(vGr , 0.0, 2300, 0.0001   , 5       );
-  styleGraph(vGrR, 0.0, 2300, -0.09999 , 0.09999 );
-  styleGraph(yGr , 0.0, 2300, 0.0001   , 5       );
-  styleGraph(yGrR, 0.0, 2300, -0.09999 , 0.09999 );
+  styleGraph(uGr , 1, 2300, 0.0001   , 5       );
+  styleGraph(uGrR, 1, 2300, -0.09999 , 0.09999 );
+  styleGraph(vGr , 1, 2300, 0.0001   , 5       );
+  styleGraph(vGrR, 1, 2300, -0.09999 , 0.09999 );
+  styleGraph(yGr , 1, 2300, 0.0001   , 5       );
+  styleGraph(yGrR, 1, 2300, -0.09999 , 0.09999 );
 
   // set fit styles
   fitVec.at(0)->SetLineColor(kAzure+1);
@@ -610,12 +691,12 @@ void makePlot(std::string inputFileName){
   fitVec.at(2)->SetNpx(1000);
 
   uCan->cd();
-  uGr->SetTitle(";;#sigma_{t}^{2}");
+  uGr->SetTitle(";;#sigma_{t}^{2} (#mus^{2})");
   uGr->Draw("ap");
   fitVec.at(0)->Draw("same");
   if (nWvfmsVec.at(0)->Integral() > 0){
     nWvfmsVec.at(0)->Scale(2./nWvfmsVec.at(0)->GetMaximum());
-    nWvfmsVec.at(0)->SetFillColor(kGray);
+    nWvfmsVec.at(0)->SetFillColor(TColor::GetColor(235,235,235));
     nWvfmsVec.at(0)->SetLineWidth(0);
     nWvfmsVec.at(0)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(0)->Draw("hist same");
@@ -632,12 +713,12 @@ void makePlot(std::string inputFileName){
   lin->DrawClone("same");
 
   vCan->cd();
-  vGr->SetTitle(";;#sigma_{t}^{2}");
+  vGr->SetTitle(";;#sigma_{t}^{2} (#mus^{2})");
   vGr->Draw("ap");
   fitVec.at(1)->Draw("same");
   if (nWvfmsVec.at(1)->Integral() > 0){
     nWvfmsVec.at(1)->Scale(2./nWvfmsVec.at(1)->GetMaximum());
-    nWvfmsVec.at(1)->SetFillColor(kGray);
+    nWvfmsVec.at(1)->SetFillColor(TColor::GetColor(235,235,235));
     nWvfmsVec.at(1)->SetLineWidth(0);
     nWvfmsVec.at(1)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(1)->Draw("hist same");
@@ -652,12 +733,12 @@ void makePlot(std::string inputFileName){
   lin->DrawClone("same");
 
   yCan->cd();
-  yGr->SetTitle(";;#sigma_{t}^{2}");
+  yGr->SetTitle(";;#sigma_{t}^{2} (#mus^{2})");
   yGr->Draw("ap");
   fitVec.at(2)->Draw("same");
   if (nWvfmsVec.at(2)->Integral() > 0){
     nWvfmsVec.at(2)->Scale(2./nWvfmsVec.at(2)->GetMaximum());
-    nWvfmsVec.at(2)->SetFillColor(kGray);
+    nWvfmsVec.at(2)->SetFillColor(TColor::GetColor(235,235,235));
     nWvfmsVec.at(2)->SetLineWidth(0);
     nWvfmsVec.at(2)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(2)->Draw("hist same");
@@ -723,6 +804,80 @@ void makePlot(std::string inputFileName){
   g_chisqVdriftTimeY->GetYaxis()->SetTitle("Gaus Fit #chi^{2}/NDF");
   g_chisqVdriftTimeY->Draw("ap");
   c6->SaveAs("chisqVdriftTimeY.pdf", "PDF");
+
+  // TCanvas for plotting all together
+  TCanvas* c8 = new TCanvas("c8", "c8", 1200, 800);
+  CanvasPartition(c8, 3, 2, 0.1, 0.05, 0.15, 0.05);
+
+  TPad* bl = ((TPad*)gROOT->FindObject("pad_0_0"));
+  bl->SetRightMargin(0.04);
+  bl->cd();
+  bl->SetGridy();
+  uGrR->GetXaxis()->SetTitleOffset(1000);
+  uGrR->GetYaxis()->CenterTitle();
+  uGrR->GetYaxis()->SetTitleOffset(2.5);
+  uGrR->GetYaxis()->SetTitleSize(30);
+  uGrR->Draw("ap");
+  lin->SetLineColor(kAzure+1);
+  lin->DrawClone("same");
+  TPad* bm =((TPad*)gROOT->FindObject("pad_1_0"));
+  bm->SetLeftMargin(0.02);
+  bm->SetRightMargin(0.05);
+  bm->cd();
+  bm->SetGridy();
+  vGrR->GetXaxis()->SetTitleOffset(1000);
+  vGrR->GetYaxis()->SetLabelOffset(1000);
+  vGrR->GetXaxis()->SetRangeUser(1, 2300);
+  vGrR->Draw("ap");
+  lin->SetLineColor(kGreen+1);
+  lin->DrawClone("same");
+  TPad* br = ((TPad*)gROOT->FindObject("pad_2_0"));
+  br->SetLeftMargin(0.02);
+  //br->SetRightMargin(0.05);
+  br->cd();
+  br->SetGridy();
+  yGrR->GetXaxis()->SetTitleOffset(1000);
+  yGrR->GetYaxis()->SetLabelOffset(1000);
+  yGrR->GetXaxis()->SetRangeUser(1, 2300);
+  yGrR->Draw("ap");
+  lin->SetLineColor(kRed);
+  lin->DrawClone("same");
+  TPad* tl = ((TPad*)gROOT->FindObject("pad_0_1"));
+  tl->SetRightMargin(0.04);
+  tl->cd();
+  uGr->GetYaxis()->CenterTitle();
+  uGr->GetYaxis()->SetTitleOffset(2.5);
+  uGr->GetYaxis()->SetTitleSize(30);
+  uGr->Draw("ap");
+  nWvfmsVec.at(0)->Draw("hist same");
+  drawPaveText("U Plane", uDiffV, uDiffE, uChiSqr, uNdf, uSig0, uSig0Err, isData, 0.14);
+  tl->RedrawAxis();
+  TPad* tm = ((TPad*)gROOT->FindObject("pad_1_1"));
+  tm->SetRightMargin(0.05);
+  tm->SetLeftMargin(0.02);
+  tm->cd();
+  vGr->GetYaxis()->SetLabelOffset(1000);
+  vGr->Draw("ap");
+  nWvfmsVec.at(1)->Draw("hist same");
+  drawPaveText("V Plane", vDiffV, vDiffE, vChiSqr, vNdf, vSig0, vSig0Err, isData, -0.1);
+  tm->RedrawAxis();
+  TPad* tr = ((TPad*)gROOT->FindObject("pad_2_1"));
+  //tr->SetRightMargin(0.05);
+  tr->SetLeftMargin(0.02);
+  tr->cd();
+  yGr->GetYaxis()->SetLabelOffset(1000);
+  yGr->Draw("ap");
+  nWvfmsVec.at(2)->Draw("hist same");
+  drawPaveText("Y Plane", yDiffV, yDiffE, yChiSqr, yNdf, ySig0, ySig0Err, isData, -0.1);
+  tr->RedrawAxis();
+
+  c8->cd();
+  TLatex* xaxis = new TLatex(0.45, 0.08, "Drift Time (#mus)");
+  xaxis->SetNDC();
+  xaxis->SetTextSize (30);
+  xaxis->Draw();
+
+  c8->SaveAs("test.pdf");
 
   fOutput->Close();
   fInput->Close();
