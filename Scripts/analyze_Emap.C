@@ -1,7 +1,11 @@
+#include "StylePlots.h"
+
 void analyze_Emap() {
-  //TFile *fin = new TFile("Emap-NTT-500-N3-S500_laserdata_v1098_cathode2548_vectorstart_notshiftcurve.root", "read");
+
+  SetGenericStyle();
   TString dir = "/uboone/app/users/amogan/diffusion_mcc9/workdir/";
-  TFile *fin = new TFile(dir+"Emap-NTT-1-MergedMapsSmoothCosmicAndLaserNoDriftVVolumeSmoothed_newCurve.root", "read");
+  TFile *fin = new TFile(dir+"Emap-NTT-500-N3-S500_laserdata_v1098_cathode2548_vectorstart_notshiftcurve.root", "read");
+  //TFile *fin = new TFile(dir+"Emap-NTT-1-MergedMapsSmoothCosmicAndLaserNoDriftVVolumeSmoothed_newCurve.root", "read");
 
   TH3 *hin = (TH3*)fin->Get("Distorted_v_X");
   // Slice in X near anode (26 total bins on z axis)
@@ -41,13 +45,16 @@ void analyze_Emap() {
     }
   }
 
-  TCanvas *c1 = new TCanvas;
+  TCanvas *c1 = new TCanvas("c1", "c1", 1200, 600);
   gStyle->SetPalette(kRainBow);
-  gStyle->SetTitleAlign(13);
-  hproj->GetXaxis()->SetTitle("Z [cm]");
-  hproj->GetYaxis()->SetTitle("Y [cm]");
+  //gStyle->SetTitleAlign(13);
+  
+  hproj->GetXaxis()->SetTitle("Z (cm)");
+  hproj->GetYaxis()->SetTitle("Y (cm)");
   hproj->GetZaxis()->SetRangeUser(-3, 3);
   hproj->SetTitle("(v_{x} - v_{d})/v_{d} [%] at X = 10 cm, "+vdstring);
+
+  hproj->UseCurrentStyle();
   hproj->Draw("colz");
   c1->SaveAs("vmap.pdf", "PDF");
 
