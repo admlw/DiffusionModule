@@ -211,14 +211,14 @@ void make_theory_world_data_plots(){
   
   el_icarus->Draw("p same");
   el_bnl->Draw("p same");
-  el_ub->Draw("p same");
+  //el_ub->Draw("p same");
 
   TLegend* leg = new TLegend(0.15, 0.68, 0.87, 0.88);
   leg->AddEntry(atrazhev_el, "Atrazhev-Timoshkin [10.1109/94.689434]", "l");
   leg->AddEntry(bnl_el     , "BNL Param. [10.1016/j.nima.2016.01.094]", "l");
   leg->AddEntry(el_bnl     , "BNL Data[10.1016/0168-9002(94)90996-2]", "pe");
   leg->AddEntry(el_icarus  , "ICARUS [10.1016/0168-9002(94)90996-2]", "pe");
-  leg->AddEntry(el_ub      , "MicroBooNE Data", "pe");
+  //leg->AddEntry(el_ub      , "MicroBooNE Data", "pe");
   leg->Draw("same");
 
   c1->SaveAs("el_summary.pdf");
@@ -251,7 +251,7 @@ void make_theory_world_data_plots(){
 
   dl_icarus->Draw("same p");
   dl_bnl->Draw("same p");
-  dl_ub->Draw("same p");
+  //dl_ub->Draw("same p");
   leg->Draw("same");
 
   c2->SaveAs("dl_summary.pdf");
