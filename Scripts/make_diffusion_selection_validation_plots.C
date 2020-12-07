@@ -1,7 +1,13 @@
+#include "StylePlots.h"
+
 void make_diffusion_selection_validation_plots(){
+  SetGenericStyle();
+  TFile* f  = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionFiltered/diffusionSelectionInfo_run3_crt_Aug2020_newFV.root", "read");
+  TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
 
   std::cout << "Starting script" << std::endl;
-  TTree* t = (TTree*)_file0->Get("diffsel/difffiltertree");
+  TTree* t  = (TTree*)f->Get("diffsel/difffiltertree");
+  TTree* t2 = (TTree*)f2->Get("DiffusionModule/difftree");
   //gStyle->SetOptStat(0);
 
   // define histograms
@@ -80,6 +86,10 @@ void make_diffusion_selection_validation_plots(){
                                     ";Track length (cm); Num.tracks",
                                     20, 0, 1000);
 
+  TH1D* defTracks_length = new TH1D("defTracks_length",
+                                    ";Track length (cm); Num. tracks",
+                                    20, 0, 1000);
+
   // save plots
   TCanvas* c1 = new TCanvas();
   c1->SetRightMargin(0.18);
@@ -110,6 +120,7 @@ void make_diffusion_selection_validation_plots(){
   t->Draw("trackLength >> t0Tracks_length", "trackLength>50 && trackIsHasT0 == 1");
   t->Draw("trackLength >> fidVolTracks_length", "trackLength>50 && trackIsPassVolumeCut == 1 && trackIsHasT0 == 1");
   t->Draw("trackLength >> selTracks_length", "trackIsSelected ==1");
+  t2->Draw("track_length >> defTracks_length", "track_avg_trans_dist < 6");
 
   allTracks_thxz_thyz->Draw("colz");
   allTracks_thxz_thyz->SetContour(1000);
@@ -178,21 +189,26 @@ void make_diffusion_selection_validation_plots(){
   lengthTracks_length->SetLineColor(kBlack);
   lengthTracks_length->SetLineWidth(2);
   lengthTracks_length->Draw();
-  t0Tracks_length->SetLineColor(kAzure+1);
+  t0Tracks_length->SetLineColor(kPTRed);
   t0Tracks_length->SetLineWidth(2);
   t0Tracks_length->Draw("same");
-  fidVolTracks_length->SetLineColor(kRed+1);
+  fidVolTracks_length->SetLineColor(kPTOrange);
   fidVolTracks_length->SetLineWidth(2);
   fidVolTracks_length->Draw("same");
-  selTracks_length->SetLineColor(kGreen+1);
+  selTracks_length->SetLineColor(kPTLightBlue);
   selTracks_length->SetLineWidth(2);
   selTracks_length->Draw("same");
-  TLegend *leg = new TLegend(0.55, 0.65, 0.8, 0.9);
+  defTracks_length->SetLineColor(kPTDarkBlue);
+  defTracks_length->SetLineWidth(2);
+  defTracks_length->Draw("same");
+  TLegend *leg = new TLegend(0.50, 0.60, 0.75, 0.9);
   gStyle->SetLegendBorderSize(0);
+  leg->SetFillStyle(0);
   leg->AddEntry(lengthTracks_length, "Tracks > 50 cm", "l");
   leg->AddEntry(t0Tracks_length, "t_{0}-tagged Tracks", "l");
   leg->AddEntry(fidVolTracks_length, "Throughgoing Tracks", "l");
   leg->AddEntry(selTracks_length, "Angle Cuts", "l");
+  leg->AddEntry(defTracks_length, "Track Deflection Cut", "l");
   leg->Draw("same");
   c1->SaveAs("trackLengths.png");
   c1->SaveAs("trackLengths.pdf");
@@ -229,5 +245,6 @@ void make_diffusion_selection_validation_plots(){
   std::cout << " n selected tracks:           " <<  selTracks_thxz_thyz->GetEntries() << std::endl;
   std::cout << " \% selected tracks:          " <<  100 * selTracks_thxz_thyz->GetEntries()/
                                                     allTracks_thxz_thyz->GetEntries() << std::endl;
+  std::cout << " tracks pass deflection:      " << defTracks_length->GetEntries() << std::endl;
 
 }

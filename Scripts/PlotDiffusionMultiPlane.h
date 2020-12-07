@@ -13,6 +13,7 @@
 #include "TPad.h"
 #include "TGraphErrors.h"
 #include "TTree.h"
+#include "TLatex.h"
 
 // cpp includes
 #include <numeric>
