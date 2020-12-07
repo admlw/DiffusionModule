@@ -843,13 +843,13 @@ void diffmod::LArDiffusion::beginJob()
 
     h_sigma_v_bin_precut.push_back(theseTDs.back().make<TH2D>(
           ("h_sigma_v_bin_precut"+folderNames.at(ifN)).c_str(), 
-          ";Bin no. ; Hit Width^{2} (#mus^{2});", 
+          ";Bin no. ; Hit Width (ticks);", 
           number_time_bins, 0, number_time_bins, 
           100, 0, 10));
 
     h_sigma_v_bin_postcut.push_back(theseTDs.back().make<TH2D>(
           ("h_sigma_v_bin_postcut"+folderNames.at(ifN)).c_str(), 
-          ";Bin no. ; Hit Width^{2} (#mus^{2});", 
+          ";Bin no. ; Hit Width (ticks);", 
           number_time_bins, 0, number_time_bins, 
           100, 0, 10));
 
@@ -867,7 +867,7 @@ void diffmod::LArDiffusion::beginJob()
 
     h_sigma_v_wvfm_pulse_height_precut.push_back(theseTDs.back().make<TH2D>(
           ("h_sigma_v_wvfm_pulse_height_precut"+folderNames.at(ifN)).c_str(), 
-          ";#sigma_{t}^{2} (#mus^{2}); Pulse Height (Arb. Units);", 
+          ";Hit Width (ticks); Pulse Height (Arb. Units);", 
           100, 0, 10, 
           100, 0, 20));
 
