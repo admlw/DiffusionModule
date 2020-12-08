@@ -4,6 +4,9 @@ Int_t kPTRed       = TColor::GetColor(221,61,45);
 Int_t kPTOrange    = TColor::GetColor(253,179,102);
 Int_t kPTDarkBlue  = TColor::GetColor(74, 123, 183);
 Int_t kPTLightBlue = TColor::GetColor(152, 202, 225);
+Int_t kPTVibrantBlue = TColor::GetColor(0, 119, 187);
+Int_t kPTVibrantCyan = TColor::GetColor(51, 187, 238);
+Int_t kPTVibrantMagenta = TColor::GetColor(238,51,119);
 
 void SetGenericStyle(){
 
@@ -25,7 +28,7 @@ void SetGenericStyle(){
   gStyle->SetStatColor(10);
 
   // Don't put a colored frame around the plots
-  gStyle->SetFrameBorderMode(0);
+  //gStyle->SetFrameBorderMode(0);
   gStyle->SetCanvasBorderMode(0);
   gStyle->SetPadBorderMode(0);
 
@@ -36,7 +39,7 @@ void SetGenericStyle(){
   //  gStyle->SetMarkerStyle(kFullCircle);
 
   // No border on legends
-  gStyle->SetLegendBorderSize(0);
+  //gStyle->SetLegendBorderSize(0);
 
   // Disabled for violating NOvA style guidelines
   // Scientific notation on axes
