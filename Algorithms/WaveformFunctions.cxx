@@ -143,8 +143,6 @@ namespace diffmod {
   
       }
 
-      // Treat errors correctly...? Maybe?
-      h_summedClone->Sumw2();
       h_summedClone->Add(h_clone);
   
   
