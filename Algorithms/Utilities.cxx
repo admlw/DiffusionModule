@@ -42,4 +42,20 @@ namespace diffmod {
     return returnerThetaYZ;
   }
 
+  double Utilities::FindMaximumValue(TH1D* h){
+  
+    double maxBinValue = h->GetBinCenter((h->GetMaximumBin()));
+    
+    TF1* gaus = new TF1("f1", "gaus", 0, 100);
+    gaus->SetParameter(0, 1);
+    gaus->SetParameter(1,maxBinValue);
+    gaus->SetParameter(2, 0.25);
+    h->Fit(gaus,"","", maxBinValue-0.25, maxBinValue+0.25);
+
+    double value = (double)h->GetFunction("f1")->GetParameter("Mean");
+
+    return value;
+
+  }
+
 }
