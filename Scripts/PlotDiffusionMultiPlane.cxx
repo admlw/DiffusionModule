@@ -507,7 +507,7 @@ void makePlot(std::string inputFileName){
       if (isMakeWaveformPlots){
         TCanvas *c_test = new TCanvas("c_test", "", 750, 550);
         c_test->cd();
-        int zoomFactor = 10;
+        int zoomFactor = 50;
         waveformHist->GetXaxis()->SetRangeUser(gausfit->GetParameter(1)-zoomFactor, gausfit->GetParameter(1)+zoomFactor );
         waveformHist->GetXaxis()->SetTitle("Time (#mus)");
         waveformHist->GetXaxis()->SetTitleSize(0.05);

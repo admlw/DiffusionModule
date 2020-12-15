@@ -146,7 +146,6 @@ void plot_noise_filter(){
   hfilter_time_u->GetYaxis()->SetRangeUser(-0.05,0.2);
   hfilter_time_u->GetXaxis()->SetRangeUser(-20,20);
   std::cout << "StdDev of w time filter: " << hfilter_time_w->GetStdDev() << std::endl;
-  std::cout << "StdDev of w time filter: " << hfilter_time_w->GetStdDev() << std::endl;
  
   
   

@@ -32,7 +32,7 @@ void waveform_sum_toy_study() {
   // Make Gaussian resembling waveforms
   TRandom3 r;
   TH1D *h_wvfm = new TH1D("h_wvfm", "", nbins, rangeLow, rangeHigh);
-  for (int i = 0; i < 1e4; i++) {
+  for (int i = 0; i < 1e6; i++) {
     h_wvfm->Fill(r.Gaus(gausMean, gausSigma));
   }
   std::cout << "Start mean: "   << h_wvfm->GetMean() << std::endl;
@@ -75,7 +75,7 @@ void waveform_sum_toy_study() {
     h_shifted->Reset();
     shift = r_shift.Uniform(-maxShift, maxShift);
     //std::cout << "Shift val: " << shift << std::endl;
-    for (int i = 0; i < 1e4; i++) {
+    for (int i = 0; i < 1e6; i++) {
       h_shifted->Fill(r.Gaus(gausMean+shift, gausSigma));
     }
 
@@ -165,19 +165,22 @@ void waveform_sum_toy_study() {
   //c->SetLogy();
 
   h_sum_noShift->GetXaxis()->SetRangeUser(gausMean-20, gausMean+20);
+  //h_sum_noShift->GetYaxis()->SetRangeUser(0., 0.5);
   h_sum_noShift->GetXaxis()->SetTitle("Time (ticks)");
   h_sum_noShift->GetXaxis()->SetTitleSize(0.05);
-  h_sum_noShift->SetLineColor(kAzure+1);
+  h_sum_noShift->SetLineColor(kPTVibrantMagenta);
+  //h_sum_noShift->SetLineStyle(7);
   h_sum_noShift->SetLineWidth(2);
-  h_sum_noShift->Draw("l");
-  //h_wvfm->DrawNormalized();
+  h_sum_noShift->Draw();
+  //h_sum_noShift->DrawNormalized("l");
 
-  h_sum->SetLineColor(kGreen+2);
+  h_sum->SetLineColor(kPTDarkBlue);
+  //h_sum->SetLineStyle(9);
   h_sum->SetLineWidth(2);
-  h_sum->Draw("same l");
-  //h_sum->DrawNormalized("same");
+  h_sum->Draw("same");
+  //h_sum->DrawNormalized("same l");
 
-  TLegend *l_comp = new TLegend(0.58, 0.65, 0.8, 0.85);
+  TLegend *l_comp = new TLegend(0.58, 0.65, 0.85, 0.85);
   l_comp->AddEntry(h_sum_noShift, "Un-Shifted Sum", "l");
   l_comp->AddEntry(h_sum        , "Shifted Sum"   , "l");
   l_comp->Draw("same");
@@ -191,7 +194,7 @@ void waveform_sum_toy_study() {
   TF1 *gaus_final = new TF1("gaus_final", "gaus");
   //h_sum->Fit(gaus_final, "q", "", gausMean-20., gausMean+20.);
   h_sum->Fit(gaus_final, "0q", "", fitRange_shift.first, fitRange_shift.second);
-  gaus_final->SetLineColor(kGreen+2);
+  gaus_final->SetLineColor(kPTRed);
   gaus_final->SetLineStyle(9);
   //gaus_final->Draw("same");
   
@@ -205,7 +208,7 @@ void waveform_sum_toy_study() {
   TF1 *gaus_final_noShift = new TF1("gaus_final_noShift", "gaus");
   //h_sum_noShift->Fit(gaus_final_noShift, "q", "", gausMean-20., gausMean+20.);
   h_sum_noShift->Fit(gaus_final_noShift, "0q", "", fitRange_noShift.first, fitRange_noShift.second);
-  gaus_final_noShift->SetLineColor(kAzure+1);
+  gaus_final_noShift->SetLineColor(kPTLightBlue);
   gaus_final_noShift->SetLineStyle(5);
   //gaus_final_noShift->Draw("same");
 
