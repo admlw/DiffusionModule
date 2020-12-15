@@ -143,7 +143,6 @@ namespace diffmod {
   
       }
 
-      //h_summedClone->Sumw2(); // This seems to do weird stuff
       h_summedClone->Add(h_clone);
   
   

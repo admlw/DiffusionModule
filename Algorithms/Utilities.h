@@ -10,6 +10,8 @@
 
 // root includes
 #include "TMath.h"
+#include "TH1.h"
+#include "TF1.h"
 
 namespace diffmod{
 
@@ -28,6 +30,8 @@ namespace diffmod{
 
       /// method gets theta yz from track
       double getThetaYZ(art::Ptr<recob::Track> thisTrack);
+
+      double FindMaximumValue(TH1D* h);
 
   };
 
