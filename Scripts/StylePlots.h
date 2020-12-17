@@ -7,6 +7,12 @@ Int_t kPTLightBlue = TColor::GetColor(152, 202, 225);
 Int_t kPTVibrantBlue = TColor::GetColor(0, 119, 187);
 Int_t kPTVibrantCyan = TColor::GetColor(51, 187, 238);
 Int_t kPTVibrantMagenta = TColor::GetColor(238,51,119);
+Int_t kPTVibrantTeal    = TColor::GetColor(0, 153, 136);
+
+enum DataType {
+  kData,
+  kSimulation
+};
 
 void SetGenericStyle(){
 
@@ -81,4 +87,19 @@ void SetGenericStyle(){
   gStyle->SetTextFont(kGenericFont);
   gStyle->SetLegendFont(kGenericFont);
 
+}
+
+void ApplyLabel(DataType dt, double xpos = -1, double ypos = -1){
+  std::string ublabel = "MicroBooNE ";
+  if (dt ==kData) ublabel+="Data";
+  else            ublabel+="Simulation";
+
+  if (xpos == -1) xpos = 0.85;
+  if (ypos == -1) ypos = 0.85;
+
+  TLatex* label = new TLatex(xpos, ypos, ublabel.c_str());
+  label->SetNDC();
+  label->SetTextSize(2/30.);
+  label->SetTextAlign(32);
+  label->Draw();
 }

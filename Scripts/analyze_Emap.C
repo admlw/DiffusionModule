@@ -46,7 +46,7 @@ void analyze_Emap() {
   }
 
   TCanvas *c1 = new TCanvas("c1", "c1", 1200, 600);
-  gStyle->SetPalette(kRainBow);
+  gStyle->SetPalette(kLightTemperature);
   //gStyle->SetTitleAlign(13);
   
   hproj->GetXaxis()->SetTitle("Z (cm)");
@@ -56,6 +56,7 @@ void analyze_Emap() {
 
   hproj->UseCurrentStyle();
   hproj->Draw("colz");
+  ApplyLabel(DataType::kData, 0.37);
   c1->SaveAs("vmap.pdf", "PDF");
 
   /*
