@@ -201,15 +201,17 @@ void make_diffusion_selection_validation_plots(){
   defTracks_length->SetLineColor(kPTDarkBlue);
   defTracks_length->SetLineWidth(2);
   defTracks_length->Draw("same");
-  TLegend *leg = new TLegend(0.50, 0.60, 0.75, 0.9);
+  TLegend *leg = new TLegend(0.5, 0.45, 0.77, 0.8);
+  leg->SetLineWidth(0);
   gStyle->SetLegendBorderSize(0);
   leg->SetFillStyle(0);
-  leg->AddEntry(lengthTracks_length, "Tracks > 50 cm", "l");
+  leg->AddEntry(lengthTracks_length, "Track Length > 50 cm", "l");
   leg->AddEntry(t0Tracks_length, "t_{0}-tagged Tracks", "l");
-  leg->AddEntry(fidVolTracks_length, "Throughgoing Tracks", "l");
+  leg->AddEntry(fidVolTracks_length, "Throughi-going Tracks", "l");
   leg->AddEntry(selTracks_length, "Angle Cuts", "l");
   leg->AddEntry(defTracks_length, "Track Deflection Cut", "l");
   leg->Draw("same");
+  ApplyLabel(DataType::kData, 0.77);
   c1->SaveAs("trackLengths.png");
   c1->SaveAs("trackLengths.pdf");
 

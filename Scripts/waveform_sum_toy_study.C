@@ -1,15 +1,18 @@
+#include "StylePlots.h"
+
 double findXCorrection(TH1D*, TH1D*, int);
 double getRms2(TH1D*);
 std::vector<double> getSigma(TH1D*);
 
 void waveform_sum_toy_study() {
+  SetGenericStyle();
 
   TFile *fout = new TFile("waveform_sum_toy_study_plots.root", "WRITE");
 
   // 25 drift time bins over 4600 tick readout
   gStyle->SetLegendTextSize(0.04);
   int  nbins     = 184;
-  bool useAnode  = true; // Use cathode-like mean, sigma if false
+  bool useAnode  = false; // Use cathode-like mean, sigma if false
 
   // Gaus and Sigma estimated using summed_waveform->GetMean() and summed_waveform->GetStdDev()
   Double_t gausMean, gausSigma; 
@@ -26,7 +29,7 @@ void waveform_sum_toy_study() {
   // Make Gaussian resembling waveforms
   TRandom3 r;
   TH1D *h_wvfm = new TH1D("h_wvfm", "", nbins, rangeLow, rangeHigh);
-  for (int i = 0; i < 1e4; i++) {
+  for (int i = 0; i < 1e6; i++) {
     h_wvfm->Fill(r.Gaus(gausMean, gausSigma));
   }
   std::cout << "Start mean: "   << h_wvfm->GetMean() << std::endl;
@@ -51,7 +54,7 @@ void waveform_sum_toy_study() {
     h_shifted->Reset();
     shift = r_shift.Uniform(-maxShift, maxShift);
     std::cout << "Shift val: " << shift << std::endl;
-    for (int i = 0; i < 1e4; i++) {
+    for (int i = 0; i < 1e6; i++) {
       h_shifted->Fill(r.Gaus(gausMean+shift, gausSigma));
     }
 
@@ -117,21 +120,25 @@ void waveform_sum_toy_study() {
 
   TFile *f_comp = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "READ");
   TH1D *h_sum_data = (TH1D*)f_comp->Get("DiffusionModule/plane2/summed_waveform_bin_0_plane2");
-  TCanvas *c = new TCanvas;
+  TCanvas *c = new TCanvas("c", "c", 500, 500);
   c->cd();
   //c->SetLogy();
 
   h_sum_noShift->GetXaxis()->SetRangeUser(gausMean-20, gausMean+20);
   h_sum_noShift->GetXaxis()->SetTitle("Time (ticks)");
-  h_sum_noShift->SetLineColor(kAzure+1);
+  h_sum_noShift->GetXaxis()->CenterTitle();
+  h_sum_noShift->SetLineColor(kPTVibrantCyan);
+  h_sum_noShift->GetYaxis()->SetRangeUser(0, h_sum_noShift->GetMaximum()*1.25);
   h_sum_noShift->Draw();
   //h_wvfm->DrawNormalized();
 
-  h_sum->SetLineColor(kGreen+2);
+  h_sum->SetLineColor(kPTVibrantMagenta);
   h_sum->Draw("same");
   //h_sum->DrawNormalized("same");
 
-  TLegend *l_comp = new TLegend(0.6, 0.65, 0.8, 0.85);
+  TLegend *l_comp = new TLegend(0.55, 0.75, 0.75, 0.85);
+  l_comp->SetLineWidth(0);
+  l_comp->SetFillStyle(0);
   l_comp->AddEntry(h_sum_noShift, "Un-Shifted Sum", "l");
   l_comp->AddEntry(h_sum        , "Shifted Sum"   , "l");
   l_comp->Draw("same");
@@ -140,6 +147,8 @@ void waveform_sum_toy_study() {
   std::cout << "Summed Mean: "     << h_sum     ->GetMean()   << std::endl;
   std::cout << "Start StdDev: " << h_sum_noShift->GetStdDev() << std::endl;
   std::cout << "Summed StdDev: "   << h_sum     ->GetStdDev() << std::endl;
+
+  c->SaveAs("toystudy.pdf");
 
   /*
   h_wvfm->SetLineColor(kAzure+1);

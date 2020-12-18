@@ -89,7 +89,7 @@ void SetGenericStyle(){
 
 }
 
-void ApplyLabel(DataType dt, double xpos = -1, double ypos = -1){
+void ApplyLabel(DataType dt, double xpos = -1, double ypos = -1, Int_t textcol = kBlack){
   std::string ublabel = "MicroBooNE ";
   if (dt ==kData) ublabel+="Data";
   else            ublabel+="Simulation";
@@ -101,5 +101,6 @@ void ApplyLabel(DataType dt, double xpos = -1, double ypos = -1){
   label->SetNDC();
   label->SetTextSize(2/30.);
   label->SetTextAlign(32);
+  label->SetTextColor(textcol);
   label->Draw();
 }

@@ -9,6 +9,16 @@
 // Datasets:
 //  - MicroBooNE
 //  - ICARUS
+//
+
+#include "StylePlots.h"
+
+Int_t kMicroBooNEColor = kBlack;
+Int_t kICARUSColor     = kPTRed;
+Int_t kBNLColor        = kPTDarkBlue;
+Int_t kAtrazhevColor   = kPTOrange; //TColor::GetColor(187, 187, 187);
+Int_t kBNLParamColor   = kPTVibrantCyan;
+bool isDrawMicroBooNE = false;
 
 //.............................................................................
 Double_t bnl_mu_param(double ef){
@@ -94,9 +104,9 @@ void make_theory_world_data_plots(){
 
   TGraphAsymmErrors* dl_ub = new TGraphAsymmErrors(1, dl_ubx, dl_uby, dl_ubxd, dl_ubxu, dl_ubyd, dl_ubyu);
   dl_ub->SetMarkerStyle(20);
-  dl_ub->SetMarkerColor(kAzure+1);
+  dl_ub->SetMarkerColor(kMicroBooNEColor);
   dl_ub->SetLineWidth(2);
-  dl_ub->SetLineColor(kAzure+1);
+  dl_ub->SetLineColor(kMicroBooNEColor);
 
   Double_t el_ubx[1]   = {273.9};
   Double_t el_ubxu[1]  = {273.9*1.15-(273.9)};
@@ -107,9 +117,9 @@ void make_theory_world_data_plots(){
 
   TGraphAsymmErrors* el_ub = new TGraphAsymmErrors(1, el_ubx, el_uby, el_ubxd, el_ubxu, el_ubyd, el_ubyu);
   el_ub->SetMarkerStyle(20);
-  el_ub->SetMarkerColor(kAzure+1);
+  el_ub->SetMarkerColor(kMicroBooNEColor);
   el_ub->SetLineWidth(2);
-  el_ub->SetLineColor(kAzure+1);
+  el_ub->SetLineColor(kMicroBooNEColor);
 
   // icarus
   Double_t dl_icarusx[1]  = {225};
@@ -120,10 +130,10 @@ void make_theory_world_data_plots(){
   Double_t dl_icarusyd[1]  = {0.2};
 
   TGraphAsymmErrors* dl_icarus = new TGraphAsymmErrors(1, dl_icarusx, dl_icarusy, dl_icarusxd, dl_icarusxu, dl_icarusyd, dl_icarusyu);
-  dl_icarus->SetMarkerStyle(20);
-  dl_icarus->SetMarkerColor(kPink+1);
+  dl_icarus->SetMarkerStyle(21);
+  dl_icarus->SetMarkerColor(kICARUSColor);
   dl_icarus->SetLineWidth(2);
-  dl_icarus->SetLineColor(kPink+1);
+  dl_icarus->SetLineColor(kICARUSColor);
 
   Double_t el_icarusx[1]  = {225};
   Double_t el_icarusxu[1] = {350-225};
@@ -133,10 +143,10 @@ void make_theory_world_data_plots(){
   Double_t el_icarusyd[1]  = {0.2/bnl_mu_param(225)};
 
   TGraphAsymmErrors* el_icarus = new TGraphAsymmErrors(1, el_icarusx, el_icarusy, el_icarusxd, el_icarusxu, el_icarusyd, el_icarusyu);
-  el_icarus->SetMarkerStyle(20);
-  el_icarus->SetMarkerColor(kPink+1);
+  el_icarus->SetMarkerStyle(21);
+  el_icarus->SetMarkerColor(kICARUSColor);
   el_icarus->SetLineWidth(2);
-  el_icarus->SetLineColor(kPink+1);
+  el_icarus->SetLineColor(kICARUSColor);
 
   // bnl
   Double_t el_bnlx[17]   = {0.1*1000     , 0.134*1000   , 0.150*1000   , 0.2*1000     , 0.27*1000    , 0.30*1000    , 
@@ -159,10 +169,10 @@ void make_theory_world_data_plots(){
                             0.0228-0.0175, 0.0331-0.0250, 0.0380-0.0259, 0.0331-0.0146, 0.0099-0.0050};
 
   TGraphAsymmErrors* el_bnl = new TGraphAsymmErrors(17, el_bnlx, el_bnly, el_bnlxd, el_bnlxu, el_bnlyd, el_bnlyu);
-  el_bnl->SetMarkerStyle(20);
-  el_bnl->SetMarkerColor(kBlack);
+  el_bnl->SetMarkerStyle(22);
+  el_bnl->SetMarkerColor(kBNLColor);
   el_bnl->SetLineWidth(2);
-  el_bnl->SetLineColor(kBlack);
+  el_bnl->SetLineColor(kBNLColor);
 
   Double_t dl_bnly[17]; 
   Double_t dl_bnlyu[17];
@@ -175,16 +185,17 @@ void make_theory_world_data_plots(){
   }
 
   TGraphAsymmErrors* dl_bnl = new TGraphAsymmErrors(17, el_bnlx, dl_bnly, el_bnlxd, el_bnlxu, dl_bnlyd, dl_bnlyu);
-  dl_bnl->SetMarkerStyle(20);
-  dl_bnl->SetMarkerColor(kBlack);
+  dl_bnl->SetMarkerStyle(22);
+  dl_bnl->SetMarkerColor(kBNLColor);
   dl_bnl->SetLineWidth(2);
-  dl_bnl->SetLineColor(kBlack);
+  dl_bnl->SetLineColor(kBNLColor);
 
 
 
   //.............................................
   // electron energy
   //.............................................
+  SetGenericStyle();
 
   TCanvas* c1 = new TCanvas("c1", "", 500, 500);
   c1->SetGridy();
@@ -195,33 +206,56 @@ void make_theory_world_data_plots(){
   c1->SetBottomMargin(0.12);
 
   TH2D* el_bg = new TH2D("el_bg", ";E (V/cm);Electron Energy, #epsilon_{L} (eV)", 100, 80, 10000, 100, 5e-3, 2.0e-1);
-  el_bg->GetXaxis()->SetTitleOffset(1.2);
+  el_bg->GetXaxis()->SetTitleOffset(1.05);
   el_bg->GetXaxis()->CenterTitle();
   el_bg->GetYaxis()->CenterTitle();
   el_bg->Draw();
 
   TF1* bnl_el = new TF1("bnl_el", "bnl_el_param(x)", 10e-2, 1500);
   bnl_el->SetLineStyle(5);
-  bnl_el->SetLineColor(kOrange+3);
-  bnl_el->SetLineWidth(2);
+  bnl_el->SetLineColor(kBNLParamColor);
+  bnl_el->SetLineWidth(4);
   bnl_el->Draw("l same");
   
   TF1* atrazhev_el = new TF1("atrazhev_el", "atrazhev_el_param(x)", 10e-2, 10000);
+  atrazhev_el->SetLineColor(kAtrazhevColor);
+  atrazhev_el->SetLineStyle(kDashed);
+  atrazhev_el->SetLineWidth(4);
   atrazhev_el->Draw("l same");
   
   el_icarus->Draw("p same");
   el_bnl->Draw("p same");
-  //el_ub->Draw("p same");
+  if (isDrawMicroBooNE)
+    el_ub->Draw("p same");
 
-  TLegend* leg = new TLegend(0.15, 0.68, 0.87, 0.88);
-  leg->AddEntry(atrazhev_el, "Atrazhev-Timoshkin [10.1109/94.689434]", "l");
-  leg->AddEntry(bnl_el     , "BNL Param. [10.1016/j.nima.2016.01.094]", "l");
-  leg->AddEntry(el_bnl     , "BNL Data[10.1016/0168-9002(94)90996-2]", "pe");
-  leg->AddEntry(el_icarus  , "ICARUS [10.1016/0168-9002(94)90996-2]", "pe");
-  //leg->AddEntry(el_ub      , "MicroBooNE Data", "pe");
+  TLegend* leg = new TLegend(0.15, 0.68+(0.2*1./5.), 0.87, 0.88);
+  leg->AddEntry(atrazhev_el, "Atrazhev-Timoshkin  ", "l");
+  leg->AddEntry(bnl_el     , "BNL Parametrization ", "l");
+  leg->AddEntry(el_bnl     , "BNL Data            ", "pe");
+  leg->AddEntry(el_icarus  , "ICARUS              ", "pe");
+  if (isDrawMicroBooNE){
+    leg->SetY1(0.68);
+    leg->AddEntry(el_ub      , "MicroBooNE Data", "pe");
+  }
   leg->Draw("same");
 
-  c1->SaveAs("el_summary.pdf");
+  TLegend* dois = new TLegend(0.47, 0.68+(0.2*1./5.), 0.87, 0.88);
+  dois->AddEntry(atrazhev_el, "10.1109/94.689434", "");
+  dois->AddEntry(bnl_el     , "10.1016/j.nima.2016.01.094", "");
+  dois->AddEntry(el_bnl     , "10.1016/j.nima.2016.01.094", "");
+  dois->AddEntry(el_icarus  , "10.1016/0168-9002(94)90996-2", "");
+  dois->SetFillStyle(0);
+  dois->SetLineWidth(0);
+  dois->SetTextColor(kGray+1);
+  dois->Draw("same");
+
+  TLatex* names = new TLatex(0.68, 0.91, "A. Lister, A. Mogan");
+  names->SetTextColor(kGray+1);
+  names->SetNDC();
+  names->SetTextSize(1/35.);
+  names->SetTextAlign(11);
+  names->Draw();
+
 
   //.............................................
   // diffusion plots
@@ -235,24 +269,43 @@ void make_theory_world_data_plots(){
   c2->SetBottomMargin(0.12);
 
   TH2D* dl_bg = new TH2D("dl_bg", ";E (V/cm);D_{L} (cm^{2}/s)", 100, 80, 10000, 100, 0, 18.5);
-  dl_bg->GetXaxis()->SetTitleOffset(1.2);
+  dl_bg->GetXaxis()->SetTitleOffset(1.05);
   dl_bg->GetXaxis()->CenterTitle();
   dl_bg->GetYaxis()->CenterTitle();
   dl_bg->Draw();
 
   TF1* bnl_dl = new TF1("bnl_dl", "bnl_dl_param(x)", 10e-2, 1500);
   bnl_dl->SetLineStyle(5);
-  bnl_dl->SetLineColor(kOrange+3);
-  bnl_dl->SetLineWidth(2);
+  bnl_dl->SetLineColor(kBNLParamColor);
+  bnl_dl->SetLineWidth(4);
   bnl_dl->Draw("l same");
   
   TF1* atrazhev_dl = new TF1("atrazhev_dl", "atrazhev_dl_param(x)", 10e-2, 10000);
+  atrazhev_dl->SetLineColor(kAtrazhevColor);
+  atrazhev_dl->SetLineStyle(kDashed);
+  atrazhev_dl->SetLineWidth(4);
   atrazhev_dl->Draw("l same");
 
   dl_icarus->Draw("same p");
   dl_bnl->Draw("same p");
-  //dl_ub->Draw("same p");
+  if (isDrawMicroBooNE)
+    dl_ub->Draw("same p");
   leg->Draw("same");
+  dois->Draw("same");
+  names->Draw();
 
-  c2->SaveAs("dl_summary.pdf");
+  std::string el_name = "el_summary_";
+  std::string dl_name = "dl_summary_";
+
+  if (isDrawMicroBooNE){
+    el_name+="ub.pdf";
+    dl_name+="ub.pdf";
+  }
+  else {
+    el_name+="noub.pdf";
+    dl_name+="noub.pdf";
+  }
+
+  c1->SaveAs(el_name.c_str());
+  c2->SaveAs(dl_name.c_str());
 }

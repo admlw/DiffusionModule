@@ -121,7 +121,7 @@ void centerAndArbitrizeHistogram(TH1D* h){
 }
 
 //.............................................................................
-std::vector<TH1D*> getHistograms(TFile* file, int planeNo, int color){
+std::vector<TH1D*> getHistograms(TFile* file, int planeNo, int color, int style=1){
 
   std::vector<TH1D*> returnHists;
 
@@ -138,6 +138,7 @@ std::vector<TH1D*> getHistograms(TFile* file, int planeNo, int color){
     }
 
     returnHists[i]->SetLineColor(color);
+    returnHists[i]->SetLineStyle(style);
     returnHists[i]->SetLineWidth(2);
     returnHists[i]->SetTitle(";Arbitary Time (ticks); ADCs (norm.)");
 
@@ -223,8 +224,8 @@ void make_classic_plot(){
 
     // pull out histograms
     std::vector<TH1D*> hData   = getHistograms(fData   , planeNo, kBlack);
-    std::vector<TH1D*> hMC6p4  = getHistograms(fMC6p4  , planeNo, kAzure+1);
-    std::vector<TH1D*> hMC3p23 = getHistograms(fMC3p23 , planeNo, kGreen+1);
+    std::vector<TH1D*> hMC6p4  = getHistograms(fMC6p4  , planeNo, kPTVibrantCyan, kDashed);
+    std::vector<TH1D*> hMC3p23 = getHistograms(fMC3p23 , planeNo, kPTVibrantMagenta, kDashed);
 
     std::vector<TH1D*> hOffsetData = getOffsetHistograms(hData);
     std::vector<TF1*>  lines       = getLines(hOffsetData);
@@ -266,7 +267,7 @@ void make_classic_plot(){
     bg->Draw();
 
     for (int i = 0; i < hData.size(); ++i){
-      hOffsetData[i]->Draw("hist l same");
+      hOffsetData[i]->Draw("hist same");
       lines[i]->Draw("same");
     }
 
@@ -351,76 +352,77 @@ void make_classic_plot(){
   TPad* pad_0_0 = ((TPad*)gROOT->FindObject("pad_0_0"));
   pad_0_0->SetRightMargin(0.04);
   pad_0_0->cd();
-  NormalizeAndDraw(hMC6p4TP[0][0],"l hist");
-  NormalizeAndDraw(hMC3p23TP[0][0], "l hist same");
-  NormalizeAndDraw(hDataTP[0][0], "l hist same");
 
+  NormalizeAndDraw(hDataTP[0][0], "l hist same");
+  NormalizeAndDraw(hMC6p4TP[0][0],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[0][0], "l hist same");
   //pad_0_1
   TPad* pad_0_1 = ((TPad*)gROOT->FindObject("pad_0_1"));
   pad_0_1->SetRightMargin(0.04);
   pad_0_1->cd();
-  NormalizeAndDraw(hMC6p4TP[0][12],"l hist");
-  NormalizeAndDraw(hMC3p23TP[0][12],"l hist same");
   NormalizeAndDraw(hDataTP[0][12],"l hist same");
+  NormalizeAndDraw(hMC6p4TP[0][12],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[0][12],"l hist same");
 
   //pad_0_2
   TPad* pad_0_2 = ((TPad*)gROOT->FindObject("pad_0_2"));
   pad_0_2->SetRightMargin(0.04);
   pad_0_2->cd();
-  NormalizeAndDraw(hMC6p4TP[0][24],"l hist");
-  NormalizeAndDraw(hMC3p23TP[0][24],"l hist same");
   NormalizeAndDraw(hDataTP[0][24],"l hist same");
+  NormalizeAndDraw(hMC6p4TP[0][24],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[0][24],"l hist same");
 
   //pad_1_0
   TPad* pad_1_0 = ((TPad*)gROOT->FindObject("pad_1_0"));
   pad_1_0->SetRightMargin(0.04);
   pad_1_0->cd();
-  NormalizeAndDraw(hMC6p4TP[1][0],"l hist");
-  NormalizeAndDraw(hMC3p23TP[1][0], "l hist same");
   NormalizeAndDraw(hDataTP[1][0], "l hist same");
+  NormalizeAndDraw(hMC6p4TP[1][0],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[1][0], "l hist same");
 
   //pad_1_1
   TPad* pad_1_1 = ((TPad*)gROOT->FindObject("pad_1_1"));
   pad_1_1->SetRightMargin(0.04);
   pad_1_1->cd();
-  NormalizeAndDraw(hMC6p4TP[1][12],"l hist");
-  NormalizeAndDraw(hMC3p23TP[1][12], "l hist same");
   NormalizeAndDraw(hDataTP[1][12], "l hist same");
+  NormalizeAndDraw(hMC6p4TP[1][12],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[1][12], "l hist same");
 
   //pad_1_2
   TPad* pad_1_2 = ((TPad*)gROOT->FindObject("pad_1_2"));
   pad_1_2->SetRightMargin(0.04);
   pad_1_2->cd();
-  NormalizeAndDraw(hMC6p4TP[1][24],"l hist");
-  NormalizeAndDraw(hMC3p23TP[1][24], "l hist same");
   NormalizeAndDraw(hDataTP[1][24], "l hist same");
+  NormalizeAndDraw(hMC6p4TP[1][24],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[1][24], "l hist same");
 
   //pad_2_0
   TPad* pad_2_0 = ((TPad*)gROOT->FindObject("pad_2_0"));
   //pad_2_0->SetRightMargin(0.04);
   pad_2_0->cd();
-  NormalizeAndDraw(hMC6p4TP[2][0],"l hist");
-  NormalizeAndDraw(hMC3p23TP[2][0], "l hist same");
   NormalizeAndDraw(hDataTP[2][0], "l hist same");
+  NormalizeAndDraw(hMC6p4TP[2][0],"l hist same");
+  NormalizeAndDraw(hMC3p23TP[2][0], "l hist same");
 
   //pad_2_1
   TPad* pad_2_1 = ((TPad*)gROOT->FindObject("pad_2_1"));
   //pad_2_1->SetRightMargin(0.04);
   pad_2_1->cd();
-  NormalizeAndDraw(hMC6p4TP[2][12],"l hist");
-  NormalizeAndDraw(hMC3p23TP[2][12], "l hist same");
   NormalizeAndDraw(hDataTP[2][12], "l hist same");
+  NormalizeAndDraw(hMC3p23TP[2][12], "l hist same");
+  NormalizeAndDraw(hMC6p4TP[2][12],"l hist same");
 
   //pad_2_2
   TPad* pad_2_2 = ((TPad*)gROOT->FindObject("pad_2_2"));
   //pad_2_2->SetRightMargin(0.04);
   pad_2_2->cd();
-  NormalizeAndDraw(hMC6p4TP[2][24],"l hist");
+
+  NormalizeAndDraw(hDataTP[2][24], "l hist");
+  NormalizeAndDraw(hMC6p4TP[2][24],"l hist same");
   NormalizeAndDraw(hMC3p23TP[2][24], "l hist same");
-  NormalizeAndDraw(hDataTP[2][24], "l hist same");
 
   tp->cd();
-  TLatex* xaxis = new TLatex(0.52, 0.1, "Time (ticks, Zero-centered)");
+  TLatex* xaxis = new TLatex(0.49, 0.1, "Time (ticks, Zero-centered)");
   xaxis->SetNDC();
   xaxis->SetTextSize(0.03);
   xaxis->SetTextAlign(22);
@@ -464,8 +466,8 @@ void make_classic_plot(){
 
   TLegend* leg2 = new TLegend(0.11, 0.81, 0.31, 0.9);
   leg2->AddEntry(hDataTP[2][24], "MicroBooNE Data", "l");
-  leg2->AddEntry(hMC3p23TP[2][24], "D_{L} = 3.23 cm^{2}/s", "l");
-  leg2->AddEntry(hMC6p4TP[2][24], "D_{L} = 6.4 cm^{2}/s", "l");
+  leg2->AddEntry(hMC3p23TP[2][24], "Sim. D_{L} = 3.23 cm^{2}/s", "l");
+  leg2->AddEntry(hMC6p4TP[2][24], "Sim. D_{L} = 6.40 cm^{2}/s", "l");
   leg2->SetLineWidth(0);
   leg2->SetFillStyle(0);
   leg2->Draw("same");

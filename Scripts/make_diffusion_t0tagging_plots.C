@@ -3,7 +3,7 @@
 void NormalizeAndDraw(TH1D* h, std::string opt){
   if (h->Integral() > 0)
     h->Scale(1./h->Integral());
-  h->GetYaxis()->SetRangeUser(0, 0.129);
+  h->GetYaxis()->SetRangeUser(0, 0.159);
   h->Draw(opt.c_str());
 }
 
@@ -98,30 +98,30 @@ void make_diffusion_t0tagging_plots(){
   TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
   TTree* t2 = (TTree*)f2->Get("DiffusionModule/difftree");
 
-  TH1D* hu0  = new TH1D("hu0" , ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hu12 = new TH1D("hu12", ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hu24 = new TH1D("hu24", ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hv0  = new TH1D("hv0" , ";Hit RMS (#mus);Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hv12 = new TH1D("hv12", ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hv24 = new TH1D("hv24", ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hy0  = new TH1D("hy0" , ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hy12 = new TH1D("hy12", ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
-  TH1D* hy24 = new TH1D("hy24", ";;Number of Hits (area norm.)", 100, 0.51, 3.49);
+  TH1D* hu0  = new TH1D("hu0" , ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hu12 = new TH1D("hu12", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hu24 = new TH1D("hu24", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hv0  = new TH1D("hv0" , ";Hit RMS (#mus);Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hv12 = new TH1D("hv12", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hv24 = new TH1D("hv24", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hy0  = new TH1D("hy0" , ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hy12 = new TH1D("hy12", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hy24 = new TH1D("hy24", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
 
-  t2->Draw("hit_rms/2. >> hu0"  , "hit_view == 0 && wvfm_bin_no == 0");
-  t2->Draw("hit_rms/2. >> hu12" , "hit_view == 0 && wvfm_bin_no == 12");
-  t2->Draw("hit_rms/2. >> hu24" , "hit_view == 0 && wvfm_bin_no == 24");
-  t2->Draw("hit_rms/2. >> hv0"  , "hit_view == 1 && wvfm_bin_no == 0");
-  t2->Draw("hit_rms/2. >> hv12" , "hit_view == 1 && wvfm_bin_no == 12");
-  t2->Draw("hit_rms/2. >> hv24" , "hit_view == 1 && wvfm_bin_no == 24");
-  t2->Draw("hit_rms/2. >> hy0"  , "hit_view == 2 && wvfm_bin_no == 0");
-  t2->Draw("hit_rms/2. >> hy12" , "hit_view == 2 && wvfm_bin_no == 12");
-  t2->Draw("hit_rms/2. >> hy24" , "hit_view == 2 && wvfm_bin_no == 24");
+  t2->Draw("(hit_rms/2.) >> hu0"  , "hit_view == 0 && wvfm_bin_no == 0");
+  t2->Draw("(hit_rms/2.) >> hu12" , "hit_view == 0 && wvfm_bin_no == 12");
+  t2->Draw("(hit_rms/2.) >> hu24" , "hit_view == 0 && wvfm_bin_no == 24");
+  t2->Draw("(hit_rms/2.) >> hv0"  , "hit_view == 1 && wvfm_bin_no == 0");
+  t2->Draw("(hit_rms/2.) >> hv12" , "hit_view == 1 && wvfm_bin_no == 12");
+  t2->Draw("(hit_rms/2.) >> hv24" , "hit_view == 1 && wvfm_bin_no == 24");
+  t2->Draw("(hit_rms/2.) >> hy0"  , "hit_view == 2 && wvfm_bin_no == 0");
+  t2->Draw("(hit_rms/2.) >> hy12" , "hit_view == 2 && wvfm_bin_no == 12");
+  t2->Draw("(hit_rms/2.) >> hy24" , "hit_view == 2 && wvfm_bin_no == 24");
 
   SetGenericStyle();
   gROOT->ForceStyle();
 
-  TCanvas* ct = new TCanvas("ct", "ct", 1000, 600);
+  TCanvas* ct = new TCanvas("ct", "ct", 1200, 600);
   ct->UseCurrentStyle();
   gStyle->SetLabelFont(43, "xyz");
   gStyle->SetLabelSize(10);
@@ -146,7 +146,7 @@ void make_diffusion_t0tagging_plots(){
   NormalizeAndDraw(hu12, "hist same");
   NormalizeAndDraw(hu24, "hist same");
 
-  TLegend* leg = new TLegend(0.3, 0.78, 0.95, 0.97);
+  TLegend* leg = new TLegend(0.3, 0.73, 0.95, 0.97);
   leg->AddEntry(hu0 , "Drift time = 45 #mus", "l");
   leg->AddEntry(hu12, "Drift time = 1150 #mus", "l");
   leg->AddEntry(hu24, "Drift time = 2254 #mus", "l");
@@ -181,6 +181,7 @@ void make_diffusion_t0tagging_plots(){
   NormalizeAndDraw(hy0, "hist");
   NormalizeAndDraw(hy12, "hist same");
   NormalizeAndDraw(hy24, "hist same");
+  ApplyLabel(kData, 0.67, 0.95);
   
   ct->cd();
   TLatex *upl = new TLatex(0.185, 0.91, "U Plane");

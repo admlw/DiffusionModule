@@ -125,7 +125,7 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   tpv->SetFillStyle(0);
   tpv->SetLineWidth(0);
   tpv->SetTextFont(43);
-  tpv->SetTextSize(18);
+  tpv->SetTextSize(22);
   tpv->AddText(isDataString.c_str());
   tpv->AddText(plane.c_str());
   tpv->AddText(diffString.c_str());
@@ -507,13 +507,33 @@ void makePlot(std::string inputFileName){
       // this is to make plots for single waveforms
       if (isMakeWaveformPlots){
         TCanvas *c_test = new TCanvas("c_test", "", 750, 550);
+         const int kGenericFont = 42;
+         gStyle->SetStatFont(kGenericFont);
+         gStyle->SetLabelFont(kGenericFont, "xyz");
+         gStyle->SetTitleFont(kGenericFont, "xyz");
+         gStyle->SetTitleFont(kGenericFont, ""); // Apply same setting to plot titles
+         gStyle->SetTextFont(kGenericFont);
+         gStyle->SetLegendFont(kGenericFont);
+
         c_test->cd();
         int zoomFactor = 10;
         waveformHist->GetXaxis()->SetRangeUser(gausfit->GetParameter(1)-zoomFactor, gausfit->GetParameter(1)+zoomFactor );
         waveformHist->Draw();
         gausfit->Draw("same");
-        gStyle->SetOptFit(1);
+        gStyle->SetOptFit(0);
+        gStyle->SetOptStat(0);
+        waveformHist->GetYaxis()->SetRangeUser(0, waveformHist->GetMaximum()*1.25);
         waveformHist->Draw("e1");
+        waveformHist->SetLineColor(kBlack);
+        waveformHist->SetMarkerColor(kBlack);
+        waveformHist->GetXaxis()->SetTitle("Time (#mus)");
+        waveformHist->GetXaxis()->CenterTitle();
+        TLatex* label = new TLatex(0.85, 0.85, "MicroBooNE Data");
+        label->SetNDC();
+        label->SetTextSize(2/30.);
+        label->SetTextAlign(32);
+        label->Draw();
+
         TString waveformHistName = Form("waveformHist_%i", idb);
         TString testDir          = "waveformHistPlots/";
         c_test->SaveAs(testDir+waveformHistName+planeName+".pdf");
@@ -550,6 +570,9 @@ void makePlot(std::string inputFileName){
 
       // get pulse width squared
       sigmaSqrVals    [ip][idb] = std::pow(sigma,2);
+      if (idb == 18 | idb == 20){
+        driftTimes[ip][idb] = -1.0;
+      }
       //sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
       sigmaSqrValsErrs[ip][idb] = 1e-9;
       std::cout << "sigma = " << sigma << std::endl;
