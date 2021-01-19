@@ -45,7 +45,7 @@ void SetGenericStyle(){
   //  gStyle->SetMarkerStyle(kFullCircle);
 
   // No border on legends
-  //gStyle->SetLegendBorderSize(0);
+  gStyle->SetLegendBorderSize(0);
 
   // Disabled for violating NOvA style guidelines
   // Scientific notation on axes

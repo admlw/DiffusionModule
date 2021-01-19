@@ -291,8 +291,7 @@ void makePlot(std::string inputFileName){
   // drift velocity at nominal E-field of 273 V/cm. Why? Basically 
   // because that's what the simulation expects, even though we think
   // the anode drift velocity is the better thing to use
-  if (isData) driftVelocity = 0.10762;  // Anode drift velocity
-  //if (isData) driftVelocity = 0.1130;  // 5% variations: 0.10224, 0.1130
+  if (isData) driftVelocity = 0.10762;  // Anode drift velocity; 2% variations 1.055 and 1.098
   else        driftVelocity = 0.1098;   // Average drift velocity
 
   TFile *fInput = new TFile(inputFileName.c_str(), "READ");
@@ -516,13 +515,21 @@ void makePlot(std::string inputFileName){
          gStyle->SetLegendFont(kGenericFont);
 
         c_test->cd();
-        int zoomFactor = 10;
+        int zoomFactor = 50;
         waveformHist->GetXaxis()->SetRangeUser(gausfit->GetParameter(1)-zoomFactor, gausfit->GetParameter(1)+zoomFactor );
+        waveformHist->GetXaxis()->SetTitle("Time (#mus)");
+        waveformHist->GetXaxis()->SetTitleSize(0.05);
         waveformHist->Draw();
         gausfit->Draw("same");
+<<<<<<< HEAD
         gStyle->SetOptFit(0);
         gStyle->SetOptStat(0);
         waveformHist->GetYaxis()->SetRangeUser(0, waveformHist->GetMaximum()*1.25);
+=======
+        //gStyle->SetOptFit(1);
+        gStyle->SetOptFit(0);
+        gStyle->SetOptStat(0);
+>>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
         waveformHist->Draw("e1");
         waveformHist->SetLineColor(kBlack);
         waveformHist->SetMarkerColor(kBlack);
@@ -537,7 +544,7 @@ void makePlot(std::string inputFileName){
         TString waveformHistName = Form("waveformHist_%i", idb);
         TString testDir          = "waveformHistPlots/";
         c_test->SaveAs(testDir+waveformHistName+planeName+".pdf");
-        c_test->SaveAs(testDir+waveformHistName+planeName+".png");
+        delete c_test;
       }
 
       hPeakTime->GetXaxis()->SetLimits(fitRanges.first, fitRanges.second);
