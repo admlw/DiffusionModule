@@ -8,19 +8,13 @@ std::pair<float, float> getFitRange(TH1D*);
 void waveform_sum_toy_study() {
   SetGenericStyle();
 
-  SetGenericStyle();
-
   TFile *fout = new TFile("waveform_sum_toy_study_plots.root", "WRITE");
 
   // 25 drift time bins over 4600 tick readout
   gStyle->SetOptStat(0);
   gStyle->SetLegendTextSize(0.05);
   int  nbins     = 184;
-<<<<<<< HEAD
-  bool useAnode  = false; // Use cathode-like mean, sigma if false
-=======
-  bool useAnode  = false; // If false, use cathode-like mean and sigma 
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
+  bool useAnode  = true; // If false, use cathode-like mean and sigma 
 
   // Gaus and Sigma estimated using summed_waveform->GetMean() and summed_waveform->GetStdDev()
   Double_t gausMean, gausSigma; 
@@ -79,11 +73,7 @@ void waveform_sum_toy_study() {
     // Generate Gaussian with shifted mean, relative to h_wvfm
     h_shifted->Reset();
     shift = r_shift.Uniform(-maxShift, maxShift);
-<<<<<<< HEAD
-    std::cout << "Shift val: " << shift << std::endl;
-=======
     //std::cout << "Shift val: " << shift << std::endl;
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
     for (int i = 0; i < 1e6; i++) {
       h_shifted->Fill(r.Gaus(gausMean+shift, gausSigma));
     }
@@ -168,48 +158,29 @@ void waveform_sum_toy_study() {
 
   TFile *f_comp = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "READ");
   TH1D *h_sum_data = (TH1D*)f_comp->Get("DiffusionModule/plane2/summed_waveform_bin_0_plane2");
-<<<<<<< HEAD
   TCanvas *c = new TCanvas("c", "c", 500, 500);
-=======
-
-  TCanvas *c = new TCanvas;
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
+  c->SetLeftMargin(0.12);
+  
   c->cd();
   //c->SetLogy();
 
   h_sum_noShift->GetXaxis()->SetRangeUser(gausMean-20, gausMean+20);
   //h_sum_noShift->GetYaxis()->SetRangeUser(0., 0.5);
   h_sum_noShift->GetXaxis()->SetTitle("Time (ticks)");
-<<<<<<< HEAD
+  h_sum_noShift->GetYaxis()->SetTitle("ADC Count");
+  h_sum_noShift->GetYaxis()->SetTitleOffset(1.05);
   h_sum_noShift->GetXaxis()->CenterTitle();
+  h_sum_noShift->GetYaxis()->CenterTitle();
   h_sum_noShift->SetLineColor(kPTVibrantCyan);
   h_sum_noShift->GetYaxis()->SetRangeUser(0, h_sum_noShift->GetMaximum()*1.25);
-=======
-  h_sum_noShift->GetXaxis()->SetTitleSize(0.05);
-  h_sum_noShift->SetLineColor(kPTVibrantMagenta);
-  //h_sum_noShift->SetLineStyle(7);
-  h_sum_noShift->SetLineWidth(2);
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
   h_sum_noShift->Draw();
   //h_sum_noShift->DrawNormalized("l");
 
-<<<<<<< HEAD
   h_sum->SetLineColor(kPTVibrantMagenta);
-=======
-  h_sum->SetLineColor(kPTDarkBlue);
-  //h_sum->SetLineStyle(9);
-  h_sum->SetLineWidth(2);
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
   h_sum->Draw("same");
   //h_sum->DrawNormalized("same l");
 
-<<<<<<< HEAD
-  TLegend *l_comp = new TLegend(0.55, 0.75, 0.75, 0.85);
-  l_comp->SetLineWidth(0);
-  l_comp->SetFillStyle(0);
-=======
-  TLegend *l_comp = new TLegend(0.58, 0.65, 0.85, 0.85);
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
+  TLegend *l_comp = new TLegend(0.51, 0.75, 0.75, 0.85);
   l_comp->AddEntry(h_sum_noShift, "Un-Shifted Sum", "l");
   l_comp->AddEntry(h_sum        , "Shifted Sum"   , "l");
   l_comp->Draw("same");
@@ -219,10 +190,6 @@ void waveform_sum_toy_study() {
   std::cout << "Start StdDev: " << h_sum_noShift->GetStdDev() << std::endl;
   std::cout << "Summed StdDev: "   << h_sum     ->GetStdDev() << std::endl;
 
-<<<<<<< HEAD
-  c->SaveAs("toystudy.pdf");
-
-=======
   std::pair<float, float> fitRange_shift = getFitRange(h_sum);
   TF1 *gaus_final = new TF1("gaus_final", "gaus");
   //h_sum->Fit(gaus_final, "q", "", gausMean-20., gausMean+20.);
@@ -257,7 +224,6 @@ void waveform_sum_toy_study() {
   else          output_plot_name = "waveform_sum_cathode.pdf";
   c->SaveAs(output_plot_name, "PDF");
   
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
   /*
   TCanvas *c_chi2 = new TCanvas("c_chi2", "", 800, 600);
   TGraph *g_chi2 = new TGraph(numAdditions, xVals, chisqNdfVals);

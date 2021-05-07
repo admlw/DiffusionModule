@@ -90,10 +90,10 @@ void makePlot(){
 
    double rms2 = getRms2(sum);
 
-   TPaveText* pt = new TPaveText(0.6, 0.7, 0.85, 0.85, "NDC");
+   TPaveText* pt = new TPaveText(0.5, 0.7, 0.85, 0.85, "NDC");
    pt->SetFillStyle(0);
    pt->SetBorderSize(0);
-   TString strings = Form("RMS^{2}: %0.2f", rms2);
+   TString strings = Form("Sum RMS: %0.3f", std::sqrt(rms2));
    pt->AddText(strings);
    
    pt->Draw("same");

@@ -1,9 +1,9 @@
 #include "StylePlots.h"
 
-void NormalizeAndDraw(TH1D* h, std::string opt){
+void NormalizeAndDraw(TH1D* h, std::string opt, bool setrange = true){
   if (h->Integral() > 0)
     h->Scale(1./h->Integral());
-  h->GetYaxis()->SetRangeUser(0, 0.159);
+  if (setrange) h->GetYaxis()->SetRangeUser(0, 0.159);
   h->Draw(opt.c_str());
 }
 
@@ -95,6 +95,9 @@ void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
 
 void make_diffusion_t0tagging_plots(){
 
+  //TFile* f = new TFile("/uboone/app/users/amogan/diffusion_mcc9/workdir/diffmod_single_muons_DL_down_50percent.root", "read");
+  TFile* f = new TFile("/pnfs/uboone/persistent/users/alister1/diffusion_paper/diffmod_sim_DL_3.74.root", "read");
+  TTree* t = (TTree*)f->Get("DiffusionModule/difftree");
   TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
   TTree* t2 = (TTree*)f2->Get("DiffusionModule/difftree");
 
@@ -107,6 +110,9 @@ void make_diffusion_t0tagging_plots(){
   TH1D* hy0  = new TH1D("hy0" , ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
   TH1D* hy12 = new TH1D("hy12", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
   TH1D* hy24 = new TH1D("hy24", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hysim0  = new TH1D("hysim0" , ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hysim12 = new TH1D("hysim12", "Drift time = 1150 #mus;Hit RMS (#mus);Number of Hits (area norm.)", 50, 0.81, 2.59);
+  TH1D* hysim24 = new TH1D("hysim24", ";;Number of Hits (area norm.)", 50, 0.81, 2.59);
 
   t2->Draw("(hit_rms/2.) >> hu0"  , "hit_view == 0 && wvfm_bin_no == 0");
   t2->Draw("(hit_rms/2.) >> hu12" , "hit_view == 0 && wvfm_bin_no == 12");
@@ -117,6 +123,9 @@ void make_diffusion_t0tagging_plots(){
   t2->Draw("(hit_rms/2.) >> hy0"  , "hit_view == 2 && wvfm_bin_no == 0");
   t2->Draw("(hit_rms/2.) >> hy12" , "hit_view == 2 && wvfm_bin_no == 12");
   t2->Draw("(hit_rms/2.) >> hy24" , "hit_view == 2 && wvfm_bin_no == 24");
+  t->Draw("hit_rms/2. >> hysim0"  , "hit_view == 2 && wvfm_bin_no == 0");
+  t->Draw("hit_rms/2. >> hysim12" , "hit_view == 2 && wvfm_bin_no == 12");
+  t->Draw("hit_rms/2. >> hysim24" , "hit_view == 2 && wvfm_bin_no == 24");
 
   SetGenericStyle();
   gROOT->ForceStyle();
@@ -198,5 +207,69 @@ void make_diffusion_t0tagging_plots(){
   ypl->Draw();
 
   ct->SaveAs("t0tagging.pdf");
+
+  TCanvas* clow = new TCanvas("clow", "", 500, 500);
+  hysim0->SetLabelFont(43, "xyz");
+  hysim0->SetLabelSize(20, "xyz");
+  hysim0->SetLineColor(kPTOrange);
+  hysim0->GetYaxis()->SetNdivisions(505);
+  hy0->SetMarkerStyle(20);
+  hy0->SetLineColor(kBlack);
+  hy0->SetMarkerSize(0.5);
+  hy0->SetMarkerColor(kBlack);
+
+  NormalizeAndDraw(hysim0, "hist", false);
+  NormalizeAndDraw(hy0, "p same", false);
+  clow->SaveAs("clow.pdf");
+
+  TCanvas* cmed = new TCanvas("cmed", "", 500, 500);
+  cmed->SetLeftMargin(0.18);
+  cmed->SetRightMargin(0.03);
+  hysim12->SetLabelFont(43, "xyz");
+  hysim12->SetLabelSize(20, "xyz");
+  hysim12->SetLineColor(kPTOrange);
+  hysim12->SetTitleFont(43, "xyz");
+  hysim12->SetTitleSize(20, "xyz");
+  hysim12->GetXaxis()->CenterTitle();
+  hysim12->GetYaxis()->CenterTitle();
+  hysim12->SetLineColor(kPTLightBlue);
+  hysim12->SetLineWidth(2);
+  hysim12->GetYaxis()->SetNdivisions(505);
+  hy12->SetMarkerStyle(20);
+  hy12->SetLineColor(kBlack);
+  hy12->SetMarkerSize(0.5);
+  hy12->SetMarkerColor(kBlack);
+
+  NormalizeAndDraw(hysim12, "hist", false);
+  NormalizeAndDraw(hy12, "p same", false);
+
+  TLegend* leg2 = new TLegend(0.55, 0.75, 0.95, 0.85);
+  leg2->AddEntry(hysim12, "Sim. D_{L}=3.74 cm^{2}/s", "l");
+  leg2->AddEntry(hy12, "MicroBooNE Data", "p");
+  leg2->SetLineWidth(0);
+  leg2->SetFillStyle(0);
+  leg2->Draw("sane");
+
+  cmed->SaveAs("cmed.pdf");
+
+  TCanvas* chigh = new TCanvas("chigh", "", 500, 500);
+  hysim24->SetLabelFont(43, "xyz");
+  hysim24->SetLabelSize(20, "xyz");
+  hysim24->SetTitleFont(43, "xyz");
+  hysim24->SetTitleSize(20, "xyz");
+  hysim24->GetXaxis()->CenterTitle();
+  hysim24->GetYaxis()->CenterTitle();
+  hysim24->SetLineColor(kPTLightBlue);
+  hysim24->SetLineWidth(2);
+  hysim24->GetYaxis()->SetNdivisions(505);
+  hy24->SetMarkerStyle(20);
+  hy24->SetLineColor(kBlack);
+  hy24->SetMarkerSize(0.5);
+  hy24->SetMarkerColor(kBlack);
+
+  NormalizeAndDraw(hysim24, "hist", false);
+  NormalizeAndDraw(hy24, "p same", false);
+  chigh->SaveAs("chigh.pdf");
+
 
 }

@@ -67,27 +67,27 @@ void make_diffusion_selection_validation_plots(){
                                    100, -120, 120);
 
   TH1D* allTracks_length = new TH1D("allTracks_length",
-                                    ";Track length (cm); Num. tracks",
+                                    ";Track length (cm);  Number of Tracks",
                                     20, 0, 1000);
 
   TH1D* lengthTracks_length = new TH1D("lengthTracks_length",
-                                    ";Track length (cm); Num. tracks",
+                                    ";Track length (cm);  Number of Tracks",
                                     20, 0, 1000);
 
   TH1D* t0Tracks_length = new TH1D("t0Tracks_length",
-                                    ";Track length (cm); Num. tracks",
+                                    ";Track length (cm);  Number of Tracks",
                                     20, 0, 1000);
 
   TH1D* fidVolTracks_length = new TH1D("fidVolTracks_length",
-                                    ";Track length (cm); Num. tracks",
+                                    ";Track length (cm);  Number of Tracks",
                                     20, 0, 1000);
 
   TH1D* selTracks_length = new TH1D("selTracks_length",
-                                    ";Track length (cm); Num.tracks",
+                                    ";Track length (cm);  Number of Tracks",
                                     20, 0, 1000);
 
   TH1D* defTracks_length = new TH1D("defTracks_length",
-                                    ";Track length (cm); Num. tracks",
+                                    ";Track length (cm);  Number of Tracks",
                                     20, 0, 1000);
 
   // save plots
@@ -186,6 +186,8 @@ void make_diffusion_selection_validation_plots(){
   c1->SetLogy(1);
 
   gStyle->SetOptStat(0);
+  lengthTracks_length->GetXaxis()->CenterTitle();
+  lengthTracks_length->GetYaxis()->CenterTitle();
   lengthTracks_length->SetLineColor(kBlack);
   lengthTracks_length->SetLineWidth(2);
   lengthTracks_length->Draw();
@@ -207,9 +209,9 @@ void make_diffusion_selection_validation_plots(){
   leg->SetFillStyle(0);
   leg->AddEntry(lengthTracks_length, "Track Length > 50 cm", "l");
   leg->AddEntry(t0Tracks_length, "t_{0}-tagged Tracks", "l");
-  leg->AddEntry(fidVolTracks_length, "Throughi-going Tracks", "l");
-  leg->AddEntry(selTracks_length, "Angle Cuts", "l");
-  leg->AddEntry(defTracks_length, "Track Deflection Cut", "l");
+  leg->AddEntry(fidVolTracks_length, "Through-going Tracks", "l");
+  leg->AddEntry(selTracks_length, "Angular Requirement", "l");
+  leg->AddEntry(defTracks_length, "Track Deflection", "l");
   leg->Draw("same");
   ApplyLabel(DataType::kData, 0.77);
   c1->SaveAs("trackLengths.png");

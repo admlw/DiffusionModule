@@ -45,18 +45,24 @@ void analyze_Emap() {
     }
   }
 
-  TCanvas *c1 = new TCanvas("c1", "c1", 1200, 600);
+  TCanvas *c1 = new TCanvas("c1", "c1", 1100, 600);
+  c1->SetRightMargin(0.15);
   gStyle->SetPalette(kLightTemperature);
   //gStyle->SetTitleAlign(13);
   
   hproj->GetXaxis()->SetTitle("Z (cm)");
   hproj->GetYaxis()->SetTitle("Y (cm)");
+  hproj->GetZaxis()->SetTitle("(v_{x} - v_{d})/v_{d} [%]");
+  hproj->GetXaxis()->CenterTitle();
+  hproj->GetYaxis()->CenterTitle();
+  hproj->GetZaxis()->CenterTitle();
   hproj->GetZaxis()->SetRangeUser(-3, 3);
   hproj->SetTitle("(v_{x} - v_{d})/v_{d} [%] at X = 10 cm, "+vdstring);
 
   hproj->UseCurrentStyle();
   hproj->Draw("colz");
-  ApplyLabel(DataType::kData, 0.37);
+
+  ApplyLabel(DataType::kData, 0.39);
   c1->SaveAs("vmap.pdf", "PDF");
 
   /*

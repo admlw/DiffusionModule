@@ -121,7 +121,7 @@ void centerAndArbitrizeHistogram(TH1D* h){
 }
 
 //.............................................................................
-std::vector<TH1D*> getHistograms(TFile* file, int planeNo, int color, int style=1){
+std::vector<TH1D*> getHistograms(TFile* file, int planeNo, int color, int style=1, int width=2){
 
   std::vector<TH1D*> returnHists;
 
@@ -139,7 +139,7 @@ std::vector<TH1D*> getHistograms(TFile* file, int planeNo, int color, int style=
 
     returnHists[i]->SetLineColor(color);
     returnHists[i]->SetLineStyle(style);
-    returnHists[i]->SetLineWidth(2);
+    returnHists[i]->SetLineWidth(width);
     returnHists[i]->SetTitle(";Arbitary Time (ticks); ADCs (norm.)");
 
     returnHists[i]->GetXaxis()->CenterTitle();
@@ -220,12 +220,14 @@ void make_classic_plot(){
     std::string dir = "/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/";
     TFile* fData   = new TFile(std::string(dir+"diffmod_run3_crt_Aug2020_newFV_bugFix.root").c_str(), "READ");
     TFile* fMC6p4  = new TFile(std::string(dir+"diffmod_single_muons_angular_June2020.root").c_str(), "READ");
-    TFile* fMC3p23 = new TFile(std::string("/uboone/app/users/amogan/diffusion_mcc9/workdir/diffmod_single_muons_DL_down_50percent.root").c_str(), "READ");
+    //TFile* fMC3p23 = new TFile(std::string("/uboone/app/users/amogan/diffusion_mcc9/workdir/diffmod_single_muons_DL_down_50percent.root").c_str(), "READ");
+    TFile* fMC3p23 = new TFile(std::string("/pnfs/uboone/persistent/users/alister1/diffusion_paper/diffmod_sim_DL_3.74.root").c_str(), "READ");
+
 
     // pull out histograms
     std::vector<TH1D*> hData   = getHistograms(fData   , planeNo, kBlack);
-    std::vector<TH1D*> hMC6p4  = getHistograms(fMC6p4  , planeNo, kPTVibrantCyan, kDashed);
-    std::vector<TH1D*> hMC3p23 = getHistograms(fMC3p23 , planeNo, kPTVibrantMagenta, kDashed);
+    std::vector<TH1D*> hMC6p4  = getHistograms(fMC6p4  , planeNo, kPTVibrantCyan, kDashed, 3);
+    std::vector<TH1D*> hMC3p23 = getHistograms(fMC3p23 , planeNo, kPTVibrantMagenta, kDashed, 3);
 
     std::vector<TH1D*> hOffsetData = getOffsetHistograms(hData);
     std::vector<TF1*>  lines       = getLines(hOffsetData);
@@ -353,73 +355,74 @@ void make_classic_plot(){
   pad_0_0->SetRightMargin(0.04);
   pad_0_0->cd();
 
-  NormalizeAndDraw(hDataTP[0][0], "l hist same");
-  NormalizeAndDraw(hMC6p4TP[0][0],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[0][0], "l hist same");
+  std::string drawopt = "hist same l";
+  NormalizeAndDraw(hDataTP[0][0], drawopt);
+  NormalizeAndDraw(hMC6p4TP[0][0],drawopt);
+  NormalizeAndDraw(hMC3p23TP[0][0], drawopt);
   //pad_0_1
   TPad* pad_0_1 = ((TPad*)gROOT->FindObject("pad_0_1"));
   pad_0_1->SetRightMargin(0.04);
   pad_0_1->cd();
-  NormalizeAndDraw(hDataTP[0][12],"l hist same");
-  NormalizeAndDraw(hMC6p4TP[0][12],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[0][12],"l hist same");
+  NormalizeAndDraw(hDataTP[0][12],drawopt);
+  NormalizeAndDraw(hMC6p4TP[0][12],drawopt);
+  NormalizeAndDraw(hMC3p23TP[0][12],drawopt);
 
   //pad_0_2
   TPad* pad_0_2 = ((TPad*)gROOT->FindObject("pad_0_2"));
   pad_0_2->SetRightMargin(0.04);
   pad_0_2->cd();
-  NormalizeAndDraw(hDataTP[0][24],"l hist same");
-  NormalizeAndDraw(hMC6p4TP[0][24],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[0][24],"l hist same");
+  NormalizeAndDraw(hDataTP[0][24],drawopt);
+  NormalizeAndDraw(hMC6p4TP[0][24],drawopt);
+  NormalizeAndDraw(hMC3p23TP[0][24],drawopt);
 
   //pad_1_0
   TPad* pad_1_0 = ((TPad*)gROOT->FindObject("pad_1_0"));
   pad_1_0->SetRightMargin(0.04);
   pad_1_0->cd();
-  NormalizeAndDraw(hDataTP[1][0], "l hist same");
-  NormalizeAndDraw(hMC6p4TP[1][0],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[1][0], "l hist same");
+  NormalizeAndDraw(hDataTP[1][0], drawopt);
+  NormalizeAndDraw(hMC6p4TP[1][0],drawopt);
+  NormalizeAndDraw(hMC3p23TP[1][0], drawopt);
 
   //pad_1_1
   TPad* pad_1_1 = ((TPad*)gROOT->FindObject("pad_1_1"));
   pad_1_1->SetRightMargin(0.04);
   pad_1_1->cd();
-  NormalizeAndDraw(hDataTP[1][12], "l hist same");
-  NormalizeAndDraw(hMC6p4TP[1][12],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[1][12], "l hist same");
+  NormalizeAndDraw(hDataTP[1][12], drawopt);
+  NormalizeAndDraw(hMC6p4TP[1][12],drawopt);
+  NormalizeAndDraw(hMC3p23TP[1][12], drawopt);
 
   //pad_1_2
   TPad* pad_1_2 = ((TPad*)gROOT->FindObject("pad_1_2"));
   pad_1_2->SetRightMargin(0.04);
   pad_1_2->cd();
-  NormalizeAndDraw(hDataTP[1][24], "l hist same");
-  NormalizeAndDraw(hMC6p4TP[1][24],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[1][24], "l hist same");
+  NormalizeAndDraw(hDataTP[1][24], drawopt);
+  NormalizeAndDraw(hMC6p4TP[1][24],drawopt);
+  NormalizeAndDraw(hMC3p23TP[1][24], drawopt);
 
   //pad_2_0
   TPad* pad_2_0 = ((TPad*)gROOT->FindObject("pad_2_0"));
   //pad_2_0->SetRightMargin(0.04);
   pad_2_0->cd();
-  NormalizeAndDraw(hDataTP[2][0], "l hist same");
-  NormalizeAndDraw(hMC6p4TP[2][0],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[2][0], "l hist same");
+  NormalizeAndDraw(hDataTP[2][0], drawopt);
+  NormalizeAndDraw(hMC6p4TP[2][0],drawopt);
+  NormalizeAndDraw(hMC3p23TP[2][0], drawopt);
 
   //pad_2_1
   TPad* pad_2_1 = ((TPad*)gROOT->FindObject("pad_2_1"));
   //pad_2_1->SetRightMargin(0.04);
   pad_2_1->cd();
-  NormalizeAndDraw(hDataTP[2][12], "l hist same");
-  NormalizeAndDraw(hMC3p23TP[2][12], "l hist same");
-  NormalizeAndDraw(hMC6p4TP[2][12],"l hist same");
+  NormalizeAndDraw(hDataTP[2][12], drawopt);
+  NormalizeAndDraw(hMC3p23TP[2][12], drawopt);
+  NormalizeAndDraw(hMC6p4TP[2][12],drawopt);
 
   //pad_2_2
   TPad* pad_2_2 = ((TPad*)gROOT->FindObject("pad_2_2"));
   //pad_2_2->SetRightMargin(0.04);
   pad_2_2->cd();
 
-  NormalizeAndDraw(hDataTP[2][24], "l hist");
-  NormalizeAndDraw(hMC6p4TP[2][24],"l hist same");
-  NormalizeAndDraw(hMC3p23TP[2][24], "l hist same");
+  NormalizeAndDraw(hDataTP[2][24], drawopt);
+  NormalizeAndDraw(hMC6p4TP[2][24],drawopt);
+  NormalizeAndDraw(hMC3p23TP[2][24], drawopt);
 
   tp->cd();
   TLatex* xaxis = new TLatex(0.49, 0.1, "Time (ticks, Zero-centered)");
@@ -428,7 +431,7 @@ void make_classic_plot(){
   xaxis->SetTextAlign(22);
   xaxis->Draw();
 
-  TLatex* yaxis = new TLatex(0.02, 0.55, "Waveform Amplitude (area norm.)");
+  TLatex* yaxis = new TLatex(0.02, 0.55, "Waveform Amplitude (area normalized)");
   yaxis->SetNDC();
   yaxis->SetTextAngle(90);
   yaxis->SetTextSize(0.03);
@@ -466,7 +469,7 @@ void make_classic_plot(){
 
   TLegend* leg2 = new TLegend(0.11, 0.81, 0.31, 0.9);
   leg2->AddEntry(hDataTP[2][24], "MicroBooNE Data", "l");
-  leg2->AddEntry(hMC3p23TP[2][24], "Sim. D_{L} = 3.23 cm^{2}/s", "l");
+  leg2->AddEntry(hMC3p23TP[2][24], "Sim. D_{L} = 3.74 cm^{2}/s", "l");
   leg2->AddEntry(hMC6p4TP[2][24], "Sim. D_{L} = 6.40 cm^{2}/s", "l");
   leg2->SetLineWidth(0);
   leg2->SetFillStyle(0);

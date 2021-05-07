@@ -9,7 +9,6 @@
 // Datasets:
 //  - MicroBooNE
 //  - ICARUS
-//
 
 #include "StylePlots.h"
 
@@ -19,6 +18,7 @@ Int_t kBNLColor        = kPTDarkBlue;
 Int_t kAtrazhevColor   = kPTOrange; //TColor::GetColor(187, 187, 187);
 Int_t kBNLParamColor   = kPTVibrantCyan;
 bool isDrawMicroBooNE = false;
+
 
 //.............................................................................
 Double_t bnl_mu_param(double ef){
@@ -84,10 +84,30 @@ Double_t atrazhev_dl_param(double ef){
 }
 
 //.............................................................................
+Double_t einstein_dl_param(double ef){
+  double offs = 89 * 0.000086173;
+  return offs/(bnl_mu_param(ef)/100000);
+}
+
+//.............................................................................
 // main
 void make_theory_world_data_plots(){
 
   gStyle->SetOptStat(0);
+
+  gStyle->SetTitleFont(42, "xyz");
+  gStyle->SetLabelFont(42, "xyz");
+  gStyle->SetTitleSize(.055, "xyz");
+  gStyle->SetTitleOffset(.8, "xyz");
+  // More space for y-axis to avoid clashing with big numbers
+  gStyle->SetTitleOffset(.9, "y");
+  // This applies the same settings to the overall plot title
+  gStyle->SetTitleSize(.055, "");
+  gStyle->SetTitleOffset(.8, "");
+  // Axis labels (numbering)
+  gStyle->SetLabelSize(.04, "xyz");
+  gStyle->SetLabelOffset(.005, "xyz");
+
 
   //.............................................
   // datasets
@@ -195,18 +215,19 @@ void make_theory_world_data_plots(){
   //.............................................
   // electron energy
   //.............................................
-  SetGenericStyle();
+  //SetGenericStyle();
 
   TCanvas* c1 = new TCanvas("c1", "", 500, 500);
   c1->SetGridy();
   c1->SetGridx();
   c1->SetLogx();
   c1->SetLogy();
-  c1->SetLeftMargin(0.12);
+  c1->SetLeftMargin(0.14);
   c1->SetBottomMargin(0.12);
 
   TH2D* el_bg = new TH2D("el_bg", ";E (V/cm);Electron Energy, #epsilon_{L} (eV)", 100, 80, 10000, 100, 5e-3, 2.0e-1);
   el_bg->GetXaxis()->SetTitleOffset(1.05);
+  el_bg->GetYaxis()->SetTitleOffset(1.05);
   el_bg->GetXaxis()->CenterTitle();
   el_bg->GetYaxis()->CenterTitle();
   el_bg->Draw();
@@ -230,15 +251,15 @@ void make_theory_world_data_plots(){
 
   TLegend* leg = new TLegend(0.15, 0.68+(0.2*1./5.), 0.87, 0.88);
   leg->AddEntry(atrazhev_el, "Atrazhev-Timoshkin  ", "l");
-  leg->AddEntry(bnl_el     , "BNL Parametrization ", "l");
-  leg->AddEntry(el_bnl     , "BNL Data            ", "pe");
+  leg->AddEntry(bnl_el     , "Li et al. Parametrization ", "l");
+  leg->AddEntry(el_bnl     , "Li et al. Data            ", "pe");
   leg->AddEntry(el_icarus  , "ICARUS              ", "pe");
   if (isDrawMicroBooNE){
     leg->SetY1(0.68);
     leg->AddEntry(el_ub      , "MicroBooNE Data", "pe");
   }
   leg->Draw("same");
-
+/*
   TLegend* dois = new TLegend(0.47, 0.68+(0.2*1./5.), 0.87, 0.88);
   dois->AddEntry(atrazhev_el, "10.1109/94.689434", "");
   dois->AddEntry(bnl_el     , "10.1016/j.nima.2016.01.094", "");
@@ -255,7 +276,7 @@ void make_theory_world_data_plots(){
   names->SetTextSize(1/35.);
   names->SetTextAlign(11);
   names->Draw();
-
+*/
 
   //.............................................
   // diffusion plots
@@ -265,11 +286,12 @@ void make_theory_world_data_plots(){
   c2->SetGridy();
   c2->SetGridx();
   c2->SetLogx();
-  c2->SetLeftMargin(0.12);
+  c2->SetLeftMargin(0.14);
   c2->SetBottomMargin(0.12);
 
   TH2D* dl_bg = new TH2D("dl_bg", ";E (V/cm);D_{L} (cm^{2}/s)", 100, 80, 10000, 100, 0, 18.5);
   dl_bg->GetXaxis()->SetTitleOffset(1.05);
+  dl_bg->GetYaxis()->SetTitleOffset(1.05);
   dl_bg->GetXaxis()->CenterTitle();
   dl_bg->GetYaxis()->CenterTitle();
   dl_bg->Draw();
@@ -286,13 +308,17 @@ void make_theory_world_data_plots(){
   atrazhev_dl->SetLineWidth(4);
   atrazhev_dl->Draw("l same");
 
+  TF1* einstein_dl = new TF1("einstein_dl", "einstein_dl_param(x)", 10e-2, 10000);
+  einstein_dl->SetLineColor(kBlack);
+  einstein_dl->Draw("l same");
+
   dl_icarus->Draw("same p");
   dl_bnl->Draw("same p");
   if (isDrawMicroBooNE)
     dl_ub->Draw("same p");
   leg->Draw("same");
-  dois->Draw("same");
-  names->Draw();
+  //dois->Draw("same");
+  //names->Draw();
 
   std::string el_name = "el_summary_";
   std::string dl_name = "dl_summary_";

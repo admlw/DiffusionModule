@@ -99,8 +99,8 @@ void drawPaveText(std::string plane, double diffV, double diffE, double chisq, d
   std::string diffString =
     "D_{L}: " 
     + to_string_with_precision(diffV,2)
-    //+ " +/- "
-    //+ to_string_with_precision(diffE,2)
+    + " +/- "
+    + to_string_with_precision(diffE,2)
     + " cm^{2}/s";
 
   std::string chisqString =
@@ -284,7 +284,7 @@ void makePlot(std::string inputFileName){
   const int  minTime                = waveformDriftStartTick/2; // 400 microseconds
   const int  maxTime                = waveformDriftEndTick/2;   // 2700 microseconds
   const bool isData                 = true;
-  const bool isMakeWaveformPlots    = false;
+  const bool isMakeWaveformPlots    = true;
   double     driftVelocity;
 
   // For data measurement, use drift velocity at anode. For MC, use
@@ -436,63 +436,16 @@ void makePlot(std::string inputFileName){
 
       std::pair<float, float> fitRanges = getFitRange(waveformHist);
 
-      TF1 *gausfit = new TF1("gausfit", "gaus");
+      TF1 *gausfit = new TF1("gausfit", "gaus", fitRanges.first, fitRanges.second);
+
       waveformHist->Fit(gausfit, "q", "", 
                         fitRanges.first, fitRanges.second);
 
-      std::cout << "Gaus fit range " << fitRanges.first  << 
-                   " to "            << fitRanges.second << std::endl;
-      // Error inflation
-      double chisqNdf = 10;
-      double chisq    = 10;
-      double ndf      = 1;
-      double sigma    = 100;
-      double sigmaErr = 100;
-      // Chi2 inflation
-      int iter = 0;
-
-      std::cout << "----Bin " << idb << " Plane " << ip << "------" << std::endl;
-
-      // Wacky error nonsense
-      /*
-      for (int k = 1; k < waveformHist->GetNbinsX()+1; k++) {
-        std::cout << "--------------------------" << std::endl;
-        std::cout << "Bin " << k << std::endl;
-        std::cout << "Before " << waveformHist->GetBinError(k) << std::endl;
-        //waveformHist->SetBinError(k, 0.25*sqrt(hNWvfms->GetBinContent(idb) )*waveformHist->GetBinContent(k)/waveformHist->GetBinContent(waveformHist->GetMaximumBin() ) );
-        waveformHist->SetBinError(k, 0.25*waveformHist->GetBinContent(k)/sqrt(hNWvfms->GetBinContent(idb+1)) );
-        std::cout << "After " << waveformHist->GetBinError(k) << std::endl;
-        std::cout << "--------------------------" << std::endl;
-      }
-      */
-
-      /*
-      // Moved away from this as of June 2020
-      while (chisqNdf > 1) {
-        waveformHist->Fit(gausfit, "q", "", 
-                          fitRanges.first, fitRanges.second);
-
-        chisq    = gausfit->GetChisquare();
-        ndf      = gausfit->GetNDF();
-        sigma    = gausfit->GetParameter(2);
-        sigmaErr = gausfit->GetParError(2);
-        chisqNdf = chisq/ndf;
-        increaseError(waveformHist);
-        if (iter==0) {
-          std::cout << "Starting error = " << sigmaErr << std::endl;
-        }
-        iter++;
-      }
-      */
-      
-      waveformHist->Fit(gausfit, "q", "", 
-                        fitRanges.first, fitRanges.second);
-
-      chisq    = gausfit->GetChisquare();
-      ndf      = gausfit->GetNDF();
-      sigma    = gausfit->GetParameter(2);
-      sigmaErr = gausfit->GetParError(2);
-      chisqNdf = chisq/ndf;
+      double chisq    = gausfit->GetChisquare();
+      double ndf      = gausfit->GetNDF();
+      double sigma    = gausfit->GetParameter(2);
+      double sigmaErr = gausfit->GetParError(2);
+      double chisqNdf = chisq/ndf;
       
       //chisqVals[ip][idb] = chisqNdf;
       chisqVals[ip][idb] = chisq;
@@ -515,27 +468,23 @@ void makePlot(std::string inputFileName){
          gStyle->SetLegendFont(kGenericFont);
 
         c_test->cd();
-        int zoomFactor = 50;
+        c_test->SetLeftMargin(0.12);
+        c_test->SetBottomMargin(0.12);
+        int zoomFactor = 10;
         waveformHist->GetXaxis()->SetRangeUser(gausfit->GetParameter(1)-zoomFactor, gausfit->GetParameter(1)+zoomFactor );
         waveformHist->GetXaxis()->SetTitle("Time (#mus)");
+        waveformHist->GetYaxis()->SetTitle("Arbitrary Units");
         waveformHist->GetXaxis()->SetTitleSize(0.05);
-        waveformHist->Draw();
-        gausfit->Draw("same");
-<<<<<<< HEAD
-        gStyle->SetOptFit(0);
-        gStyle->SetOptStat(0);
-        waveformHist->GetYaxis()->SetRangeUser(0, waveformHist->GetMaximum()*1.25);
-=======
-        //gStyle->SetOptFit(1);
-        gStyle->SetOptFit(0);
-        gStyle->SetOptStat(0);
->>>>>>> 7fdf1f3b37c2263cd1e565cef72d0fa4975d886c
-        waveformHist->Draw("e1");
+        waveformHist->GetYaxis()->SetTitleSize(0.05);
         waveformHist->SetLineColor(kBlack);
         waveformHist->SetMarkerColor(kBlack);
-        waveformHist->GetXaxis()->SetTitle("Time (#mus)");
         waveformHist->GetXaxis()->CenterTitle();
-        TLatex* label = new TLatex(0.85, 0.85, "MicroBooNE Data");
+        waveformHist->GetYaxis()->CenterTitle();
+        gStyle->SetOptStat(0);
+        waveformHist->Draw("hist");
+        gausfit->Draw("same");
+
+        TLatex* label = new TLatex(0.88, 0.85, "MicroBooNE Data");
         label->SetNDC();
         label->SetTextSize(2/30.);
         label->SetTextAlign(32);
@@ -577,9 +526,9 @@ void makePlot(std::string inputFileName){
 
       // get pulse width squared
       sigmaSqrVals    [ip][idb] = std::pow(sigma,2);
-      if (idb == 18 | idb == 20){
-        driftTimes[ip][idb] = -1.0;
-      }
+      //if (idb == 18 | idb == 20){
+      //  driftTimes[ip][idb] = -1.0;
+      //}
       //sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
       sigmaSqrValsErrs[ip][idb] = 1e-9;
       std::cout << "sigma = " << sigma << std::endl;
@@ -726,7 +675,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(0)->Draw("same");
   if (nWvfmsVec.at(0)->Integral() > 0){
     nWvfmsVec.at(0)->Scale(2./nWvfmsVec.at(0)->GetMaximum());
-    nWvfmsVec.at(0)->SetFillColor(TColor::GetColor(235,235,235));
+    nWvfmsVec.at(0)->SetFillColor(TColor::GetColor(220,220,220));
     nWvfmsVec.at(0)->SetLineWidth(0);
     nWvfmsVec.at(0)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(0)->Draw("hist same");
@@ -748,7 +697,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(1)->Draw("same");
   if (nWvfmsVec.at(1)->Integral() > 0){
     nWvfmsVec.at(1)->Scale(2./nWvfmsVec.at(1)->GetMaximum());
-    nWvfmsVec.at(1)->SetFillColor(TColor::GetColor(235,235,235));
+    nWvfmsVec.at(1)->SetFillColor(TColor::GetColor(220,220,220));
     nWvfmsVec.at(1)->SetLineWidth(0);
     nWvfmsVec.at(1)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(1)->Draw("hist same");
@@ -768,7 +717,7 @@ void makePlot(std::string inputFileName){
   fitVec.at(2)->Draw("same");
   if (nWvfmsVec.at(2)->Integral() > 0){
     nWvfmsVec.at(2)->Scale(2./nWvfmsVec.at(2)->GetMaximum());
-    nWvfmsVec.at(2)->SetFillColor(TColor::GetColor(235,235,235));
+    nWvfmsVec.at(2)->SetFillColor(TColor::GetColor(220,220,220));
     nWvfmsVec.at(2)->SetLineWidth(0);
     nWvfmsVec.at(2)->GetXaxis()->SetLimits(0,maxTime-minTime);
     nWvfmsVec.at(2)->Draw("hist same");
@@ -869,7 +818,7 @@ void makePlot(std::string inputFileName){
   yGrR->GetXaxis()->SetTitleOffset(1000);
   yGrR->GetYaxis()->SetLabelOffset(1000);
   yGrR->GetXaxis()->SetRangeUser(1, 2300);
-  yGrR->Draw("ap");
+  yGrR->Draw("ape");
   lin->SetLineColor(kRed);
   lin->DrawClone("same");
   TPad* tl = ((TPad*)gROOT->FindObject("pad_0_1"));
@@ -878,7 +827,7 @@ void makePlot(std::string inputFileName){
   uGr->GetYaxis()->CenterTitle();
   uGr->GetYaxis()->SetTitleOffset(2.5);
   uGr->GetYaxis()->SetTitleSize(30);
-  uGr->Draw("ap");
+  uGr->Draw("ape");
   nWvfmsVec.at(0)->Draw("hist same");
   drawPaveText("U Plane", uDiffV, uDiffE, uChiSqr, uNdf, uSig0, uSig0Err, isData, 0.14);
   tl->RedrawAxis();
@@ -887,7 +836,7 @@ void makePlot(std::string inputFileName){
   tm->SetLeftMargin(0.02);
   tm->cd();
   vGr->GetYaxis()->SetLabelOffset(1000);
-  vGr->Draw("ap");
+  vGr->Draw("ape");
   nWvfmsVec.at(1)->Draw("hist same");
   drawPaveText("V Plane", vDiffV, vDiffE, vChiSqr, vNdf, vSig0, vSig0Err, isData, -0.1);
   tm->RedrawAxis();
@@ -896,7 +845,7 @@ void makePlot(std::string inputFileName){
   tr->SetLeftMargin(0.02);
   tr->cd();
   yGr->GetYaxis()->SetLabelOffset(1000);
-  yGr->Draw("ap");
+  yGr->Draw("ape");
   nWvfmsVec.at(2)->Draw("hist same");
   drawPaveText("Y Plane", yDiffV, yDiffE, yChiSqr, yNdf, ySig0, ySig0Err, isData, -0.1);
   tr->RedrawAxis();

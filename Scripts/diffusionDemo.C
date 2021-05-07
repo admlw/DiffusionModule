@@ -4,8 +4,13 @@
 #include "TF1.h"
 #include "TPaveText.h"
 
+#include "StylePlots.h"
+
 void diffusionDemo()
 {
+
+  SetGenericStyle();
+
   gStyle->SetOptStat(0);
   gStyle->SetTitleFont(132);
   gStyle->SetTextFont(22);
