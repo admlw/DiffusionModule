@@ -641,6 +641,7 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
 
             if (make_sigma_map) {
+              // Store in sigma map, if making that
               h_sigma_hists                     .at(thisHit->View()).at(twvfm_bin_no.back())->Fill(twvfm_fit_sigma.back());
               h_wvfm_pulse_height_hists         .at(thisHit->View()).at(twvfm_bin_no.back())->Fill(twvfm_pulse_height.back());
               h_sigma_v_bin_precut              .at(thisHit->View())->Fill(twvfm_bin_no.back()   , twvfm_fit_sigma.back());
@@ -649,15 +650,6 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
 
               h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
               h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
-              
-              //if (track_theta_xz->back() < 90)
-              //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_xz->back());
-              //if (track_theta_xz->back() > 90)
-              //  h_track_theta_xz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_xz->back());
-              //if (track_theta_yz->back() < 90)
-              //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), track_theta_yz->back());
-              //if (track_theta_yz->back() > 90)
-              //  h_track_theta_yz_v_bin.at(thisHit->View())->Fill(twvfm_bin_no.back(), 180-track_theta_yz->back());
             }
 
             else {
@@ -673,22 +665,23 @@ void diffmod::LArDiffusion::analyze(art::Event const & e) {
               // fall within some region around the median
 
               // Median (default)
-              /*
               double sigma_lowerLimit = 
                 sigmaMedians.at(bin_it) - sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double sigma_higherLimit = 
                 sigmaMedians.at(bin_it) + sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double pulseHeight_lowerLimit = 
-                pulseHeightMedians.at(bin_it) - wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
+                pulseHeightMedians.at(bin_it) - wvfm_pulse_height_cut 
+                * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double pulseHeight_higherLimit = 
-                pulseHeightMedians.at(bin_it) + wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
-              */
+                pulseHeightMedians.at(bin_it) + wvfm_pulse_height_cut 
+                * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               // Maximum (for cross-check studies)
-              
+              /*
               double sigma_lowerLimit = 
                 sigmaMaxFits.at(bin_it) - sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               double sigma_higherLimit = 
                 sigmaMaxFits.at(bin_it) + sigma_cut * h_sigma_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
+              */
               //double pulseHeight_lowerLimit = 
               //  pulseHeightMaxs.at(bin_it) - wvfm_pulse_height_cut * h_wvfm_pulse_height_hists.at(thisHit->View()).at(twvfm_bin_no.back())->GetStdDev();
               //double pulseHeight_higherLimit = 

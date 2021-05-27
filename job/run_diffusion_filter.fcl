@@ -59,10 +59,10 @@ physics:
       HitLabel:               "gaushit"
       HitSPAssnLabel:         "pandora"
       TrackLengthCut:  50
-      TrackAngleCutXZLow:   0.0  # -10
-      TrackAngleCutXZHigh:  6.0  #  10
-      TrackAngleCutYZLow:   0.0  # -40
-      TrackAngleCutYZHigh:  40.  #  40
+      TrackAngleCutXZLow:   0.0  # 0.0 
+      TrackAngleCutXZHigh:  6.0  # 6.0
+      TrackAngleCutYZLow:   0.0  # 0.0
+      TrackAngleCutYZHigh:  40.  # 40.
   
       Constants           : @local::DiffusionConstantConfig
       FilterVolume        : @local::DiffusionFilterVolume

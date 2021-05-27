@@ -2,7 +2,7 @@
 
 void make_diffusion_t0tagging_deepdive(){
 
-  TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
+  TFile* f2 = new TFile("/pnfs/uboone/persistent/diffusion_analysis_final_files/diffmod_run3data_paper.root", "read");
   TTree* t2 = (TTree*)f2->Get("DiffusionModule/difftree");
 
   TFile* outfile = new TFile("hit_width_dists.root", "recreate");

@@ -183,13 +183,6 @@ std::pair<float, float> getFitRange(TH1D* wvfm){
   return fitRanges;
 }
 
-// Moving away from this as of June 2020
-void increaseError(TH1D* h){
-  for (int i = 0; i < h->GetNbinsX(); i++){
-    h->SetBinError(i+1, h->GetBinError(i+1)*1.02);
-  }
-}
-
 std::pair<int, int> getBinXError(TH1D* driftHisto){
 
     std::pair<int, int> errLowHigh;
@@ -355,7 +348,6 @@ void makePlot(std::string inputFileName){
 
     c->cd();
 
-    //std::string drawString = "hit_peak_time >> hPeakTime" + planeName;
     std::string drawString = "hit_peak_time_t0corr >> hPeakTime" + planeName;
     std::string cutString  = "hit_view == "+std::to_string(ip);
     t->Draw(drawString.c_str(), cutString.c_str());
@@ -447,7 +439,6 @@ void makePlot(std::string inputFileName){
       double sigmaErr = gausfit->GetParError(2);
       double chisqNdf = chisq/ndf;
       
-      //chisqVals[ip][idb] = chisqNdf;
       chisqVals[ip][idb] = chisq;
 
       std::cout << "chi^2     = " << chisq             << std::endl;
@@ -501,7 +492,7 @@ void makePlot(std::string inputFileName){
       // get useful information from histogram
       waveformHistXLow  = waveformHist->GetBinLowEdge(1);
       waveformHistXHigh = 
-        waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1);
+      waveformHist->GetBinLowEdge(waveformHist->GetNbinsX()-1);
 
       std::cout << "Setting waveformHist bounds to " 
                 << waveformHistXLow 
@@ -514,26 +505,24 @@ void makePlot(std::string inputFileName){
       double binMean   = hPeakTime->GetMean();
       double binStdDev = hPeakTime->GetStdDev();
       int    N         = hPeakTime->GetEntries();
+      std::cout << "binMean: " << binMean << " minTime: " << minTime << std::endl;
 
       // get drift time from truncated mean of sigma distribution
       // in each bin
       // Error is (1/(sqrt(N)) * 0.5/2 (half a tick width, if not using 
       // hit information)
-      std::cout << "binMean: " << binMean << " minTime: " << minTime << std::endl;
+      // Note: this method has been outdated for a while. The point is 
+      // that the errors are negligible and every method we've tried has
+      // virtually no impact on the measurement. Kept as-is for simplicity.
       driftTimes    [ip][idb] = binMean - minTime;
       driftTimesErrs[ip][idb] = (1/sqrt(N) * (0.5/2));
       std::cout << "driftTimesErrs = " << driftTimesErrs[ip][idb] << std::endl;
 
       // get pulse width squared
+      // Errors are negligible and not straightforward, just use some small value
       sigmaSqrVals    [ip][idb] = std::pow(sigma,2);
-      //if (idb == 18 | idb == 20){
-      //  driftTimes[ip][idb] = -1.0;
-      //}
-      //sigmaSqrValsErrs[ip][idb] = sqrt(2) * sigmaSqrVals[ip][idb] * (sigmaErr/sigma);
       sigmaSqrValsErrs[ip][idb] = 1e-9;
       std::cout << "sigma = " << sigma << std::endl;
-      //std::cout << "sigmaErr = " << sigmaErr << std::endl;
-      //std::cout << "sigmaSqrValsErrs = " << sigmaSqrValsErrs[ip][idb] << std::endl;
 
     }
   }

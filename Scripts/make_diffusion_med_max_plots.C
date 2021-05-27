@@ -21,7 +21,7 @@ std::vector<float> getMedians(TH2D* h){
 
 void make_diffusion_med_max_plots(){
 
-  TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
+  TFile* f2 = new TFile("/pnfs/uboone/persistent/diffusion_analysis_final_files/diffmod_run3data_paper.root", "read");
   TH2D* precut  = (TH2D*)f2->Get("DiffusionModule/plane2/h_sigma_v_bin_precutplane2");
   TH2D* postcut = (TH2D*)f2->Get("DiffusionModule/plane2/h_sigma_v_bin_postcutplane2");
 

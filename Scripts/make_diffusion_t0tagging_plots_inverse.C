@@ -163,10 +163,9 @@ void GetBoundaries(std::vector<TH1D*> &h_alls, std::vector<TH1D*> &h_outs, float
 
 void make_diffusion_t0tagging_plots_inverse(){
 
-  TFile* f = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
+  TFile* f = new TFile("/pnfs/uboone/persistent/diffusion_analysis_final_files/diffmod_sim_DL_3.74_paper.root", "read");
   TTree* t = (TTree*)f->Get("DiffusionModule/difftree");
-  //TFile* f2 = new TFile("/uboone/app/users/amogan/diffusion_mcc9/workdir/diffmod_single_muons_DL_down_50percent.root", "read");
-  TFile* f2 = new TFile("/pnfs/uboone/persistent/users/alister1/diffusion_paper/diffmod_sim_DL_3.74.root", "read");
+  TFile* f2 = new TFile("/pnfs/uboone/persistent/diffusion_analysis_final_files/diffmod_run3data_paper.root", "read");
   TTree* t2 = (TTree*)f2->Get("DiffusionModule/difftree");
 
   SetGenericStyle();

@@ -99,7 +99,7 @@ void make_dynamic_sigma_cut_plots(){
 
   std::cout << "set styles" << std::endl;
 
-  TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
+  TFile* f2 = new TFile("/pnfs/uboone/persistent/diffusion_analysis_final_files/diffmod_run3data_paper.root", "read");
 
   TTree* t2 = (TTree*)f2->Get("DiffusionModule/difftree");
   std::cout << "getting hists" << std::endl;

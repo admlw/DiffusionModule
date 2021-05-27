@@ -3,7 +3,7 @@
 void make_diffusion_selection_validation_plots(){
   SetGenericStyle();
   TFile* f  = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionFiltered/diffusionSelectionInfo_run3_crt_Aug2020_newFV.root", "read");
-  TFile* f2 = new TFile("/pnfs/uboone/persistent/users/amogan/v08_00_00_25/diffusion_output_files/diffusionAna/diffmod_run3_crt_Aug2020_newFV_bugFix.root", "read");
+  TFile* f2 = new TFile("/pnfs/uboone/persistent/diffusion_analysis_final_files/diffmod_run3data_paper.root", "read");
 
   std::cout << "Starting script" << std::endl;
   TTree* t  = (TTree*)f->Get("diffsel/difffiltertree");

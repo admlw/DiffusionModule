@@ -17,7 +17,7 @@ Int_t kICARUSColor     = kPTRed;
 Int_t kBNLColor        = kPTDarkBlue;
 Int_t kAtrazhevColor   = kPTOrange; //TColor::GetColor(187, 187, 187);
 Int_t kBNLParamColor   = kPTVibrantCyan;
-bool isDrawMicroBooNE = false;
+bool isDrawMicroBooNE  = false;
 
 
 //.............................................................................
@@ -308,9 +308,12 @@ void make_theory_world_data_plots(){
   atrazhev_dl->SetLineWidth(4);
   atrazhev_dl->Draw("l same");
 
+  /*
+  // Experimental thing that never quite worked
   TF1* einstein_dl = new TF1("einstein_dl", "einstein_dl_param(x)", 10e-2, 10000);
   einstein_dl->SetLineColor(kBlack);
   einstein_dl->Draw("l same");
+  */
 
   dl_icarus->Draw("same p");
   dl_bnl->Draw("same p");
