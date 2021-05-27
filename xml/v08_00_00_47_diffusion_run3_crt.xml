@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+
+<!-- project details -->
+<!DOCTYPE project [
+<!ENTITY release "v08_00_00_47">
+<!ENTITY name "crt_test">
+<!ENTITY outname "run3_crt_Mar2021_test/">
+<!ENTITY user "amogan">
+<!ENTITY scratch_dir "/pnfs/uboone/scratch/users/&user;/&release;/">
+<!ENTITY resilient_dir "/pnfs/uboone/resilient/users/&user;/&release;/">
+<!ENTITY data_dir "/uboone/data/users/&user;/&release;_data/">
+<!ENTITY work_dir "/uboone/app/users/amogan/diffusion_mcc9/workdir/">
+<!ENTITY input_list "input_run3_crt_Oct2020_sumw2.list">
+]>
+
+<job>
+
+<project name="&name;">
+
+    <!-- project size -->
+    <numevents>1000000</numevents>
+
+    <!-- batchOS -->
+    <os>SL7</os>
+
+    <resource>DEDICATED,OPPORTUNISTIC</resource>
+
+    <!-- larsoft info -->
+    <larsoft>
+        <tag>&release;</tag>
+        <qual>e17:prof</qual>
+        <local>/pnfs/uboone/resilient/users/amogan/tar_files/v08_00_00_47_Diffusion.tar</local> 
+    </larsoft>
+
+   <!-- diffusion filter -->
+   <stage name="diffusionfilter">
+        <inputdef>data_extbnb_mcc9.1_v08_00_00_25_reco2_G1_all_reco2</inputdef> 
+        <!--<inputdef>prod_crossingmuon_uboone_overlay_run1_reco2_reco2</inputdef> -->
+        <fcl>run_diffusion_filter.fcl</fcl>
+        <bookdir>&data_dir;&outname;diffusion_filter</bookdir>
+        <workdir>&resilient_dir;&outname;diffusion_filter</workdir>
+        <outdir>&scratch_dir;&outname;diffusion_filter</outdir>
+        <logdir>&scratch_dir;&outname;diffusion_filter</logdir>
+        <numjobs>5</numjobs> <!-- 169 -->
+        <maxfilesperjob>50</maxfilesperjob> <!-- 100 -->
+        <numevents>50000</numevents> <!-- ~50 events/file * 50 files/job -->
+        <memory>2000</memory>
+        <disk>30GB</disk>
+        <datatier>diffusionfilter</datatier>
+        <schema>root</schema>
+   </stage>
+
+   <!-- diffusion sigma map production -->
+   <stage name="diffusionsigmamap">
+        <inputlist>&work_dir;&input_list;</inputlist> 
+        <fcl>run_diffusion_module_sigmamap.fcl</fcl>
+        <bookdir>&data_dir;&outname;diffusion_sigmamap</bookdir>
+        <workdir>&resilient_dir;&outname;diffusion_sigmamap</workdir>
+        <outdir>&scratch_dir;&outname;diffusion_sigmamap</outdir>
+        <logdir>&scratch_dir;&outname;diffusion_sigmamap</logdir>
+        <numjobs>52</numjobs> 
+        <maxfilesperjob>5</maxfilesperjob>
+        <numevents>10000</numevents>
+        <memory>2400</memory>
+        <disk>30GB</disk>
+        <datatier>diffusionsigmamap</datatier>
+        <!--<schema>root</schema>-->
+        <schema>griftp</schema>
+   </stage>
+
+   <!-- diffusion ana -->
+   <!-- Remember that you need to hadd the output files from sigmamap 
+        stage and configure the path in this fhicl file in order for this 
+        to work -->
+   <stage name="diffusionana">
+        <inputlist>&work_dir;&input_list;</inputlist> 
+        <fcl>run_diffusion_module_ana.fcl</fcl>
+        <bookdir>&data_dir;&outname;diffusion_ana</bookdir>
+        <workdir>&resilient_dir;&outname;diffusion_ana</workdir>
+        <outdir>&scratch_dir;&outname;diffusion_ana</outdir>
+        <logdir>&scratch_dir;&outname;diffusion_ana</logdir>
+        <numjobs>52</numjobs> <!-- 52 -->
+        <maxfilesperjob>5</maxfilesperjob>
+        <numevents>10000</numevents>
+        <memory>6000</memory>
+        <disk>30GB</disk>
+        <datatier>diffusionana</datatier>
+        <!--<schema>root</schema>-->
+        <schema>griftp</schema>
+   </stage>
+
+</project>
+
+</job>

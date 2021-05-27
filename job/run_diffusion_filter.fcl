@@ -58,7 +58,7 @@ physics:
       T0Label:                "crttrackmatch" # Use acpttrigtagger for MC ACPT+Overlay, acpttagger for EXT (non-CRT)
       HitLabel:               "gaushit"
       HitSPAssnLabel:         "pandora"
-      TrackLengthCut:  50
+      TrackLengthCut:       50
       TrackAngleCutXZLow:   0.0  # 0.0 
       TrackAngleCutXZHigh:  6.0  # 6.0
       TrackAngleCutYZLow:   0.0  # 0.0
